@@ -31,7 +31,8 @@ const menuItems = [
     children: [
       { label: "Receive Parcel", href: "/parcel-management/receive" },
       { label: "Assign Rider", href: "/parcel-management/assign" },
-      { label: "Reverse Entry", href: "/parcel-management/reverse" },
+      { label: "Unprocessed", href: "/parcel-management/unprocessed" },
+      { label: "Processed", href: "/parcel-management/processed" },
       { label: "Pickup Request", href: "/parcel-management/pickup-request" },
       { label: "HUB Transfer", href: "/parcel-management/hub-transfer" },
       { label: "HUB Receive", href: "/parcel-management/hub-receive" },
@@ -116,8 +117,6 @@ export default function Sidebar({
         } md:translate-x-0`}
       >
         <nav className="p-2 space-y-1">
-        
-      
           {/* menu items */}
           {menuItems.map((item) => {
             const isExpanded = expandedItems.includes(item.href);

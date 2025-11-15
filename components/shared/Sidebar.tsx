@@ -29,6 +29,7 @@ const menuItems = [
     label: "Parcel Management",
     href: "/parcel-management",
     children: [
+      { label: "All Parcel", href: "/parcel-management/all-parcel" },
       { label: "Receive Parcel", href: "/parcel-management/receive" },
       { label: "Assign Rider", href: "/parcel-management/assign" },
       { label: "Unprocessed", href: "/parcel-management/unprocessed" },
@@ -38,7 +39,7 @@ const menuItems = [
       { label: "HUB Receive", href: "/parcel-management/hub-receive" },
       { label: "Third Party", href: "/parcel-management/thrid-party" },
       { label: "Parcel Reports", href: "/parcel-management/parcel-reports" },
-      { label: "All Parcel", href: "/parcel-management/all-parcel" },
+      { label: "Parcel History", href: "/parcel-management/parcel-history" },
     ],
   },
   {

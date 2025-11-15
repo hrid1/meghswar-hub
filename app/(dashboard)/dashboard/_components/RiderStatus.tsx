@@ -1,6 +1,6 @@
 export default function RiderStatus() {
   return (
-    <div className="border border-gray-200 rounded-xl">
+    <div className="border border-gray-200 rounded-xl bg-white">
       <div className="flex justify-between border-b border-gray-300 p-4">
         <h3 className="text-xl font-bold">Rider Status</h3>
 

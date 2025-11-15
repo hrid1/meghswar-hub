@@ -5,6 +5,7 @@ import QuickActions from "./QuickActions";
 import ParcelFlow from "./ParcelFlow";
 import PendingActions from "./PendingActions";
 import RiderStatus from "./RiderStatus";
+import OnGoingDelivery from "./OnGoingDelivery";
 
 export default function DashboardContent() {
   return (
@@ -29,8 +30,14 @@ export default function DashboardContent() {
       </div>
 
       {/* rider status and onging deliveres */}
-      <div className="w-1/3">
-        <RiderStatus />
+      <div className="flex flex-col md:flex-row gap-5">
+        <div className="w-full md:w-1/3">
+          <RiderStatus />
+        </div>
+
+        <div className="flex-1">
+          <OnGoingDelivery />
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import { Columns, Search } from "lucide-react";
 import { DataTable } from "@/components/reusable/DataTable";
 import { mockParcelsHistory, Parcel } from "./mockData";
 import DataTable3 from "@/components/reusable/DataTable3";
+import { parcelHistoryColumns } from "./columns";
 
 export default function ParcelHistoryTable() {
   const [globalFilter, setGlobalFilter] = useState("");
@@ -54,7 +55,7 @@ export default function ParcelHistoryTable() {
 
       {/* ----------- TABLE ----------- */}
       <DataTable3
-        columns={Columns}
+        columns={parcelHistoryColumns}
         data={filteredData}
         onRowSelectionChange={handleSelection}
       />

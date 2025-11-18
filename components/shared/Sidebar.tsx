@@ -31,15 +31,28 @@ const menuItems = [
     children: [
       { label: "All Parcel", href: "/parcel-management/all-parcel" },
       { label: "Receive Parcel", href: "/parcel-management/receive" },
-      { label: "Assign Rider", href: "/parcel-management/assign" },
+      { label: "Assign Rider", href: "/parcel-management/assign-rider" },
       { label: "Unprocessed", href: "/parcel-management/unprocessed" },
       { label: "Processed", href: "/parcel-management/processed" },
       { label: "Pickup Request", href: "/parcel-management/pickup-request" },
       { label: "HUB Transfer", href: "/parcel-management/hub-transfer" },
       { label: "HUB Receive", href: "/parcel-management/hub-receive" },
-      { label: "Third Party", href: "/parcel-management/thrid-party" },
+      { label: "Third Party", href: "/parcel-management/third-party" },
       { label: "Parcel Reports", href: "/parcel-management/parcel-reports" },
       { label: "Parcel History", href: "/parcel-management/parcel-history" },
+    ],
+  },
+  {
+    icon: Package,
+    label: "Rider Management",
+    href: "/rider-management",
+    children: [
+      { label: "Rider List", href: "/rider-management/rider-list" },
+      { label: "Rider Status", href: "/rider-management/rider-status" },
+      { label: "Rider transfer", href: "/rider-management/rider-transfer" },
+      { label: "Create Rider", href: "/rider-management/create-rider" },
+      { label: "Performance", href: "/rider-management/performance" },
+      { label: "Verify Otop", href: "/rider-management/verify-otp" },
     ],
   },
   {
@@ -129,7 +142,7 @@ export default function Sidebar({
                 {item.children ? (
                   <button
                     onClick={() => toggleExpand(item.href)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors border border-gray-300  ${
+                    className={`w-full flex items-center justify-between px-4 py-3 cursor-pointer rounded-lg transition-colors border border-gray-300  ${
                       hasActiveChild
                         ? "bg-orange-50 text-orange-600 "
                         : "text-gray-700 hover:bg-gray-100"

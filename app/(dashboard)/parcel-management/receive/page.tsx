@@ -151,7 +151,7 @@ export default function ParcelTable() {
   ];
 
   return (
-    <div className="p-6 space-y-6 container mx-auto ">
+    <div className="p-6 space-y-6 container mx-auto">
       {/* Page Header */}
       <h1 className="text-2xl font-bold">Receive Parcel</h1>
 

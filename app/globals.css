@@ -44,16 +44,18 @@
 }
 
 body {
-  /* background: var(--background); */
-  /* color: var(--foreground); */
+  /* background: var(--background);
+  color: var(--foreground); */
+  color: "#ffffff";
+  background-color: "#000000"
 }
 
-  .title{
+.title {
   @apply font-bold text-[30.1343px] leading-[45px] text-black;
 }
 
 /* ===== Scrollbar CSS ===== */
-  /* Firefox */
+/* Firefox */
 
 /* Custom Scrollbar Style */
 .custom-scroll::-webkit-scrollbar {
@@ -155,6 +157,4 @@ body {
   .info-title {
     @apply font-bold text-[26px];
   }
-
 }
-

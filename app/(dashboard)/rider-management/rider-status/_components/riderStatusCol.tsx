@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Edit, Eye, Trash2 } from "lucide-react";
 
-const columns = [
+export const riderStatusColumns = [
   {
     key: "riderId",
     title: "Rider Id",

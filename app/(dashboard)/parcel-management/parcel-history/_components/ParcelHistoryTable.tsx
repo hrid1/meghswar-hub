@@ -33,7 +33,7 @@ export default function ParcelHistoryTable() {
   };
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-4 ">
       {/* ----------- SEARCH BAR ----------- */}
       <div className="flex items-center gap-2 max-w-md">
         <Input

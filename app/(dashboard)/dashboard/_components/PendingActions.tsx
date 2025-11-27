@@ -25,7 +25,7 @@ const SingleActions = ({ color, descriptions }: any) => {
     <div className="border border-red-200 bg-red-50 flex items-center justify-between p-4 rounded-2xl">
       <div className="flex  justify-between w-full">
         <p className="flex gap-2 items-center">
-          <div className="w-4 h-4 bg-red-400 rounded-full " />
+          <span className="w-4 h-4 bg-red-400 rounded-full block" />
           <span>{descriptions}</span>
         </p>
 

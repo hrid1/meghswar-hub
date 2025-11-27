@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 // Small mock dataset for riders (keeps API self-contained)
 const MOCK_RIDERS = [
@@ -41,10 +41,12 @@ const MOCK_RIDERS = [
 ];
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { id?: string } }
+  _req: NextRequest,
+  { params }: { params: { id?: string } | Promise<{ id: string }> }
 ) {
-  const id = params?.id;
+  // Next's route typing sometimes passes params as a Promise; handle both
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const id = resolvedParams?.id;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const rider = MOCK_RIDERS.find((r) => r.riderId === id);

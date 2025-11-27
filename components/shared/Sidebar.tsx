@@ -52,43 +52,30 @@ const menuItems = [
       { label: "Rider transfer", href: "/rider-management/rider-transfer" },
       { label: "Create Rider", href: "/rider-management/create-rider" },
       { label: "Performance", href: "/rider-management/performance" },
-      { label: "Verify Otop", href: "/rider-management/verify-otp" },
+      { label: "Verify OTP", href: "/rider-management/verify-otp" },
     ],
   },
-  {
-    icon: MapPin,
-    label: "Pickup Request",
-    href: "/pickup-request",
-  },
+ 
   {
     icon: TruckIcon,
-    label: "Hub Transfer",
-    href: "/hub-transfer",
+    label: "Merchant Management",
+    href: "/merchant-management",
   },
-  {
-    icon: UserCheck,
-    label: "Hub Receive",
-    href: "/hub-receive",
+
+   {
+    icon: MapPin,
+    label: "Financial Report",
+    href: "/financial-report",
+    children: [
+      { label: "COD Manangement", href: "/financial-report/cod-manangement" },
+      { label: "Transaction", href: "/financial-report/transaction" },
+    ],
   },
-  {
-    icon: ArrowLeftRight,
-    label: "Third Party",
-    href: "/third-party",
-  },
-  {
-    icon: FileText,
-    label: "Parcel Reports",
-    href: "/reports",
-  },
-  {
-    icon: BarChart3,
-    label: "Parcel History",
-    href: "/history",
-  },
-  {
-    icon: BoxIcon,
-    label: "All Parcel",
-    href: "/all-parcel",
+
+   {
+    icon: TruckIcon,
+    label: "Manage Operators",
+    href: "/merchant-management",
   },
 ];
 

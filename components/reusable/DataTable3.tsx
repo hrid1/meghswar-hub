@@ -19,7 +19,7 @@ export default function DataTable3({
         <thead>
           <tr className="bg-orange-500 text-white">
             {/* Select All Checkbox */}
-            <th style={{ width: 60 }} className="px-4 py-3">
+            <th style={{ width: 10 }} className="px-4 py-3">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -49,7 +49,7 @@ export default function DataTable3({
                 className="border-b border-gray-200 hover:bg-gray-50"
               >
                 {/* Row checkbox */}
-                <td className="px-4 py-4">
+                <td className="px-4 py-2">
                   <input
                     type="checkbox"
                     checked={isSelected}
@@ -59,7 +59,7 @@ export default function DataTable3({
 
                 {/* Row data */}
                 {columns.map((col: any) => (
-                  <td key={col.key} className="px-4 py-4 align-">
+                  <td key={col.key} className="p-2 align-">
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
                 ))}

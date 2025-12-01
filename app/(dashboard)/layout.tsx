@@ -1,38 +1,43 @@
-"use client";
-import Header from "@/components/shared/Header";
-import Sidebar from "@/components/shared/Sidebar";
-import { useState } from "react";
+'use client';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+import { Header } from '@/components/shared/Header';
+import { Sidebar } from '@/components/shared/Sidebar';
+import { ReactNode, useState } from 'react';
+
+
+interface DashboardLayoutProps {
+  children: ReactNode;
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header - Full Width */}
-        <div className="">
-          <Header
-            sidebarOpen={sidebarOpen}
-            onMenuClick={() => setSidebarOpen((prev) => !prev)}
-          />
-        </div>
+    <div className="min-h-screen bg-gray-50/50">
+      <Header
+        sidebarOpen={sidebarOpen}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        setSidebarOpen={setSidebarOpen}
+      />
 
-        {/* Sidebar & Main Content */}
-        <div className="flex mt-16">
-          <div className="mt-14">
-            <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          </div>
+      <Sidebar
+        open={sidebarOpen}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-          {/* Main Content Area */}
-          <main className="flex-1 p-8 md:ml-70 transition-all duration-300 border border-red-700">
-            {children}
-          </main>
-        </div>
-      </div>
+      <main 
+        className={`
+          pt-15 px-6 pb-10
+          transition-all duration-300 ease-in-out
+          ${collapsed ? "md:ml-20" : "md:ml-60"}
+        `}
+      >
+        {children}
+      </main>
     </div>
   );
 }

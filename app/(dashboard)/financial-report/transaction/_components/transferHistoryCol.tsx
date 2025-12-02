@@ -20,7 +20,7 @@ export const riderStatusColumns = [
   {
   key: "proof",
   title: "Proof",
-  width: 180,
+  width: 120,
   render: (row: any) => (
     <span className="font-semibold text-orange-500 flex items-center space-x-1 cursor-pointer">
       <FileIcon className="w-4 h-4" />
@@ -33,6 +33,7 @@ export const riderStatusColumns = [
     key: "note",
     title: "Note",
     width: 200,
+    render: (row:any) => (<p className="text-nowrap text-sm text-gray-600">{row.note}</p>)
   },
 
   

@@ -164,7 +164,7 @@ export const parcelColumns1 = (onClickUpdate: any) => [
     width: 200,
     render: (row: any) => (
       <span
-        className={`px-3 py-1 text-xs rounded-full ${
+        className={`px-3 py-1 text-xs rounded-full w-40 ${
           row.status === "Delivered"
             ? "bg-green-100 text-green-600"
             : "bg-red-100 text-red-600"

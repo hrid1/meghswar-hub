@@ -12,7 +12,7 @@ export default function TestTablePage() {
     {
       key: "parcelId",
       title: "Parcel Id",
-      width: 120,
+      width: 60,
       render: (row: any) => (
         <span className="font-semibold">{row.parcelId}</span>
       ),
@@ -32,10 +32,10 @@ export default function TestTablePage() {
     {
       key: "merchant",
       title: "Merchant",
-      width: 180,
+      width: 200,
       render: (row: any) => (
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gray-200 rounded-full" />
+          <div className="w-8 h-8 bg-gray-200 rounded-full shrink-0" />
           <div>
             <p className="font-semibold">{row.merchant}</p>
             <p className="text-xs text-gray-500">{row.merchantInvoice}</p>
@@ -51,7 +51,7 @@ export default function TestTablePage() {
     {
       key: "rider",
       title: "Rider",
-      width: 200,
+      width: 220,
       render: (row: any) => (
         <div className="flex items-center space-x-2">
           <img
@@ -60,7 +60,7 @@ export default function TestTablePage() {
             alt="rider"
           />
           <div>
-            <p className="font-semibold">{row.rider}</p>
+            <p className="font-semibold text-sm text-nowrap">{row.rider}</p>
             <p className="text-xs text-gray-500">{row.riderPhone}</p>
           </div>
         </div>
@@ -69,10 +69,10 @@ export default function TestTablePage() {
     {
       key: "status",
       title: "Status",
-      width: 140,
+      width: 100,
       render: (row: any) => (
         <span
-          className={`px-2 py-1 text-xs rounded-full ${
+          className={`px-2 py-1 text-xs rounded-full text-nowrap ${
             row.status === "In Progress"
               ? "bg-green-100 text-green-600"
               : row.status === "Partial Delivery"
@@ -87,7 +87,7 @@ export default function TestTablePage() {
     {
       key: "amount",
       title: "Amount",
-      width: 100,
+      width: 20,
       render: (row: any) => <span>৳ {row.amount}</span>,
     },
     {

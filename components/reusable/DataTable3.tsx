@@ -59,7 +59,7 @@ export default function DataTable3({
 
                 {/* Row data */}
                 {columns.map((col: any) => (
-                  <td key={col.key} className="p-2 align-">
+                  <td key={col.key} className="pl-2 pr-4 py-4 align-">
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
                 ))}

@@ -127,7 +127,7 @@ export function Sidebar({
               return (
                 <div key={item.href} className="mb-2">
                   {collapsed && (
-                    <div className="absolute left-full top-2 ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-xl transform translate-x-2 group-hover:translate-x-0 transition-transform">
+                    <div className="absolute left-full top-2 ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100  whitespace-nowrap z-50 pointer-events-none shadow-xl transform translate-x-2 group-hover:translate-x-0 transition-transform">
                       {item.label}
                     </div>
                   )}

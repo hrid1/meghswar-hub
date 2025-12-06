@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 
-import { Search, Printer, ChevronDown } from "lucide-react";
+import { Search, Printer, ChevronDown, Copy } from "lucide-react";
 import DataTable3 from "@/components/reusable/DataTable3";
 
 export default function ParcelTable() {
@@ -27,6 +27,7 @@ export default function ParcelTable() {
       weight: 0.5,
       delivery: 125,
       totalWeight: "1K",
+      deliveryArea: "Dhaka, Uttara , Dia bari",
     },
     {
       id: "#139680",
@@ -44,6 +45,7 @@ export default function ParcelTable() {
       weight: 1.2,
       delivery: 150,
       totalWeight: "2K",
+      deliveryArea: "Dhaka, Mirpur , Pallabi",
     },
   ];
 
@@ -86,36 +88,104 @@ export default function ParcelTable() {
 
   /* -------------------------------- Columns -------------------------------- */
   const columns = [
-    { key: "id", title: "Parcel ID", width: "120px" },
-    { key: "merchant", title: "Merchant", width: "180px" },
-    { key: "merchantInvoice", title: "Invoice", width: "140px" },
+    {
+      key: "id",
+      title: "ID",
+      width: "130px",
+      render: (row: any) => (
+        <p className="">
+          <p className="text-nowrap flex items-center">
+            PID:{row.id}{" "}
+            <span>
+              <Copy className="w-3 ml-1" />
+            </span>
+          </p>
+          <p className="text-nowrap flex items-center">
+            MID:{row.merchantInvoice}
+            <span>
+              <Copy className="w-3 ml-1" />
+            </span>
+          </p>
+        </p>
+      ),
+    },
+    {
+      key: "merchant",
+      title: "Merchant",
+      width: "150px",
+      render: (row: any) => <p className="text-nowrap">{row.merchant}</p>,
+    },
+
     {
       key: "additionalNote",
       title: "Additional Note",
-      width: "220px",
-      render: (row: any) => (
-        <span className="text-sm text-gray-600">{row.additionalNote}</span>
-      ),
+      width: "160px",
+      wrap: true,
+      render: (row: any) => {
+        const note = row.additionalNote || "";
+        const shortNote = note.length > 50 ? note.slice(0, 50) + "..." : note;
+
+        return (
+          <div className="relative group">
+            <p className="text-sm text-gray-600 break-words border cursor-help">
+              {shortNote}
+            </p>
+
+            {/* Tooltip */}
+            <div className="absolute z-20 hidden max-w-full rounded bg-orange-400 text-white px-2 py-1 text-xs  group-hover:block -top-1 left-0 ml-2 ">
+              {note}
+            </div>
+          </div>
+        );
+      },
     },
     {
       key: "customer",
-      title: "Customer",
-      width: "160px",
-      render: (row: any) => (
-        <div className="text-sm">
-          <div className="font-semibold">{row.customer}</div>
-          <div className="text-gray-600">{row.phone}</div>
-          <div className="text-gray-500 text-xs mt-1">{row.address}</div>
-        </div>
-      ),
+      title: "Customer Info",
+      width: "200px",
+      wrap: true,
+      render: (row: any) => {
+        const address: string = row.address || "";
+
+        // what you show in the cell
+        const shortAddress =
+          address.length > 30 ? address.slice(0, 30) + "..." : address;
+
+        // what you show in the tooltip
+        const tooltipAddress =
+          address.length > 100 ? address.slice(0, 100) + "..." : address;
+
+        return (
+          <div className="text-sm break-words border">
+            <div className="font-semibold">{row.customer}</div>
+            <div className="text-gray-600">{row.phone}</div>
+
+            {/* Address with custom tooltip */}
+            <div className="relative group mt-1">
+              {/* CELL: sliced manually */}
+              <div className="text-gray-500 text-xs cursor-pointer">
+                {shortAddress}
+              </div>
+
+              {/* TOOLTIP: also sliced manually, single line */}
+              <div className="absolute left-0 bottom-full mt-1 z-20 hidden group-hover:flex">
+                <div className="rounded-md bg-orange-400 px-2 py-1 text-[11px] leading-snug text-white shadow-lg whitespace-nowrap">
+                  {tooltipAddress}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      },
     },
+    { key: "deliveryArea", title: "Delivery Area", width: "120px" },
     {
       key: "amount",
       title: "Amount",
-      width: "140px",
+      width: "120px",
       render: (row: any) => (
-        <div>
-          <div className="text-green-600 font-bold text-lg">
+        <div className="break-words w-30">
+          <div className="text-green-600 font-bold text-lg ">
             ৳{row.collectableAmount.toLocaleString()}
           </div>
           <div className="text-xs text-gray-600 mt-1">
@@ -126,32 +196,39 @@ export default function ParcelTable() {
         </div>
       ),
     },
-    { key: "weight", title: "Weight (kg)", width: "40px" },
+    {
+      key: "weight",
+      title: "Weight",
+      width: "70px",
+      render: (row: any) => (
+        <div className=" w-12 pl-2">{row.weight}</div>
+      ),
+    },
     {
       key: "delivery",
       title: "Delivery",
-      width: "120px",
+      width: "80px",
       render: (row: any) => (
-        <div className="border rounded-md w-20 px-1 py-0.5 font-medium">
-          {row.delivery} <span className="ml-2">tk</span>
+        <div className="rounded-md w-fit px-2 py-1 font-medium">
+          {row.delivery} <span className="ml-[2px]">tk</span>
         </div>
       ),
     },
     {
       key: "action",
       title: "Action",
-      width: "130px",
+      width: "80px",
       render: () => (
-        <button className="bg-orange-100 text-orange-600 px-3 py-2 rounded-lg">
-          <Printer className="w-4 h-4 inline-block  " />{" "}
-          <span className="text-black font-medium text-sm ml-2">Print</span>
+        <button className="bg-orange-100 text-orange-600 px-3 py-2 rounded-md">
+          <Printer className="w-3 h-3 inline-block" />{" "}
+          <span className="text-black font-medium text-sm ">Print</span>
         </button>
       ),
     },
   ];
 
   return (
-    <div className="p-6 space-y-6 container mx-auto">
+    <div className="">
       {/* Page Header */}
       <h1 className="text-2xl font-bold">Receive Parcel</h1>
 

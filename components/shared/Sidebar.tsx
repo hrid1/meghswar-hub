@@ -29,6 +29,12 @@ const menuItems = [
       { label: "Assign Rider", href: "/parcel-management/assign-rider" },
       { label: "Unprocessed", href: "/parcel-management/unprocessed" },
       { label: "Processed", href: "/parcel-management/processed" },
+      { label: "Pickup Request", href: "/parcel-management/pickup-request" },
+      { label: "Hub Transfer", href: "/parcel-management/hub-transfer" },
+      { label: "Hub Receive", href: "/parcel-management/hub-receive" },
+      { label: "Third Party", href: "/parcel-management/third-party" },
+      { label: "Parcel Report", href: "/parcel-management/parcel-reports" },
+      { label: "Parcel History", href: "/parcel-management/parcel-history" },
     ],
   },
   {
@@ -37,7 +43,11 @@ const menuItems = [
     href: "/rider-management",
     children: [
       { label: "Rider List", href: "/rider-management/rider-list" },
+      { label: "Rider Status", href: "/rider-management/rider-status" },
+      { label: "Rider Transfer", href: "/rider-management/rider-transfer" },
+      { label: "Create Rider", href: "/rider-management/create-rider" },
       { label: "Performance", href: "/rider-management/performance" },
+      { label: "Verify OTP", href: "/rider-management/verify-otp" },
     ],
   },
   {
@@ -51,9 +61,15 @@ const menuItems = [
     href: "/financial-report",
     children: [
       { label: "Transactions", href: "/financial-report/transaction" },
-      { label: "COD Management", href: "/financial-report/cod-management" },
+      { label: "COD Management", href: "/financial-report/cod-manangement" },
     ],
   },
+  {
+    icon: MapPin,
+    label: "Manage Operator",
+    href: "/manage-operators",
+
+  }
 ];
 
 interface SidebarProps {
@@ -106,18 +122,18 @@ export function Sidebar({
           transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)
           ${open ? "translate-x-0" : "-translate-x-full"} 
           md:translate-x-0 md:top-16 md:h-[calc(100vh-4rem)]
-          ${collapsed ? "md:w-20" : "md:w-64"}
+          ${collapsed ? "md:w-20" : "md:w-60"}
         `}
       >
         <div className="h-full flex flex-col justify-between">
-          <div className="flex-1 overflow-y-auto sidebar-scroll py-6 px-3 space-y-1">
+          <div className="flex-1 overflow-y-auto sidebar-scroll py-5 px-1 space-y-1">
             {menuItems.map((item) => {
               const isExpanded = expandedItems.includes(item.href);
               const hasActiveChild = isChildActive(item.children);
               const active = isActive(item.href);
               
               const itemClasses = `
-                relative flex items-center w-full p-3 rounded-xl transition-all duration-200 group
+                relative flex items-center w-full p-2 py-3 rounded-xl transition-all duration-200 group
                 ${collapsed ? 'justify-center' : 'justify-between'}
                 ${active || hasActiveChild 
                   ? 'bg-orange-50 text-orange-600' 
@@ -127,7 +143,7 @@ export function Sidebar({
               return (
                 <div key={item.href} className="mb-2">
                   {collapsed && (
-                    <div className="absolute left-full top-2 ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100  whitespace-nowrap z-50 pointer-events-none shadow-xl transform translate-x-2 group-hover:translate-x-0 transition-transform">
+                    <div className="absolute  left-full top-2 ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100  whitespace-nowrap z-50 pointer-events-none shadow-xl transform translate-x-2 group-hover:translate-x-0 transition-transform">
                       {item.label}
                     </div>
                   )}
@@ -137,7 +153,7 @@ export function Sidebar({
                       <div className={`flex items-center ${collapsed ? 'justify-center w-full' : 'gap-3'}`}>
                          <item.icon className={`
                            ${collapsed ? "w-6 h-6" : "w-5 h-5"} 
-                           shrink-0 transition-colors
+                           shrink-0 transition-colors 
                            ${hasActiveChild ? "text-orange-600" : "text-gray-400 group-hover:text-gray-600"}
                          `} />
                          
@@ -177,7 +193,7 @@ export function Sidebar({
                             key={child.href}
                             href={child.href}
                             className={`
-                              block px-3 py-2 text-sm rounded-lg transition-colors truncate
+                              block px-3 py-2 text-sm rounded-lg transition-colors border truncate
                               ${isActive(child.href) 
                                 ? "text-orange-600 bg-orange-50 font-medium" 
                                 : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"}

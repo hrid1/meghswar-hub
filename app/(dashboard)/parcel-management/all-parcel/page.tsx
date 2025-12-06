@@ -167,7 +167,7 @@ export default function TestTablePage() {
   };
 
   return (
-    <div className="p-6 space-y-6 container mx-auto ">
+    <div className="">
       {/* Page Header */}
       <h1 className="text-2xl font-bold">All Parcel</h1>
 

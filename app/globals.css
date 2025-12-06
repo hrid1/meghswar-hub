@@ -158,3 +158,6 @@ body {
     @apply font-bold text-[26px];
   }
 }
+
+/* body { font-family: var(--font-geist-sans); } */
+/* code { font-family: var(--font-geist-mono); } */

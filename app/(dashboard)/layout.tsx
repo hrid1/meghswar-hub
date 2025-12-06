@@ -30,9 +30,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       />
 
       <main 
-        className={`
-          pt-15 px-6 pb-10
-          transition-all duration-300 ease-in-out
+        className={` contai ner mx-auto
+          pt-20 px-2 xl:px-6
+          transition-all duration-300 ease-in-out 
           ${collapsed ? "md:ml-20" : "md:ml-60"}
         `}
       >

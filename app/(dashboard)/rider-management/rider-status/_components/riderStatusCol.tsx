@@ -4,14 +4,14 @@ import { Edit, Eye, Trash2 } from "lucide-react";
 export const riderStatusColumns = [
   {
     key: "riderId",
-    title: "Rider Id",
-    width: 120,
+    header: "Rider Id",
+    width: "15%",
     render: (row: any) => <span className="font-semibold">{row.riderId}</span>,
   },
   {
     key: "rider",
-    title: "Rider",
-    width: 200,
+    header: "Rider",
+    width: "25%",
     render: (row: any) => (
       <div className="flex items-center space-x-2">
         <img src={row.riderImg} className="w-8 h-8 rounded-full" alt="rider" />
@@ -24,19 +24,19 @@ export const riderStatusColumns = [
   },
   {
     key: "status",
-    title: "Status",
-    width: 120,
+    header: "Status",
+    width: "15%",
   },
   {
     key: " licenseNo",
-    title: "License No.",
-    width: 120,
+    header: "License No.",
+    width: "15%",
   },
 
   {
     key: "riderPerformance",
-    title: "Rider's Performance",
-    width: 140,
+    header: "Rider's Performance",
+    width: "30%",
     render: (row: any) => <span>৳ {row.riderPerformance}</span>,
   },
 ];

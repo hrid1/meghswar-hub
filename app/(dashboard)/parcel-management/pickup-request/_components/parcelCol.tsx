@@ -4,22 +4,22 @@
 export const parcelColumns = (onClickUpdate: any) => [
   {
     key: "reqId",
-    title: "Request Id",
-    width: 120,
+    header: "Request Id",
+    width: "15%",
     render: (row: any) => <span className="font-semibold">{row.parcelid}</span>,
   },
 
   {
     key: "pickup-location",
-    title: "Pickup Location",
-    width: 220,
+    header: "Pickup Location",
+    width: "25%",
     render: (row: any) => <p>{row.additionalNote}</p>,
   },
 
   {
     key: "merchant",
-    title: "Merchant",
-    width: 180,
+    header: "Merchant",
+    width: "20%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.merchant.name}</div>
@@ -30,8 +30,8 @@ export const parcelColumns = (onClickUpdate: any) => [
 
   {
     key: "comments",
-    title: "Comment",
-    width: 240,
+    header: "Comment",
+    width: "25%",
     render: (row: any) => (
       <span className="text-sm text-gray-600">{row.area}</span>
     ),
@@ -39,8 +39,8 @@ export const parcelColumns = (onClickUpdate: any) => [
 
   {
     key: "parcel-quantity",
-    title: "Parcel Quantity",
-    width: 100,
+    header: "Parcel Quantity",
+    width: "15%",
     render: (row: any) => (
       <span className="font-semibold text-gray-900">{row.amount}</span>
     ),
@@ -49,22 +49,22 @@ export const parcelColumns = (onClickUpdate: any) => [
 export const parcelColumns1 = (onClickUpdate: any) => [
   {
     key: "reqId",
-    title: "Request Id",
-    width: 120,
+    header: "Request Id",
+    width: "13%",
     render: (row: any) => <span className="font-semibold">{row.parcelid}</span>,
   },
 
   {
     key: "pickup-location",
-    title: "Pickup Location",
-    width: 220,
+    header: "Pickup Location",
+    width: "22%",
     render: (row: any) => <p>{row.additionalNote}</p>,
   },
 
   {
     key: "merchant",
-    title: "Merchant",
-    width: 180,
+    header: "Merchant",
+    width: "18%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.merchant.name}</div>
@@ -75,8 +75,8 @@ export const parcelColumns1 = (onClickUpdate: any) => [
 
   {
     key: "comments",
-    title: "Comment",
-    width: 240,
+    header: "Comment",
+    width: "22%",
     render: (row: any) => (
       <span className="text-sm text-gray-600">{row.area}</span>
     ),
@@ -84,16 +84,16 @@ export const parcelColumns1 = (onClickUpdate: any) => [
 
   {
     key: "parcel-quantity",
-    title: "Parcel Quantity",
-    width: 100,
+    header: "Parcel Quantity",
+    width: "13%",
     render: (row: any) => (
       <span className="font-semibold text-gray-900">{row.amount}</span>
     ),
   },
   {
     key: "rider",
-    title: "Rider Info",
-    width: 180,
+    header: "Rider Info",
+    width: "12%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.rider?.name}</div>

@@ -6,45 +6,81 @@ import { Phone } from "lucide-react";
 export const parcelColumns = (onClickUpdate: any) => [
   {
     key: "id",
-    title: "Parcel Id",
-    width: 120,
+    header: "Parcel Id",
+    width: "10%",
     render: (row: any) => <span className="font-semibold">{row.id}</span>,
   },
   {
     key: "customerInfo",
-    title: "Customer",
-    width: 200,
-    render: (row: any) => (
-      <div className="flex flex-col">
-        <span className="font-semibold">{row.customerInfo.name}</span>
-        <span className="text-sm text-gray-500">{row.customerInfo.phone}</span>
-        <span className="text-xs text-gray-400">
-          {row.customerInfo.address}
-        </span>
-      </div>
-    ),
+    header: "Customer",
+    width: "20%",
+    wrap: true,
+    render: (row: any) => {
+      const address = row.customerInfo.address || "";
+      const needsTruncation = address.length > 50; // Approximate 2 lines
+      
+      return (
+        <div className="flex flex-col">
+          <span className="font-semibold">{row.customerInfo.name}</span>
+          <span className="text-sm text-gray-500">{row.customerInfo.phone}</span>
+          <div className="relative group">
+            <span className="text-xs text-gray-400 line-clamp-2">
+              {address}
+            </span>
+            {needsTruncation && (
+              <div className="absolute left-0 bottom-full mb-2 z-50 top hidden group-hover:block">
+                <div className="bg-gray-800 text-white text-xs rounded-md px-3 py-2 shadow-lg max-w-xs whitespace-normal">
+                  {address}
+                  {/* Tail */}
+                  <div className="w-3 h-3 bg-gray-800 rotate-45 absolute left-4 -bottom-1.5"></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    },
   },
 
   {
     key: "note",
-    title: "Additional Note",
-    width: 240,
-    render: (row: any) => (
-      <span className="text-sm text-gray-600">{row.note}</span>
-    ),
+    header: "Additional Note",
+    width: "18%",
+    wrap: true,
+    render: (row: any) => {
+      const note = row.note || "";
+      const needsTruncation = note.length > 60; // Approximate 2 lines
+      
+      return (
+        <div className="relative group">
+          <span className="text-sm text-gray-600 line-clamp-2">
+            {note}
+          </span>
+          {needsTruncation && (
+            <div className="absolute left-0  -bottom-4 mb-2 z-50 hidden group-hover:block">
+              <div className="bg-gray-800 text-white text-xs rounded-md px-3 py-2 shadow-lg max-w-xs whitespace-normal">
+                {note}
+                {/* Tail */}
+                <div className="w-3 h-3 bg-gray-800 rotate-45 absolute left-4  right-4"></div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    },
   },
 
   {
     key: "area",
-    title: "Area",
-    width: 100,
+    header: "Area",
+    width: "8%",
     render: (row: any) => <span>{row.area}</span>,
   },
 
   {
     key: "merchant",
-    title: "Merchant",
-    width: 180,
+    header: "Merchant",
+    width: "15%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.merchant.name}</div>
@@ -56,8 +92,8 @@ export const parcelColumns = (onClickUpdate: any) => [
 
   {
     key: "amount",
-    title: "Amount",
-    width: 180,
+    header: "Amount",
+    width: "10%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.amount}</div>
@@ -67,8 +103,8 @@ export const parcelColumns = (onClickUpdate: any) => [
 
   {
     key: "status",
-    title: "Status",
-    width: 200,
+    header: "Status",
+    width: "12%",
     render: (row: any) => (
       <span
         className={`px-3 py-1 text-xs rounded-full ${
@@ -84,13 +120,13 @@ export const parcelColumns = (onClickUpdate: any) => [
 
   {
     key: "Attempt",
-    title: "attempt",
-    width: 140,
+    header: "attempt",
+    width: "9%",
   },
   {
     key: "age",
-    title: "Age",
-    width: 140,
+    header: "Age",
+    width: "10%",
   },
 ];
 
@@ -99,45 +135,81 @@ export const parcelColumns = (onClickUpdate: any) => [
 export const parcelColumns1 = (onClickUpdate: any) => [
   {
     key: "id",
-    title: "Parcel Id",
-    width: 120,
+    header: "Parcel Id",
+    width: "10%",
     render: (row: any) => <span className="font-semibold">{row.id}</span>,
   },
   {
     key: "customerInfo",
-    title: "Customer",
-    width: 200,
-    render: (row: any) => (
-      <div className="flex flex-col">
-        <span className="font-semibold">{row.customerInfo.name}</span>
-        <span className="text-sm text-gray-500">{row.customerInfo.phone}</span>
-        <span className="text-xs text-gray-400">
-          {row.customerInfo.address}
-        </span>
-      </div>
-    ),
+    header: "Customer",
+    width: "18%",
+    wrap: true,
+    render: (row: any) => {
+      const address = row.customerInfo.address || "";
+      const needsTruncation = address.length > 60; // Approximate 2 lines
+      
+      return (
+        <div className="flex flex-col">
+          <span className="font-semibold">{row.customerInfo.name}</span>
+          <span className="text-sm text-gray-500">{row.customerInfo.phone}</span>
+          <div className="relative group">
+            <span className="text-xs text-gray-400 line-clamp-2">
+              {address}
+            </span>
+            {needsTruncation && (
+              <div className="absolute left-0 bottom-full mb-2 z-50 hidden group-hover:block">
+                <div className="bg-gray-800 text-white text-xs rounded-md px-3 py-2 shadow-lg max-w-xs whitespace-normal">
+                  {address}
+                  {/* Tail */}
+                  <div className="w-3 h-3 bg-gray-800 rotate-45 absolute left-4 -bottom-1.5"></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    },
   },
 
   {
     key: "note",
-    title: "Additional Note",
-    width: 240,
-    render: (row: any) => (
-      <span className="text-sm text-gray-600">{row.note}</span>
-    ),
+    header: "Additional Note",
+    width: "18%",
+    wrap: true,
+    render: (row: any) => {
+      const note = row.note || "";
+      const needsTruncation = note.length > 60; // Approximate 2 lines
+      
+      return (
+        <div className="relative group">
+          <span className="text-sm text-gray-600 line-clamp-2">
+            {note}
+          </span>
+          {needsTruncation && (
+            <div className="absolute left-0 bottom-full mb-2 z-50 hidden group-hover:block">
+              <div className="bg-gray-800 text-white text-xs rounded-md px-3 py-2 shadow-lg max-w-xs whitespace-normal">
+                {note}
+                {/* Tail */}
+                <div className="w-3 h-3 bg-gray-800 rotate-45 absolute left-4 -bottom-1.5"></div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    },
   },
 
   {
     key: "assignHub",
-    title: "Assign Hub",
-    width: 100,
+    header: "Assign Hub",
+    width: "8%",
     render: (row: any) => <span>{row.assignHub}</span>,
   },
 
   {
     key: "merchant",
-    title: "Merchant",
-    width: 180,
+    header: "Merchant",
+    width: "15%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.merchant.name}</div>
@@ -149,8 +221,8 @@ export const parcelColumns1 = (onClickUpdate: any) => [
 
   {
     key: "amount",
-    title: "Amount",
-    width: 180,
+    header: "Amount",
+    width: "10%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.amount}</div>
@@ -160,8 +232,8 @@ export const parcelColumns1 = (onClickUpdate: any) => [
 
   {
     key: "status",
-    title: "Status",
-    width: 200,
+    header: "Status",
+    width: "12%",
     render: (row: any) => (
       <span
         className={`px-3 py-1 text-xs rounded-full w-40 ${
@@ -177,12 +249,12 @@ export const parcelColumns1 = (onClickUpdate: any) => [
 
   {
     key: "Attempt",
-    title: "attempt",
-    width: 140,
+    header: "attempt",
+    width: "9%",
   },
   {
     key: "age",
-    title: "Age",
-    width: 140,
+    header: "Age",
+    width: "10%",
   },
 ];

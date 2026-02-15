@@ -3,24 +3,24 @@ import { FileIcon } from "lucide-react";
 export const riderStatusColumns = [
   {
     key: "date",
-    title: "Date",
-    width: 120,
+    header: "Date",
+    width: "15%",
     render: (row: any) => <span className="font-semibold">{row.date}</span>,
   },
   {
     key: "bank",
-    title: "Bank",
-    width: 120,
+    header: "Bank",
+    width: "15%",
   },
   {
     key: "amount",
-    title: "Amount",
-    width: 120,
+    header: "Amount",
+    width: "15%",
   },
   {
   key: "proof",
-  title: "Proof",
-  width: 120,
+  header: "Proof",
+  width: "15%",
   render: (row: any) => (
     <span className="font-semibold text-orange-500 flex items-center space-x-1 cursor-pointer">
       <FileIcon className="w-4 h-4" />
@@ -31,16 +31,16 @@ export const riderStatusColumns = [
 
   {
     key: "note",
-    title: "Note",
-    width: 200,
+    header: "Note",
+    width: "25%",
     render: (row:any) => (<p className="text-nowrap text-sm text-gray-600">{row.note}</p>)
   },
 
   
   {
     key: "successRate",
-    title: "Success Rate",
-    width: 140,
+    header: "Success Rate",
+    width: "15%",
     render: (row: any) => (
       <span className="text-green-500 font-medium px-2 py-1 rounded-2xl"> {row.successRate}</span>
     ),

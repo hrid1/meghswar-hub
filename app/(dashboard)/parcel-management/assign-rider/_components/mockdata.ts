@@ -10,6 +10,7 @@ export type Parcel = {
   };
   additionalNote: string;
   merchant: {
+    mid?: string;
     name: string;
     phone: string | number;
   };
@@ -28,6 +29,7 @@ export const mockParcels: Parcel[] = [
     },
     additionalNote: "Handle with care",
     merchant: {
+      mid: "MRC-1001",
       name: "Booklet Design BD",
       phone: "+8801677889900",
     },
@@ -45,6 +47,7 @@ export const mockParcels: Parcel[] = [
     },
     additionalNote: "Leave at gate",
     merchant: {
+      mid: "MRC-1002",
       name: "TechZone BD",
       phone: "+8801311223344",
     },
@@ -62,6 +65,7 @@ export const mockParcels: Parcel[] = [
     },
     additionalNote: "Call before delivery",
     merchant: {
+      mid: "MRC-1003",
       name: "Fashion Hub BD",
       phone: "+8801555332211",
     },

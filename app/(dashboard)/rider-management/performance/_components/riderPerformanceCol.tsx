@@ -1,14 +1,14 @@
 export const riderStatusColumns = [
   {
     key: "date",
-    title: "Date",
-    width: 120,
+    header: "Date",
+    width: "12%",
     render: (row: any) => <span className="font-semibold">{row.date}</span>,
   },
   {
     key: "rider",
-    title: "Rider",
-    width: 200,
+    header: "Rider",
+    width: "20%",
     render: (row: any) => (
       <div className="flex items-center space-x-2">
         <img src={row.riderImg} className="w-8 h-8 rounded-full" alt="rider" />
@@ -21,35 +21,35 @@ export const riderStatusColumns = [
   },
   {
     key: "delivered",
-    title: "Deliverd",
-    width: 120,
+    header: "Deliverd",
+    width: "10%",
   },
   {
     key: "rescheduled",
-    title: "Rescheduled",
-    width: 120,
+    header: "Rescheduled",
+    width: "10%",
   },
   {
     key: "return",
-    title: "Return",
-    width: 120,
+    header: "Return",
+    width: "10%",
   },
   {
     key: "assigned",
-    title: "Assigned",
-    width: 120,
+    header: "Assigned",
+    width: "10%",
   },
 
   {
     key: "comission",
-    title: "Comission",
-    width: 140,
+    header: "Comission",
+    width: "12%",
     render: (row: any) => <span> {row.comission}</span>,
   },
   {
     key: "successRate",
-    title: "Success Rate",
-    width: 140,
+    header: "Success Rate",
+    width: "16%",
     render: (row: any) => <span className="text-green-500 font-medium"> {row.successRate}</span>,
   },
 ];

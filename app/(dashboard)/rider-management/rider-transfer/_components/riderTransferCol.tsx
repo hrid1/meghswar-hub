@@ -1,18 +1,17 @@
 import { Eye } from "lucide-react";
 import Link from "next/link";
-import { title } from "process";
 
 export const riderTransferColumns = [
   {
     key: "riderId",
-    title: "Rider Id",
-    width: 120,
+    header: "Rider Id",
+    width: "15%",
     render: (row: any) => <span className="font-semibold">{row.riderId}</span>,
   },
   {
     key: "rider",
-    title: "Rider",
-    width: 200,
+    header: "Rider",
+    width: "25%",
     render: (row: any) => (
       <div className="flex items-center space-x-2">
         <img src={row.riderImg} className="w-8 h-8 rounded-full" alt="rider" />
@@ -25,23 +24,23 @@ export const riderTransferColumns = [
   },
   {
     key: "status",
-    title: "Status",
-    width: 120,
+    header: "Status",
+    width: "15%",
   },
   {
     key: "licenseNo",
-    title: "License No.",
-    width: 120,
+    header: "License No.",
+    width: "15%",
   },
   {
     key: "totalParcel",
-    title: "Total Parcel",
-    width: 120,
+    header: "Total Parcel",
+    width: "15%",
   },
   {
     key: "actions",
-    title: "Actions",
-    width: 100,
+    header: "Actions",
+    width: "15%",
     render: (row: any) => (
       <Link href={`/rider-management/rider-transfer/${row.riderId}`}>
         <Eye />

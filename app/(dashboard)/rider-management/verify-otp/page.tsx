@@ -1,12 +1,16 @@
 "use client";
 
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 import { fakeParcelData } from "./_components/fakeData";
 import { riderTableColumns } from "./_components/RiderCol";
+import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
 
 export default function ParcelReportTable() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+
+
 
   // filtering
   const filteredParcels = fakeParcelData.filter((p) => {
@@ -20,8 +24,8 @@ export default function ParcelReportTable() {
   });
 
   const handleAction = (type: string, riderId: string) => {
-    if (type === "approve") alert("approve done"+ riderId);
-    if (type === "decline") alert("Decline Done"+ riderId);
+    if (type === "approve") alert("approve done" + riderId);
+    if (type === "decline") alert("Decline Done" + riderId);
   };
 
   return (
@@ -38,12 +42,22 @@ export default function ParcelReportTable() {
       </div>
 
       {/* TABLE */}
-      <DataTable3
+      <DataTable
         columns={riderTableColumns(handleAction)}
         data={filteredParcels}
-        selectedRows={[]}
-        onSelectRow={() => {}}
-        onSelectAll={() => {}}
+        selectable={true}
+        getRowId={(row) => row.parcelId}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={(rowId) => {
+          setSelectedRowIds((prev) =>
+            prev.includes(rowId)
+              ? prev.filter((id) => id !== rowId)
+              : [...prev, rowId],
+          );
+        }}
+        onToggleAll={(nextSelected) => {
+          setSelectedRowIds(nextSelected);
+        }}
       />
     </div>
   );

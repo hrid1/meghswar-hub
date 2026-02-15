@@ -1,6 +1,6 @@
 "use client";
 
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 import { parcelColumns } from "./_component/parcelCol";
 import { mockParcels } from "./_component/mockdata";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 export default function ParcelReportTable() {
   // table selections
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
 
   // modal
   const [openModal, setOpenModal] = useState(false);
@@ -24,18 +24,16 @@ export default function ParcelReportTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
-  // select a single row
-  const handleSelectRow = (index: number) => {
-    setSelectedRows((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+  // toggle a single row by ID
+  const handleToggleRow = (rowId: string | number, row: any) => {
+    setSelectedRowIds((prev) =>
+      prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
     );
   };
-
-  // select all rows
-  const handleSelectAll = () => {
-    selectedRows.length === filteredParcels.length
-      ? setSelectedRows([])
-      : setSelectedRows(filteredParcels.map((_, i) => i));
+  
+  // toggle all rows
+  const handleToggleAll = (nextSelected: (string | number)[], rows: any[]) => {
+    setSelectedRowIds(nextSelected);
   };
 
   // 🔍 SEARCH + FILTER
@@ -63,8 +61,8 @@ export default function ParcelReportTable() {
     if (selectedParcel) {
       parcelIds = [selectedParcel.id];
     } else {
-      // bulk update by selected indexes
-      parcelIds = selectedRows.map((i) => filteredParcels[i].id);
+      // bulk update by selected IDs
+      parcelIds = selectedRowIds;
     }
 
     try {
@@ -118,10 +116,10 @@ export default function ParcelReportTable() {
 
         {/* 🔥 BULK UPDATE BUTTON */}
         <Button
-          disabled={selectedRows.length === 0}
+          disabled={selectedRowIds.length === 0}
           className="bg-red-600/80 text-white"
           onClick={() => {
-            if (selectedRows.length === 0) {
+            if (selectedRowIds.length === 0) {
               alert("Please select at least one parcel.");
               return;
             }
@@ -134,15 +132,17 @@ export default function ParcelReportTable() {
       </div>
 
       {/* TABLE */}
-      <DataTable3
+      <DataTable
         columns={parcelColumns((row: any) => {
           setSelectedParcel(row); // single mode
           setOpenModal(true);
         })}
         data={filteredParcels}
-        selectedRows={selectedRows}
-        onSelectRow={handleSelectRow}
-        onSelectAll={handleSelectAll}
+        selectable={true}
+        getRowId={(row) => row.id}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={handleToggleRow}
+        onToggleAll={handleToggleAll}
       />
 
       {/* MODAL */}

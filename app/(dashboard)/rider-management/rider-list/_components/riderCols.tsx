@@ -5,14 +5,14 @@ import Link from "next/link";
 export const Ridercolumns = (onAction?: (type: string, row: any) => void) => [
   {
     key: "riderId",
-    title: "Rider Idd",
-    width: 120,
+    header: "Rider Idd",
+    width: "10%",
     render: (row: any) => <span className="font-semibold ">{row.riderId}</span>,
   },
   {
     key: "rider",
-    title: "Rider",
-    width: 200,
+    header: "Rider",
+    width: "17%",
     render: (row: any) => (
       <div className="flex items-center space-x-2 w-40 py-2">
         <img src={row.riderImg} className="w-8 h-8 rounded-full" alt="rider" />
@@ -25,45 +25,45 @@ export const Ridercolumns = (onAction?: (type: string, row: any) => void) => [
   },
   {
     key: "vehicleType",
-    title: "Vehicle Type",
-    width: 140,
+    header: "Vehicle Type",
+    width: "12%",
     render: (row: any) => <div className="ml-2">{row.vehicleType}</div>,
   },
   {
     key: "licenseNo",
-    title: "License No.",
-    width: 120,
+    header: "License No.",
+    width: "10%",
     render: (row: any) => <div className="ml-2">{row.licenseNo}</div>,
   },
-  { key: "nid", title: "NID", width: 160 },
+  { key: "nid", header: "NID", width: "13%" },
   {
     key: "deliveryCompleted",
-    title: "Delivery Completed",
-    width: 120,
+    header: "Delivery Completed",
+    width: "10%",
     render: (row: any) => (
       <div className="text-center">{row.deliveryCompleted}</div>
     ),
   },
   {
     key: "deliveryReturn",
-    title: "Delivery Return",
-    width: 120,
+    header: "Delivery Return",
+    width: "10%",
     render: (row: any) => (
       <div className="text-center">{row.deliveryReturn}</div>
     ),
   },
   {
     key: "totalCash",
-    title: "Total Cash Collected",
-    width: 140,
+    header: "Total Cash Collected",
+    width: "12%",
     render: (row: any) => <p className="text-center">৳ {row.totalCash}</p>,
   },
 
   // -------------------- ACTION COLUMN --------------------
   {
     key: "action",
-    title: "Action",
-    width: 100,
+    header: "Action",
+    width: "6%",
     render: (row: any) => (
       <div className="flex gap-2 items-center justify-center">
         <Link href={`rider-list/${row.riderId}`}>

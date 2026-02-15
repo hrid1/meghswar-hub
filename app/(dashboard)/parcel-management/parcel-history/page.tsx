@@ -2,38 +2,29 @@
 
 import React, { useState } from "react";
 import { mockParcelsHistory } from "./_components/mockData";
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
 import { parcelHistoryColumns } from "./_components/columns";
 
 
 export default function ParcelHistoryTable() {
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
-
-  const handleSelectRow = (index: number) => {
-    if (selectedRows.includes(index)) {
-      setSelectedRows(selectedRows.filter((i) => i !== index));
-    } else {
-      setSelectedRows([...selectedRows, index]);
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedRows.length === mockParcelsHistory.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(mockParcelsHistory.map((_, i) => i));
-    }
-  };
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
 
   return (
     <div className="p-6">
-      <DataTable3
+      <DataTable
         columns={parcelHistoryColumns}
         data={mockParcelsHistory}
-        selectedRows={selectedRows}
-        onSelectRow={handleSelectRow}
-        onSelectAll={handleSelectAll}
-        rowKey="id"
+        selectable={true}
+        getRowId={(row) => row.id}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={(rowId) => {
+          setSelectedRowIds((prev) =>
+            prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
+          );
+        }}
+        onToggleAll={(nextSelected) => {
+          setSelectedRowIds(nextSelected);
+        }}
       />
     </div>
   );

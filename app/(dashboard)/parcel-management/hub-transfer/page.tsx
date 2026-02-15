@@ -26,7 +26,7 @@ const myTabs = [
 
 export default function page() {
   return (
-    <div>
+    <div className="container mx-auto">
       <h1 className="text-2xl font-bold">Hub Transfer</h1>
       <CustomTabs tabs={myTabs} defaultValue="all-parcel-list"></CustomTabs>
     </div>

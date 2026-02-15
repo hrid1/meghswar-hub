@@ -6,14 +6,14 @@ import { Key, Phone } from "lucide-react";
 export const parcelColumns = (onClickUpdate: any) => [
   {
     key: "parcelid",
-    title: "Parcel Id",
-    width: 120,
+    header: "Parcel Id",
+    width: "10%",
     render: (row: any) => <span className="font-semibold">{row.parcelid}</span>,
   },
   {
     key: "customerInfo",
-    title: "Customer",
-    width: 200,
+    header: "Customer",
+    width: "18%",
     render: (row: any) => (
       <div className="flex flex-col">
         <span className="font-semibold">{row.customerInfo.name}</span>
@@ -27,15 +27,15 @@ export const parcelColumns = (onClickUpdate: any) => [
 
   {
     key: "additionalNote",
-    title: "Additional Note",
-    width: 220,
+    header: "Additional Note",
+    width: "18%",
     render: (row: any) => <p>{row.additionalNote}</p>,
   },
 
   {
     key: "merchant",
-    title: "Merchant",
-    width: 180,
+    header: "Merchant",
+    width: "15%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.merchant.name}</div>
@@ -47,24 +47,24 @@ export const parcelColumns = (onClickUpdate: any) => [
 
   {
     key: "area",
-    title: "Area",
-    width: 240,
+    header: "Area",
+    width: "20%",
     render: (row: any) => (
       <span className="text-sm text-gray-600">{row.area}</span>
     ),
   },
   {
     key: "amount",
-    title: "Amount",
-    width: 100,
+    header: "Amount",
+    width: "10%",
     render: (row: any) => (
       <span className="text-sm text-gray-600">{row.amount}</span>
     ),
   },
   {
     key: "age",
-    title: "Age",
-    width: 180,
+    header: "Age",
+    width: "9%",
     render: (row: any) => (
       <span className="text-sm text-gray-600">{row.age}</span>
     ),

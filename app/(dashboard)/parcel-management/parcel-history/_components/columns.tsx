@@ -5,8 +5,8 @@ export const parcelHistoryColumns = [
   },
   {
     key: "customerInfo",
-    title: "Customer",
-    width: 260,
+    header: "Customer",
+    width: "20%",
     render: (row: any) => (
       <div className="flex flex-col">
         <span className="font-semibold">{row.customerInfo.name}</span>
@@ -18,8 +18,8 @@ export const parcelHistoryColumns = [
 
   {
     key: "merchant",
-    title: "Merchant",
-    width: 180,
+    header: "Merchant",
+    width: "14%",
     render: (row: any) => (
       <div className="flex flex-col">
         <span className="font-semibold">{row.merchant}</span>
@@ -30,8 +30,8 @@ export const parcelHistoryColumns = [
 
   {
     key: "rider",
-    title: "Rider",
-    width: 120,
+    header: "Rider",
+    width: "10%",
     render: (row: any) => (
       <div className="flex flex-col">
         <span className="font-semibold">{row.rider.name}</span>
@@ -42,8 +42,8 @@ export const parcelHistoryColumns = [
 
   {
     key: "status",
-    title: "Status",
-    width: 160,
+    header: "Status",
+    width: "12%",
     render: (row: any) => (
       <span
         className={`px-3 py-1 text-xs rounded-full ${
@@ -61,21 +61,21 @@ export const parcelHistoryColumns = [
 
   {
     key: "amount",
-    title: "Amount",
-    width: 100,
+    header: "Amount",
+    width: "8%",
     render: (row: any) => <span className="font-semibold">৳ {row.amount}</span>,
   },
 
   {
     key: "age",
-    title: "Age",
-    width: 80,
+    header: "Age",
+    width: "6%",
   },
 
   {
     key: "deliveryCharge",
-    title: "Charges",
-    width: 140,
+    header: "Charges",
+    width: "12%",
     render: (row: any) => (
       <div className="text-xs text-gray-600 leading-4">
         <p>Delivery Charge: {row.deliveryCharge}</p>
@@ -87,8 +87,8 @@ export const parcelHistoryColumns = [
 
   {
     key: "createdAt",
-    title: "Timeline",
-    width: 180,
+    header: "Timeline",
+    width: "18%",
     render: (row: any) => (
       <div className="text-xs text-gray-500">
         <p>Created: {row.createdAt}</p>

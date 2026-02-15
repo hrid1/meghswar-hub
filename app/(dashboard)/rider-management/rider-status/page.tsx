@@ -1,6 +1,6 @@
 "use client";
 
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 import { riderStatusColumns } from "./_components/riderStatusCol";
 
@@ -37,6 +37,7 @@ const fakeRiderData = [
 
 export default function ParcelReportTable() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
 
   // filtering
   const filteredParcels = fakeRiderData.filter((p) => {
@@ -64,12 +65,20 @@ export default function ParcelReportTable() {
       </div>
 
       {/* TABLE */}
-      <DataTable3
+      <DataTable
         columns={riderStatusColumns}
         data={filteredParcels}
-        selectedRows={[]}
-        onSelectRow={() => {}}
-        onSelectAll={() => {}}
+        selectable={true}
+        getRowId={(row) => row.riderId}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={(rowId) => {
+          setSelectedRowIds((prev) =>
+            prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
+          );
+        }}
+        onToggleAll={(nextSelected) => {
+          setSelectedRowIds(nextSelected);
+        }}
       />
     </div>
   );

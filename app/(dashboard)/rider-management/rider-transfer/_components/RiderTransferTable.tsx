@@ -1,8 +1,9 @@
 "use client";
 
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 import { riderTransferColumns } from "./riderTransferCol";
+import CustomPagination from "@/components/reusable/CustomPagination";
 
 export const riderTransferData = [
   {
@@ -36,9 +37,11 @@ export const riderTransferData = [
   },
 ];
 
-
 export default function RiderTransferTable() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   // filtering
   const filteredParcels = riderTransferData.filter((p) => {
@@ -51,6 +54,12 @@ export default function RiderTransferTable() {
     );
   });
 
+  // pagination
+  const totalPages = Math.ceil(filteredParcels.length / limit);
+  const paginatedData = filteredParcels.slice(
+    (page - 1) * limit,
+    page * limit
+  );
 
   return (
     <div className="p-6">
@@ -66,12 +75,34 @@ export default function RiderTransferTable() {
       </div>
 
       {/* TABLE */}
-      <DataTable3
+      <DataTable
         columns={riderTransferColumns}
-        data={filteredParcels}
-        selectedRows={[]}
-        onSelectRow={() => {}}
-        onSelectAll={() => {}}
+        data={paginatedData}
+        selectable={true}
+        getRowId={(row) => row.riderId}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={(rowId) => {
+          setSelectedRowIds((prev) =>
+            prev.includes(rowId)
+              ? prev.filter((id) => id !== rowId)
+              : [...prev, rowId],
+          );
+        }}
+        onToggleAll={(nextSelected) => {
+          setSelectedRowIds(nextSelected);
+        }}
+      />
+
+      <CustomPagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalItems={filteredParcels.length}
+        itemsPerPage={limit}
+        show
+        showItemsPerPage={false}
+        showingLabel="Showing"
+        resultsLabel="Results"
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 
 import CustomDialog from "@/components/reusable/CustomDialog";
@@ -11,8 +11,8 @@ import { mockParcels } from "@/app/(dashboard)/parcel-management/third-party/_co
 import { parcelColumns } from "@/app/(dashboard)/parcel-management/third-party/_components/parcelCol";
 
 export default function RiderAssignParcelTable() {
-  // table selections
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  // table selections - using parcelid as ID
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
 
   // modal
   const [openModal, setOpenModal] = useState(false);
@@ -26,17 +26,16 @@ export default function RiderAssignParcelTable() {
   // search + filter state
   const [searchQuery, setSearchQuery] = useState("");
 
-  // select a single row
-  const handleSelectRow = (index: number) => {
-    setSelectedRows((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+  // toggle a single row by ID
+  const handleToggleRow = (rowId: string | number, row: any) => {
+    setSelectedRowIds((prev) =>
+      prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
     );
   };
-  // select all rows
-  const handleSelectAll = () => {
-    selectedRows.length === filteredParcels.length
-      ? setSelectedRows([])
-      : setSelectedRows(filteredParcels.map((_, i) => i));
+  
+  // toggle all rows
+  const handleToggleAll = (nextSelected: (string | number)[], rows: any[]) => {
+    setSelectedRowIds(nextSelected);
   };
   // 🔍 SEARCH + FILTER
   const filteredParcels = mockParcels.filter((p) => {
@@ -59,10 +58,10 @@ export default function RiderAssignParcelTable() {
 
     // single update
     if (selectedParcel) {
-      parcelIds = [selectedParcel.id];
+      parcelIds = [selectedParcel.parcelid];
     } else {
-      // bulk update by selected indexes
-      parcelIds = selectedRows.map((i) => selectedParcel[i].id);
+      // bulk update by selected IDs
+      parcelIds = selectedRowIds;
     }
 
     try {
@@ -103,7 +102,7 @@ export default function RiderAssignParcelTable() {
 
         {/* 🔥 BULK UPDATE BUTTON */}
         <Button
-          disabled={selectedRows.length === 0}
+          disabled={selectedRowIds.length === 0}
           className="bg-orange-600/80 text-white"
           onClick={() => {
             setSelectedParcel(null); // bulk mode
@@ -115,15 +114,17 @@ export default function RiderAssignParcelTable() {
       </div>
 
       {/* TABLE */}
-      <DataTable3
+      <DataTable
         columns={parcelColumns((row: any) => {
           setSelectedParcel(row); // single mode
           setOpenModal(true);
         })}
         data={filteredParcels}
-        selectedRows={selectedRows}
-        onSelectRow={handleSelectRow}
-        onSelectAll={handleSelectAll}
+        selectable={true}
+        getRowId={(row) => row.parcelid}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={handleToggleRow}
+        onToggleAll={handleToggleAll}
       />
 
       {/* MODAL */}

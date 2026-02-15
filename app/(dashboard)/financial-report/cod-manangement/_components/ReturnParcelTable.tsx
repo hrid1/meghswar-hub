@@ -1,21 +1,32 @@
 "use client";
 
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
+import { useState } from "react";
 import { returnParcelColumns } from "./ReturnParcelCol";
 
 
 
 
 export default function ReturnParcelTable() {
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+
   return (
     <div>
       <h2 className="text-2xl font-bold">Transfer History</h2>
-      <DataTable3
+      <DataTable
         columns={returnParcelColumns}
         data={riderStatusData}
-        selectedRows={[]}
-        onSelectRow={() => {}}
-        onSelectAll={() => {}}
+        selectable={true}
+        getRowId={(row) => row.parcelId}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={(rowId) => {
+          setSelectedRowIds((prev) =>
+            prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
+          );
+        }}
+        onToggleAll={(nextSelected) => {
+          setSelectedRowIds(nextSelected);
+        }}
       />
     </div>
   );

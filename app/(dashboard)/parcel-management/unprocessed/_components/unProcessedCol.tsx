@@ -1,32 +1,32 @@
 export const columns = [
-  { key: "id", title: "Parcel ID", width: "120px" },
+  { key: "id", header: "Parcel ID", width: "12%" },
   {
     key: "reason",
-    title: "Reason",
-    width: "200px",
+    header: "Reason",
+    width: "15%",
     render: (row: any) => (
       <span className="text-sm text-gray-800">{row.additionalNote}</span>
     ),
   },
   {
     key: "destination",
-    title: "Destination",
-    width: "200px",
+    header: "Destination",
+    width: "15%",
     render: (row: any) => (
       <span className="text-sm text-gray-600">{row.additionalNote}</span>
     ),
   },
   {
     key: "zone",
-    title: "Zone",
-    width: "140px",
+    header: "Zone",
+    width: "12%",
     render: (row: any) => <span className="font-semibold">{row.zone}</span>,
   },
-  
+
   {
     key: "merchant",
-    title: "Merchant",
-    width: 180,
+    header: "Merchant",
+    width: "15%",
     render: (row: any) => (
       <div>
         <div className="font-semibold">{row.merchant.name}</div>
@@ -37,8 +37,8 @@ export const columns = [
   },
   {
     key: "status",
-    title: "Status",
-    width: 200,
+    header: "Status",
+    width: "12%",
     render: (row: any) => (
       <span
         className={`px-3 py-1 text-xs rounded-full ${
@@ -53,8 +53,8 @@ export const columns = [
   },
   {
     key: "codAmount",
-    title: "COD Amount",
-    width: "160px",
+    header: "COD Amount",
+    width: "15%",
     render: (row: any) => (
       <div>
         <div className="text-green-600 font-bold text-lg">
@@ -69,13 +69,15 @@ export const columns = [
     ),
   },
   {
+    key: "attempt",
+    header: "Attempt",
+    headerClassName: "w-15" ,   
+    render: (row: any) => <div className="font-semibold text-center bg-orange-100 w-2/3 mx-auto rounded-md py-0.5 ">{row.attempt}</div>,
+  },
+  {
     key: "age",
-    title: "Age", // 3 days
-    width: "120px", 
-    render: (row: any) => (
-      <div>
-        {row.age}
-      </div>
-    ),
+    header: "Age", // 3 days
+    width: "12%",
+    render: (row: any) => <div>{row.age}</div>,
   },
 ];

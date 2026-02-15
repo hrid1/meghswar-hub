@@ -3,10 +3,10 @@
 import React, { useState, useMemo } from "react";
 
 import { Search, Printer, ChevronDown, Copy } from "lucide-react";
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
 
 export default function ParcelTable() {
-  const [selected, setSelected] = useState<number[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
   const [search, setSearch] = useState("");
 
   const parcels = [
@@ -57,20 +57,19 @@ export default function ParcelTable() {
   }, [parcels, search]);
 
   /* ------------------------------ Select Rows ------------------------------- */
-  const toggleRow = (idx: number) => {
-    setSelected((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+  const handleToggleRow = (rowId: string | number, row: any) => {
+    setSelectedRowIds((prev) =>
+      prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
     );
   };
 
-  const toggleSelectAll = () => {
-    if (selected.length === filteredData.length) setSelected([]);
-    else setSelected(filteredData.map((_, i) => i));
+  const handleToggleAll = (nextSelected: (string | number)[], rows: any[]) => {
+    setSelectedRowIds(nextSelected);
   };
 
   /* ------------------------------ Summary Totals ----------------------------- */
   const summary = useMemo(() => {
-    const rows = selected.map((i) => filteredData[i]);
+    const rows = filteredData.filter((row) => selectedRowIds.includes(row.id));
 
     return {
       totalCollectable: rows.reduce((s, p) => s + p.collectableAmount, 0),
@@ -78,20 +77,20 @@ export default function ParcelTable() {
       totalDeliveryCharge: rows.reduce((s, p) => s + p.deliveryCharge, 0),
       totalWeight: rows.reduce((s, p) => s + p.weight, 0),
     };
-  }, [selected, filteredData]);
+  }, [selectedRowIds, filteredData]);
 
   /* ------------------------------- API Calls -------------------------------- */
   const receiveParcels = async () => {
     await new Promise((res) => setTimeout(res, 800)); // mock API
-    alert(`Received ${selected.length} parcels`);
+    alert(`Received ${selectedRowIds.length} parcels`);
   };
 
   /* -------------------------------- Columns -------------------------------- */
   const columns = [
     {
       key: "id",
-      title: "ID",
-      width: "130px",
+      header: "ID",
+      width: "13%",
       render: (row: any) => (
         <p className="">
           <p className="text-nowrap flex items-center">
@@ -111,15 +110,15 @@ export default function ParcelTable() {
     },
     {
       key: "merchant",
-      title: "Merchant",
-      width: "150px",
+      header: "Merchant",
+      width: "15%",
       render: (row: any) => <p className="text-nowrap">{row.merchant}</p>,
     },
 
     {
       key: "additionalNote",
-      title: "Additional Note",
-      width: "160px",
+      header: "Additional Note",
+      width: "16%",
       wrap: true,
       render: (row: any) => {
         const note = row.additionalNote || "";
@@ -127,7 +126,7 @@ export default function ParcelTable() {
 
         return (
           <div className="relative group">
-            <p className="text-sm text-gray-600 break-words border cursor-help">
+            <p className="text-sm text-gray-600 break-words cursor-help">
               {shortNote}
             </p>
 
@@ -141,8 +140,8 @@ export default function ParcelTable() {
     },
     {
       key: "customer",
-      title: "Customer Info",
-      width: "200px",
+      header: "Customer Info",
+      width: "20%",
       wrap: true,
       render: (row: any) => {
         const address: string = row.address || "";
@@ -156,7 +155,7 @@ export default function ParcelTable() {
           address.length > 100 ? address.slice(0, 100) + "..." : address;
 
         return (
-          <div className="text-sm break-words border">
+          <div className="text-sm break-words ">
             <div className="font-semibold">{row.customer}</div>
             <div className="text-gray-600">{row.phone}</div>
 
@@ -178,11 +177,11 @@ export default function ParcelTable() {
         );
       },
     },
-    { key: "deliveryArea", title: "Delivery Area", width: "120px" },
+    { key: "deliveryArea", header: "Delivery Area", width: "12%" },
     {
       key: "amount",
-      title: "Amount",
-      width: "120px",
+      header: "Amount",
+      width: "12%",
       render: (row: any) => (
         <div className="break-words w-30">
           <div className="text-green-600 font-bold text-lg ">
@@ -198,16 +197,16 @@ export default function ParcelTable() {
     },
     {
       key: "weight",
-      title: "Weight",
-      width: "70px",
+      header: "Weight",
+      width: "7%",
       render: (row: any) => (
         <div className=" w-12 pl-2">{row.weight}</div>
       ),
     },
     {
       key: "delivery",
-      title: "Delivery",
-      width: "80px",
+      header: "Delivery",
+      width: "8%",
       render: (row: any) => (
         <div className="rounded-md w-fit px-2 py-1 font-medium">
           {row.delivery} <span className="ml-[2px]">tk</span>
@@ -216,8 +215,8 @@ export default function ParcelTable() {
     },
     {
       key: "action",
-      title: "Action",
-      width: "80px",
+      header: "Action",
+      width: "7%",
       render: () => (
         <button className="bg-orange-100 text-orange-600 px-3 py-2 rounded-md">
           <Printer className="w-3 h-3 inline-block" />{" "}
@@ -248,7 +247,7 @@ export default function ParcelTable() {
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-orange-100 px-4 py-3 rounded-lg">
           <div className="font-bold text-orange-600 text-xl">
-            {selected.length}
+            {selectedRowIds.length}
           </div>
           <div className="text-sm">Selected</div>
         </div>
@@ -289,17 +288,17 @@ export default function ParcelTable() {
               </button>
             </div>
             <div className="font-semibold">
-              {selected.length} Parcel Selected
+              {selectedRowIds.length} Parcel Selected
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
           <button
-            disabled={selected.length === 0}
+            disabled={selectedRowIds.length === 0}
             onClick={receiveParcels}
             className={`px-6 py-2 rounded-lg font-medium ${
-              selected.length === 0
+              selectedRowIds.length === 0
                 ? "bg-gray-300 text-gray-500"
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
@@ -315,12 +314,14 @@ export default function ParcelTable() {
       </div>
 
       {/* DataTable */}
-      <DataTable3
+      <DataTable
         columns={columns}
         data={filteredData}
-        selectedRows={selected}
-        onSelectRow={toggleRow}
-        onSelectAll={toggleSelectAll}
+        selectable={true}
+        getRowId={(row) => row.id}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={handleToggleRow}
+        onToggleAll={handleToggleAll}
       />
     </div>
   );

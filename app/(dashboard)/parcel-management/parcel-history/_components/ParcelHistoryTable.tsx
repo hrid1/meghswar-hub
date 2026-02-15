@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Columns, Search } from "lucide-react";
 import { DataTable } from "@/components/reusable/DataTable";
 import { mockParcelsHistory, Parcel } from "./mockData";
-import DataTable3 from "@/components/reusable/DataTable3";
 import { parcelHistoryColumns } from "./columns";
 
 export default function ParcelHistoryTable() {
@@ -54,10 +53,10 @@ export default function ParcelHistoryTable() {
       </div>
 
       {/* ----------- TABLE ----------- */}
-      <DataTable3
+      <DataTable
         columns={parcelHistoryColumns}
         data={filteredData}
-        onRowSelectionChange={handleSelection}
+        selectable={false}
       />
     </div>
   );

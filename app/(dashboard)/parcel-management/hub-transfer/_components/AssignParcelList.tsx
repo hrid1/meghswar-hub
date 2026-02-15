@@ -1,6 +1,6 @@
 "use client";
 
-import DataTable3 from "@/components/reusable/DataTable3";
+import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 
 import CustomDialog from "@/components/reusable/CustomDialog";
@@ -12,7 +12,7 @@ import { mockParcels1 } from "./mockData";
 
 export default function PickupRequestTable() {
   // table selections
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
 
   // modal
   const [openModal, setOpenModal] = useState(false);
@@ -26,17 +26,16 @@ export default function PickupRequestTable() {
   // search + filter state
   const [searchQuery, setSearchQuery] = useState("");
 
-  // select a single row
-  const handleSelectRow = (index: number) => {
-    setSelectedRows((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+  // toggle a single row by ID
+  const handleToggleRow = (rowId: string | number, row: any) => {
+    setSelectedRowIds((prev) =>
+      prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
     );
   };
-  // select all rows
-  const handleSelectAll = () => {
-    selectedRows.length === filteredParcels.length
-      ? setSelectedRows([])
-      : setSelectedRows(filteredParcels.map((_, i) => i));
+  
+  // toggle all rows
+  const handleToggleAll = (nextSelected: (string | number)[], rows: any[]) => {
+    setSelectedRowIds(nextSelected);
   };
   // 🔍 SEARCH + FILTER
   const filteredParcels = mockParcels1.filter((p) => {
@@ -59,8 +58,8 @@ export default function PickupRequestTable() {
     if (selectedParcel) {
       parcelIds = [selectedParcel.id];
     } else {
-      // bulk update by selected indexes
-      parcelIds = selectedRows.map((i) => selectedParcel[i].id);
+      // bulk update by selected IDs
+      parcelIds = selectedRowIds;
     }
 
     try {
@@ -104,15 +103,17 @@ export default function PickupRequestTable() {
       </div>
 
       {/* TABLE */}
-      <DataTable3
+      <DataTable
         columns={parcelColumns1((row: any) => {
           setSelectedParcel(row); // single mode
           setOpenModal(true);
         })}
         data={filteredParcels}
-        selectedRows={selectedRows}
-        onSelectRow={handleSelectRow}
-        onSelectAll={handleSelectAll}
+        selectable={true}
+        getRowId={(row) => row.id}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={handleToggleRow}
+        onToggleAll={handleToggleAll}
       />
 
       {/* MODAL */}

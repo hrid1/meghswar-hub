@@ -4,14 +4,14 @@ import { Check, X } from "lucide-react";
 export const riderTableColumns = (onAction?: (type: string, id: string) => void) => [
   {
     key: "parcelId",
-    title: "Parcel ID",
-    width: 120,
+    header: "Parcel ID",
+    width: "10%",
     render: (row: any) => <span className="font-semibold">{row.parcelId}</span>,
   },
   {
     key: "rider",
-    title: "Rider",
-    width: 200,
+    header: "Rider",
+    width: "15%",
     render: (row: any) => (
       <div className="flex items-center gap-2">
         <img src={row.riderImg} className="w-8 h-8 rounded-full" alt="rider" />
@@ -24,8 +24,8 @@ export const riderTableColumns = (onAction?: (type: string, id: string) => void)
   },
   {
     key: "status",
-    title: "Requested For",
-    width: 140,
+    header: "Requested For",
+    width: "12%",
     render: (row: any) => (
       <div className="flex flex-col">
         <span className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -43,8 +43,8 @@ export const riderTableColumns = (onAction?: (type: string, id: string) => void)
   },
   {
     key: "customerInfo",
-    title: "Customer Info",
-    width: 250,
+    header: "Customer Info",
+    width: "20%",
     render: (row: any) => (
       <div className="text-xs">
         <p className="font-semibold">{row.customerName}</p>
@@ -55,8 +55,8 @@ export const riderTableColumns = (onAction?: (type: string, id: string) => void)
   },
   {
     key: "merchant",
-    title: "Merchant",
-    width: 180,
+    header: "Merchant",
+    width: "15%",
     render: (row: any) => (
       <div className="text-xs">
         <p className="font-semibold">{row.merchantName}</p>
@@ -66,13 +66,13 @@ export const riderTableColumns = (onAction?: (type: string, id: string) => void)
   },
   {
     key: "area",
-    title: "Area",
-    width: 120,
+    header: "Area",
+    width: "10%",
   },
   {
     key: "actions",
-    title: "Actions",
-    width: 160,
+    header: "Actions",
+    width: "18%",
     render: (row: any) => (
       <div className="flex gap-2">
         <Button

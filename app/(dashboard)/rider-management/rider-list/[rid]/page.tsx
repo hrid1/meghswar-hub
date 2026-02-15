@@ -1,29 +1,51 @@
-"use client"
+"use client";
 
-import React from "react";
-import { X, Package, RotateCcw, Wallet } from "lucide-react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { Package, RotateCcw, Wallet } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useGetRiderByIdQuery } from "@/redux/features/rider/riderApi";
+import { getReadUrl } from "@/lib/upload";
+
 
 export default function RiderDetailsPage() {
-
+  const params = useParams();
   const router = useRouter();
 
-  const riderData = {
-    name: "Ahmed Wasi",
-    phone: "+8801234567890",
-    guardianPhone: "+8801234567890",
-    nid: "DH-38439",
-    vehicleType: "Motor Bike",
-    vehicleNumber: "88721345",
-    presentAddress: "72/5 Bashundhara Avenue, Dhaka",
-    permanentAddress: "72/5 Bashundhara Avenue, Dhaka",
-    email: "wasi@email.com",
-    deliveryCompleted: 125,
-    deliveryReturned: 25,
-    salary: 1250,
-    commission: 1250,
-    totalCashCollected: 1250,
-  };
+  // ⚠️ Change to params.id if your folder is [id]
+  const riderID = params.rid as string;
+
+  const { data, isLoading, isError } = useGetRiderByIdQuery(riderID);
+  const rider = data?.data ;
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+
+  // 🔥 Fetch signed read URL when rider.photo exists
+  useEffect(() => {
+    const loadImage = async () => {
+      if (!rider?.photo) return;
+
+      try {
+        setImageLoading(true);
+        const url = await getReadUrl(rider.photo);
+        setImageUrl(url);
+      } catch (error) {
+        console.error("Failed to load image:", error);
+      } finally {
+        setImageLoading(false);
+      }
+    };
+
+    loadImage();
+  }, [rider?.photo]);
+
+  if (isLoading) {
+    return <div className="p-6">Loading rider...</div>;
+  }
+
+  if (isError || !rider) {
+    return <div className="p-6 text-red-500">No Rider Found</div>;
+  }
 
   const placeholderBox = (text: string) => (
     <div className="bg-gray-100 rounded-lg h-40 flex items-center justify-center">
@@ -39,77 +61,90 @@ export default function RiderDetailsPage() {
           <h1 className="text-xl font-semibold text-gray-800">
             View Rider Details
           </h1>
-          <button onClick={() => router.back()} className="p-1 hover:bg-gray-100 rounded-md px-4 border ">
-            <span className="text-lg font-semibold"> Go Back</span>
+          <button
+            onClick={() => router.back()}
+            className="hover:bg-gray-100 rounded-md px-4 py-2 border"
+          >
+            <span className="font-semibold">Go Back</span>
           </button>
         </div>
 
         <div className="p-6">
           {/* Profile Image */}
           <div className="flex justify-center mb-8">
-            <img
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop"
-              alt="Rider"
-              className="w-32 h-32 rounded-full object-cover"
-            />
+            {imageLoading ? (
+              <div className="w-32 h-32 rounded-full bg-gray-200 animate-pulse" />
+            ) : imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={rider.full_name}
+                className="w-32 h-32 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-500 text-sm">No Image</span>
+              </div>
+            )}
           </div>
 
           {/* Rider Info */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {[
-              ["Rider's Name", riderData.name],
-              ["Rider's Mobile No.", riderData.phone],
-              ["Rider's Guardian No.", riderData.guardianPhone],
-              ["Rider's NID Number", riderData.nid],
-              ["Rider's Vehicle Type", riderData.vehicleType],
-              ["Rider's Vehicle Number", riderData.vehicleNumber],
-              ["Rider's Present Address", riderData.presentAddress],
-              ["Rider's Permanent Address", riderData.permanentAddress],
-              ["Rider's Email", riderData.email],
+              ["Rider's Name", rider.full_name],
+              ["Rider's Mobile No.", rider.phone],
+              ["Guardian Mobile No.", rider.guardian_mobile_no],
+              ["NID Number", rider.nid_number],
+              ["Vehicle Type", rider.bike_type],
+              ["License No.", rider.license_no],
+              ["Present Address", rider.present_address],
+              ["Permanent Address", rider.permanent_address],
+              ["Email", rider.email],
+              ["Hub Branch", rider.hub?.branch_name],
+              [
+                "Created At",
+                new Date(rider.created_at).toLocaleString(),
+              ],
             ].map(([label, value], idx) => (
               <div key={idx}>
                 <p className="text-sm text-gray-500 mb-1">{label}</p>
-                <p className="font-medium text-gray-800">{value}</p>
+                <p className="font-medium text-gray-800">{value || "-"}</p>
               </div>
             ))}
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          {/* Salary Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="bg-orange-50 rounded-lg p-4 text-center">
+              <Wallet className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+              <p className="text-lg font-bold text-orange-600">
+                ৳ {Number(rider.fixed_salary).toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-600">Fixed Salary</p>
+            </div>
+
+            <div className="bg-blue-50 rounded-lg p-4 text-center">
+              <Wallet className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+              <p className="text-lg font-bold text-blue-600">
+                ৳ {Number(rider.commission_per_delivery).toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-600">
+                Commission Per Delivery
+              </p>
+            </div>
+          </div>
+
+          {/* Placeholder Stats (Until backend provides real fields) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div className="bg-green-50 rounded-lg p-4 text-center">
               <Package className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-green-600">
-                {riderData.deliveryCompleted}
-              </p>
+              <p className="text-3xl font-bold text-green-600">0</p>
               <p className="text-sm text-green-700">Delivery Completed</p>
             </div>
 
             <div className="bg-purple-50 rounded-lg p-4 text-center">
               <RotateCcw className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-purple-600">
-                {riderData.deliveryReturned}
-              </p>
+              <p className="text-3xl font-bold text-purple-600">0</p>
               <p className="text-sm text-purple-700">Delivery Returned</p>
-            </div>
-
-            <div className="bg-orange-50 rounded-lg p-4 text-center">
-              <Wallet className="w-8 h-8 text-orange-600 mx-auto mb-2" />
-              <p className="text-lg font-bold text-orange-600">
-                ৳ {riderData.salary.toLocaleString()}
-              </p>
-              <p className="text-xs text-gray-600 mb-2">Salary</p>
-              <p className="text-lg font-bold text-orange-600">
-                ৳ {riderData.commission.toLocaleString()}
-              </p>
-              <p className="text-xs text-gray-600">Commission</p>
-            </div>
-
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <Wallet className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-blue-600">
-                ৳ {riderData.totalCashCollected.toLocaleString()}
-              </p>
-              <p className="text-sm text-blue-700">Total Cash Collected</p>
             </div>
           </div>
 
@@ -119,7 +154,6 @@ export default function RiderDetailsPage() {
               Documents
             </h2>
 
-            {/* NID */}
             <div className="mb-6">
               <p className="text-sm font-medium text-gray-700 mb-3">
                 Rider's NID Documents
@@ -130,25 +164,13 @@ export default function RiderDetailsPage() {
               </div>
             </div>
 
-            {/* Driving License */}
-            <div className="mb-6">
+            <div>
               <p className="text-sm font-medium text-gray-700 mb-3">
                 Driving License Documents
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {placeholderBox("Driving License Front Side")}
-                {placeholderBox("Driving License Back Side")}
-              </div>
-            </div>
-
-            {/* Payment MFS */}
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-3">
-                Payment MFS Documents
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {placeholderBox("MFS Document Front")}
-                {placeholderBox("MFS Document Back")}
+                {placeholderBox("License Front Side")}
+                {placeholderBox("License Back Side")}
               </div>
             </div>
           </div>

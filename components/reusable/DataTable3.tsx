@@ -45,7 +45,7 @@ export default function DataTable3({
                 return (
                   <th
                     key={col.key}
-                    className={`py-3 font-semibold text-left px-2 ${wrapHeaderClass} ${
+                    className={`py-3 font-semibold text-left pr-2 ${wrapHeaderClass} ${
                       col.headerClassName ?? ""
                     }`}
                     style={widthStyle}

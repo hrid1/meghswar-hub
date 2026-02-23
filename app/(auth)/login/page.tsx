@@ -16,8 +16,8 @@ export default function LoginPage() {
   const dispatch = useAppDispatch()
   const accessToken = useAppSelector((state) => state.auth.access_token)
   const [login, { isLoading }] = useLoginMutation()
-  const [identifier, setIdentifier] = React.useState("")
-  const [password, setPassword] = React.useState("")
+  const [identifier, setIdentifier] = React.useState("manager@hub.com")
+  const [password, setPassword] = React.useState("Manager123!")
 
   React.useEffect(() => {
     if (accessToken) router.replace("/dashboard")
@@ -78,7 +78,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 placeholder="Enter your email"
-                type="email"
+                type="text"
                 autoCapitalize="none"
                 autoComplete="email"
                 autoCorrect="off"

@@ -1,3 +1,5 @@
+import { Pi } from "lucide-react";
+
 export const  TAG_TYPES = {
     Hubs: "Hubs" ,
     Pricing: "Pricing" ,
@@ -5,7 +7,7 @@ export const  TAG_TYPES = {
     Riders: "Riders" ,
     Posts: "Posts" ,
     Categories: "Categories" ,
-    
+    PickupRequests: "PickupRequests" ,
 } as const;
 
 export type TagType = typeof TAG_TYPES[keyof typeof TAG_TYPES];

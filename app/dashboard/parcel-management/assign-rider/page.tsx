@@ -1,15 +1,27 @@
 "use client";
 
 import { DataTable } from "@/components/reusable/DataTable";
-import React, { useState } from "react";
-
+import React, { useState, useMemo } from "react";
 import CustomDialog from "@/components/reusable/CustomDialog";
 import { Button } from "@/components/ui/button";
-
+import { Search, ChevronDown } from "lucide-react";
 import { parcelColumns } from "./_components/parcelCol";
-import { mockParcels } from "./_components/mockdata";
+import { useGetParcelsForAssignmentQuery, useAssignRiderToParcelsMutation } from "@/redux/features/parcels/parcelsApi";
+import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
+import { SearchableSelect } from "@/components/reusable/SearchableSelect";
+import { toast } from "sonner";
 
 export default function ThirdPartyTable() {
+  const { data, isLoading } = useGetParcelsForAssignmentQuery({ page: 1, limit: 20 });
+  const [assignRiderToParcels, { isLoading: isAssigning }] = useAssignRiderToParcelsMutation();
+  const {data: ridersData} = useGetRidersQuery({ isActive: true, page: 1, limit: 100 });
+  const allRiders = ridersData?.data?.riders || [];
+  const availableRiders = allRiders.filter((rider: any) => rider.is_active);
+  console.log("availableRiders", availableRiders);
+  
+  const parcels = data?.data?.parcels || []; 
+  console.log("parcels", parcels);
+
   // table selections
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
 
@@ -19,8 +31,9 @@ export default function ThirdPartyTable() {
   // for single update
   const [selectedParcel, setSelectedParcel] = useState<any>(null);
 
-  // radio value
-  const [selectedStatus, setSelectedStatus] = useState("");
+  // rider selection
+  const [selectedRiderId, setSelectedRiderId] = useState("");
+  const [riders, setRiders] = useState<any[]>([]); // You'll fetch this from API
 
   // search + filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,80 +49,111 @@ export default function ThirdPartyTable() {
   const handleToggleAll = (nextSelected: (string | number)[], rows: any[]) => {
     setSelectedRowIds(nextSelected);
   };
+
   // 🔍 SEARCH + FILTER
-  const filteredParcels = mockParcels.filter((p) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      p.parcelid.toLowerCase().includes(q) ||
-      p.customerInfo.name.toLowerCase().includes(q) ||
-      p.customerInfo.phone.includes(q) ||
-      p.merchant.name.toLowerCase().includes(q)
-    );
-  });
+  const filteredParcels = useMemo(() => {
+    return parcels.filter((p: any) => {
+      const q = searchQuery.toLowerCase();
+      return (
+        p.parcel_tx_id?.toLowerCase().includes(q) ||
+        p.tracking_number?.toLowerCase().includes(q) ||
+        p.customer_name?.toLowerCase().includes(q) ||
+        p.customer_phone?.includes(q) ||
+        p.store?.business_name?.toLowerCase().includes(q) ||
+        p.delivery_area?.area?.toLowerCase().includes(q)
+      );
+    });
+  }, [parcels, searchQuery]);
+
+  // Get selected parcels data
+  const selectedParcels = useMemo(() => {
+    return filteredParcels.filter((p: any) => selectedRowIds.includes(p.id));
+  }, [filteredParcels, selectedRowIds]);
 
   // SUBMIT (single + bulk)
-  const handleSubmit = async (e: any) => {
+  const handleAssignRider = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedStatus) return;
+    if (!selectedRiderId) {
+      toast.error("Please select a rider");
+      return;
+    }
 
-    let parcelIds;
+    let parcelIds: string[];
 
     // single update
     if (selectedParcel) {
-      parcelIds = [selectedParcel.parcelid];
+      parcelIds = [selectedParcel.id];
     } else {
       // bulk update by selected IDs
-      parcelIds = selectedRowIds;
+      parcelIds = selectedParcels.map((p: any) => p.id);
     }
 
     try {
-      const res = await fetch("/api/update-parcels", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          parcelIds,
-          status: selectedStatus,
-        }),
-      });
+      await assignRiderToParcels({
+        rider_id: selectedRiderId,
+        parcel_ids: parcelIds
+      }).unwrap();
 
-      const data = await res.json();
-      console.log("API Response:", data);
-
+      toast.success(`Successfully assigned ${parcelIds.length} parcel(s) to rider`);
       setOpenModal(false);
-      setSelectedStatus("");
+      setSelectedRiderId("");
       setSelectedParcel(null);
+      setSelectedRowIds([]); // Clear selection after successful assignment
     } catch (err) {
       console.error("API error:", err);
+      toast.error("Failed to assign rider. Please try again.");
     }
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="p-6 container mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500">Loading parcels...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 container mx-auto">
-      <h1 className="text-2xl font-bold">All Rider</h1>
+      <h1 className="text-2xl font-bold mb-6">Parcels for Assignment</h1>
+      
       {/* 🔍 SEARCH + FILTER */}
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search parcels..."
-            className="border p-2 rounded w-60"
+            placeholder="Search by ID, customer, merchant, area..."
+            className="pl-10 pr-4 py-2 border w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-200"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        {/* 🔥 BULK UPDATE BUTTON */}
-        <Button
-          disabled={selectedRowIds.length === 0}
-          className="bg-orange-600/80 text-white cursor-pointer"
-          onClick={() => {
-            setSelectedParcel(null); // bulk mode
-            setOpenModal(true);
-          }}
-        >
-          Assign Rider
-        </Button>
+        {/* Selection info and bulk action */}
+        <div className="flex items-center gap-4">
+          {selectedRowIds.length > 0 && (
+            <span className="text-sm text-gray-600">
+              {selectedRowIds.length} parcel{selectedRowIds.length > 1 ? 's' : ''} selected
+            </span>
+          )}
+          
+          <Button
+            disabled={selectedRowIds.length === 0}
+            className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
+            onClick={() => {
+              setSelectedParcel(null); // bulk mode
+              setOpenModal(true);
+              // Fetch riders list here if needed
+            }}
+          >
+            Assign Rider {selectedRowIds.length > 0 && `(${selectedRowIds.length})`}
+          </Button>
+        </div>
       </div>
 
       {/* TABLE */}
@@ -117,23 +161,75 @@ export default function ThirdPartyTable() {
         columns={parcelColumns((row: any) => {
           setSelectedParcel(row); // single mode
           setOpenModal(true);
+          // Fetch riders list here if needed
         })}
         data={filteredParcels}
         selectable={true}
-        getRowId={(row) => row.parcelid}
+        getRowId={(row) => row.id}
         selectedRowIds={selectedRowIds}
         onToggleRow={handleToggleRow}
         onToggleAll={handleToggleAll}
       />
 
-      {/* MODAL */}
-      <CustomDialog open={openModal} setOpen={setOpenModal}>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <div>This si still processing...</div>
+      {/* Results count */}
+      <div className="mt-4 text-sm text-gray-500">
+        Showing {filteredParcels.length} of {parcels.length} parcels
+      </div>
 
-          <div className="flex ">
-            <Button type="submit" className="bg-orange-500 text-white flex-1">
-              Confirm
+      {/* MODAL - Assign Rider */}
+      <CustomDialog open={openModal} setOpen={setOpenModal}>
+        <form className="flex flex-col gap-4 " onSubmit={handleAssignRider}>
+          <h2 className="text-xl font-semibold mb-2">Assign Rider</h2>
+          
+          <div className="bg-orange-50 p-3 rounded-lg mb-2">
+            <p className="text-sm text-gray-700">
+              {selectedParcel 
+                ? `Assigning 1 parcel: ${selectedParcel.parcel_tx_id || selectedParcel.tracking_number}`
+                : `Assigning ${selectedRowIds.length} parcels to rider`
+              }
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">Select Rider</label>
+           {/* Reusable searchable select with conditional search */}
+        <div className="w-full ">
+          <SearchableSelect
+            options={availableRiders.map((rider: any) => ({
+              value: rider.id,
+              label: rider.full_name,
+            }))}
+            value={selectedRiderId}
+            onChange={setSelectedRiderId}
+            placeholder="Select a rider"
+            searchable={true}
+            searchPlaceholder="Search rider by name..."
+            emptyMessage="No riders found"
+            selectHeight="max-h-[250px]"
+            required={true}
+          />
+          </div>
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setOpenModal(false);
+                setSelectedRiderId("");
+                setSelectedParcel(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
+              disabled={isAssigning || !selectedRiderId}
+            >
+              {isAssigning ? "Assigning..." : "Confirm Assignment"}
             </Button>
           </div>
         </form>

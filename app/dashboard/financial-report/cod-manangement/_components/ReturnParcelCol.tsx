@@ -14,10 +14,10 @@ export const returnParcelColumns = [
   },
   {
     key: "status",
-    header: "status",
+    header: "Status",
     width: "18%",
     render: (row: any) => (
-      <span className="font-semibold text-orange-500 flex items-center justify-center ">
+      <span className="font-semibold text-orange-500 flex items-center justify-start ">
         <span>{row.status}</span>
       </span>
     ),

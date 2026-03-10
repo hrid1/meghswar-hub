@@ -7,8 +7,8 @@ import CustomDialog from "@/components/reusable/CustomDialog";
 import { Button } from "@/components/ui/button";
 
 
-import { mockParcels } from "@/app/(dashboard)/parcel-management/third-party/_components/mockdata";
-import { parcelColumns } from "@/app/(dashboard)/parcel-management/third-party/_components/parcelCol";
+// import { mockParcels } from "@/app/(dashboard)/parcel-management/third-party/_components/mockdata";
+// import { parcelColumns } from "@/app/(dashboard)/parcel-management/third-party/_components/parcelCol";
 
 export default function RiderAssignParcelTable() {
   // table selections - using parcelid as ID

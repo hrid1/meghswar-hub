@@ -40,6 +40,7 @@ interface DataTableProps<T> extends RowSelectionProps<T> {
   emptyMessage?: string;
   minWidth?: string | number;
   cellPaddingX?: string; // Horizontal padding class (e.g., "px-2", "px-4")
+  isLoading?: boolean;
 }
 
 export function DataTable<T>({
@@ -57,6 +58,7 @@ export function DataTable<T>({
   onToggleRow,
   onToggleAll,
   isRowSelectable,
+  isLoading = false,
 }: DataTableProps<T>) {
   const resolvedGetRowId = useMemo(() => {
     return (
@@ -175,7 +177,13 @@ export function DataTable<T>({
         </thead>
 
         <tbody>
-          {data.length === 0 ? (
+          {isLoading ? (
+            <tr>
+              <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-4 py-10 text-center text-sm text-[#909296]">
+                Loading...
+              </td>
+            </tr>
+          ) : data.length === 0 ? (
             <tr>
               <td
                 colSpan={columns.length + (selectable ? 1 : 0)}

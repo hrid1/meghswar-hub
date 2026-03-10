@@ -1,6 +1,8 @@
 import React from "react";
-import ProcessedTable from "./_components/processedTable";
+
 import CustomTabs from "@/components/reusable/CustomTabs";
+import ReturnToMerchantTable from "./_components/returnToMerchantTable";
+import DeliveryResheduleTable from "./_components/DeliveryResheduleTable";
 
 export default function page() {
   const tabs = [
@@ -9,15 +11,14 @@ export default function page() {
       value: "rtm",
       content: (
         <div>
-          hi
-          <ProcessedTable />
+          <ReturnToMerchantTable />
         </div>
       ),
     },
     {
       name: "Delivery Reschedule",
       value: "reschedule",
-      content: <ProcessedTable />,
+      content: <DeliveryResheduleTable />,
     },
   ];
 

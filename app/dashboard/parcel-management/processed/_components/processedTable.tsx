@@ -6,8 +6,17 @@ import React, { useMemo, useState } from "react";
 
 import { columns, mockData } from "./processedCol";
 import UpdateStatusModal from "../../hub-transfer/_components/UpdateStatusModal";
+import { useGetRescheduledDeliveriesQuery,  } from "@/redux/features/process-unprocess/processUnprocessApi";
 
-export default function ProcessedTable() {
+export default function ReturnToMerchantTable() {
+
+
+
+
+  const { data: returnToMerchantData, isLoading: isReturnToMerchantLoading } =
+    useGetRescheduledDeliveriesQuery({ page: 1, limit: 10 });
+    
+  const returnToMerchantParcels = returnToMerchantData?.data?.parcels || [];
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
   const [search, setSearch] = useState("");
   const [openStatusModal, setOpenStatusModal] = useState(false);

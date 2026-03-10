@@ -1,70 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ReturnParcelTable from "./_components/ReturnParcelTable";
+import {
+  useGetCodManagementListQuery,
+  useCollectedCODAmountMutation,
+} from "@/redux/features/financial-report/FinancialReportApi";
+import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
+import type { Rider } from "@/redux/features/rider/riderType";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
-type Rider = {
-  id: number;
-  name: string;
-  license: string;
-  phone: string;
-  bike: string;
-  photo: string;
-  totalCollected: number;
-  completedDelivery: number;
+const BIKE_LABEL: Record<string, string> = {
+  MOTORCYCLE: "Motor Bike",
+  BICYCLE: "Cycle",
+  SCOOTER: "Scooter",
+  CAR: "Car",
 };
 
-// 🚀 Fake API (replace with real one easily)
-async function fetchRiders(): Promise<Rider[]> {
-  return [
-    {
-      id: 1,
-      name: "Ahmed Wasi",
-      license: "DH-38439",
-      phone: "+8801234567890",
-      bike: "Motor Bike",
-      photo: "https://i.pravatar.cc/150?img=12",
-      totalCollected: 24519,
-      completedDelivery: 35,
-    },
-    {
-      id: 2,
-      name: "Hrid Wasi",
-      license: "DH-38449",
-      phone: "+8801234567890",
-      bike: "Cycle",
-      photo: "https://i.pravatar.cc/150?img=14",
-      totalCollected: 18000,
-      completedDelivery: 22,
-    },
-  ];
-}
-
 export default function CODPage() {
-  const [riders, setRiders] = useState<Rider[]>([]);
   const [selectedRider, setSelectedRider] = useState<Rider | null>(null);
   const [countAmount, setCountAmount] = useState("");
 
+  const { data: ridersData } = useGetRidersQuery({
+    isActive: true,
+    page: 1,
+    limit: 100,
+  });
+  const riders: Rider[] = ridersData?.data?.riders ?? [];
+
+  const { data: codData, isLoading: codLoading } = useGetCodManagementListQuery(
+    { riderId: selectedRider?.id ?? "" },
+    { skip: !selectedRider?.id }
+  );
+
+  const [collectCod, { isLoading: isCollecting }] = useCollectedCODAmountMutation();
+
+  const summary = codData?.data?.summary;
+  const parcels = codData?.data?.parcels ?? [];
+  const totalCollected = summary?.total_collectable_amount ?? 0;
+  const completedDelivery = summary?.total_cleared_parcels ?? 0;
+
   const discrepancy =
     selectedRider && countAmount
-      ? selectedRider.totalCollected - Number(countAmount)
+      ? totalCollected - Number(countAmount)
       : 0;
 
-  // 🎯 Fetch Riders from API
-  useEffect(() => {
-    async function load() {
-      const data = await fetchRiders();
-      setRiders(data);
-      setSelectedRider(data[0]); // auto-select first rider
-    }
-    load();
-  }, []);
-
-  // 🎯 When dropdown changes
-  const handleSelectRider = (id: number) => {
-    const found = riders.find((r) => r.id === id) || null;
+  const handleSelectRider = (id: string) => {
+    const found = riders.find((r) => r.id === id) ?? null;
     setSelectedRider(found);
-    setCountAmount(""); // reset input
+    setCountAmount("");
+  };
+
+  const handleConfirmCollect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRider?.id) {
+      toast.error("Please select a rider");
+      return;
+    }
+    const amount = Number(countAmount);
+    if (Number.isNaN(amount) || amount < 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    try {
+      await collectCod({
+        riderId: selectedRider.id,
+        counted_amount: amount,
+      }).unwrap();
+      toast.success("COD collected successfully");
+      setCountAmount("");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to collect COD");
+    }
   };
 
   return (
@@ -82,11 +91,13 @@ export default function CODPage() {
 
           <select
             className="w-full mt-2 p-3 border rounded-lg"
-            onChange={(e) => handleSelectRider(Number(e.target.value))}
+            value={selectedRider?.id ?? ""}
+            onChange={(e) => handleSelectRider(e.target.value)}
           >
-            {riders.map((r) => (
+            <option value="">Select rider</option>
+            {riders.map((r: Rider) => (
               <option key={r.id} value={r.id}>
-                {r.name}
+                {r.full_name}
               </option>
             ))}
           </select>
@@ -96,20 +107,27 @@ export default function CODPage() {
         {selectedRider && (
           <div className="bg-white p-5 rounded-xl shadow flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <img
-                src={selectedRider.photo}
-                className="w-24 h-24 rounded-full object-cover"
-              />
+              {selectedRider.photo ? (
+                <img
+                  src={selectedRider.photo}
+                  alt={selectedRider.full_name}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-semibold text-gray-500">
+                  {selectedRider.full_name.charAt(0)}
+                </div>
+              )}
               <div>
-                <p className="font-semibold text-lg">{selectedRider.name}</p>
+                <p className="font-semibold text-lg">{selectedRider.full_name}</p>
                 <p className="text-sm text-gray-500">
-                  Rider's Bike Type: {selectedRider.bike}
+                  Rider&apos;s Bike Type: {BIKE_LABEL[selectedRider.bike_type] ?? selectedRider.bike_type}
                 </p>
               </div>
             </div>
 
             <div className="text-right text-sm text-gray-600">
-              <p>Rider's License: {selectedRider.license}</p>
+              <p>Rider&apos;s License: {selectedRider.license_no || "—"}</p>
               <p>Mobile: {selectedRider.phone}</p>
             </div>
           </div>
@@ -122,7 +140,7 @@ export default function CODPage() {
           <div className="bg-white p-5 rounded-xl shadow">
             <p className="text-gray-600 font-medium">Total Collected Amount</p>
             <h2 className="text-4xl font-bold text-orange-500">
-              ৳ {selectedRider?.totalCollected.toLocaleString()}
+              ৳ {totalCollected.toLocaleString()}
             </h2>
           </div>
 
@@ -130,7 +148,7 @@ export default function CODPage() {
           <div className="bg-white p-5 rounded-xl shadow">
             <p className="text-gray-600 font-medium">Completed Delivery</p>
             <h2 className="text-4xl font-bold text-green-600">
-              {selectedRider?.completedDelivery}
+              {completedDelivery}
             </h2>
           </div>
 
@@ -165,7 +183,10 @@ export default function CODPage() {
           </p>
           
           {/* table */}
-          <ReturnParcelTable/>
+          <ReturnParcelTable
+            parcels={parcels}
+            isLoading={codLoading}
+          />
         </div>
       </section>
     </div>

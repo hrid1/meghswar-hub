@@ -5,18 +5,23 @@ import { ChevronDown, Printer } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { columns } from "./unProcessedCol";
 import UpdateStatusModal from "../../hub-transfer/_components/UpdateStatusModal";
+import { useGetDeliveryOutcomesQuery } from "@/redux/features/process-unprocess/processUnprocessApi";
 
 export default function UnProcessedTable() {
+  const { data: unprocessedData, isLoading: isUnprocessedLoading } = useGetDeliveryOutcomesQuery({ page: 1, limit: 10 });
+  const unprocessedParcels = unprocessedData?.data?.parcels || [];
+  console.log("unprocessedParcels", unprocessedParcels);
+
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
   const [search, setSearch] = useState("");
   const [openStatusModal, setOpenStatusModal] = useState(false);
 
   /* ------------------------------- Filtering -------------------------------- */
   const filteredData = useMemo(() => {
-    return mockData.filter((p) =>
+    return unprocessedParcels.filter((p: any) =>
       Object.values(p).join(" ").toLowerCase().includes(search.toLowerCase())
     );
-  }, [mockData, search]);
+  }, [unprocessedParcels, search]);
 
   /* ------------------------------ Select Rows ------------------------------- */
   const handleToggleRow = (rowId: string | number, row: any) => {
@@ -72,7 +77,7 @@ export default function UnProcessedTable() {
             className={`px-6 py-2 rounded-lg font-medium ${
               selectedRowIds.length === 0
                 ? "bg-gray-300 text-gray-500"
-                : "bg-orange-500 text-white hover:bg-orange-00"
+                : "bg-orange-500 text-white hover:bg-orange-600"
             }`}
           >
             Update Status
@@ -82,10 +87,11 @@ export default function UnProcessedTable() {
 
       {/* DataTable */}
       <DataTable
+        isLoading={isUnprocessedLoading}
         columns={columns}
         data={filteredData}
         selectable={true}
-        getRowId={(row) => row.id}
+        getRowId={(row) => row.parcel_id} // Use parcel_id from API or fallback to id
         selectedRowIds={selectedRowIds}
         onToggleRow={handleToggleRow}
         onToggleAll={handleToggleAll}
@@ -100,62 +106,3 @@ export default function UnProcessedTable() {
     </div>
   );
 }
-
-const mockData = [
-  {
-    id: "PX-1001",
-    additionalNote: "Customer not available",
-    destination: "Banani, Dhaka",
-    zone: "Dhaka North",
-    merchant: {
-      name: "FashionHub",
-      phone: "01711-223344",
-    },
-    area: "Banani DOHS",
-    status: "Delivered",
-    collectableAmount: 1250,
-    deliveryCharge: 60,
-    codCharge: 25,
-    weightCharge: 20,
-    attempt: 1,
-    age: "2 days",
-  },
-
-  {
-    id: "PX-1002",
-    additionalNote: "Address mismatch",
-    destination: "Mirpur 10, Dhaka",
-    zone: "Dhaka West",
-    merchant: {
-      name: "TechLine",
-      phone: "01822-556677",
-    },
-    area: "Mirpur DOHS",
-    status: "Returned",
-    collectableAmount: 2990,
-    deliveryCharge: 80,
-    codCharge: 30,
-    weightCharge: 25,
-    attempt: 2,
-    age: "5 days",
-  },
-
-  {
-    id: "PX-1003",
-    additionalNote: "Receiver requested delay",
-    destination: "Uttara Sector 11",
-    zone: "Dhaka North",
-    merchant: {
-      name: "GadgetStore",
-      phone: "01933-778899",
-    },
-    area: "Uttara Sector 11",
-    status: "Delivered",
-    collectableAmount: 4500,
-    deliveryCharge: 100,
-    codCharge: 45,
-    weightCharge: 30,
-    attempt: 1,
-    age: "1 day",
-  },
-];

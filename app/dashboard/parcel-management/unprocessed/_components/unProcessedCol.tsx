@@ -1,11 +1,17 @@
+// unProcessedCol.tsx
 export const columns = [
-  { key: "id", header: "Parcel ID", width: "12%" },
+  { 
+    key: "parcel_tx_id", 
+    header: "Parcel ID", 
+    width: "12%",
+    render: (row: any) => <span>{row.parcel_tx_id || row.parcel_id}</span>
+  },
   {
     key: "reason",
     header: "Reason",
     width: "15%",
     render: (row: any) => (
-      <span className="text-sm text-gray-800">{row.additionalNote}</span>
+      <span className="text-sm text-gray-800">{row.reason || "N/A"}</span>
     ),
   },
   {
@@ -13,7 +19,7 @@ export const columns = [
     header: "Destination",
     width: "15%",
     render: (row: any) => (
-      <span className="text-sm text-gray-600">{row.additionalNote}</span>
+      <span className="text-sm text-gray-600">{row.destination}</span>
     ),
   },
   {
@@ -22,16 +28,14 @@ export const columns = [
     width: "12%",
     render: (row: any) => <span className="font-semibold">{row.zone}</span>,
   },
-
   {
-    key: "merchant",
+    key: "store",
     header: "Merchant",
     width: "15%",
     render: (row: any) => (
       <div>
-        <div className="font-semibold">{row.merchant.name}</div>
-        <div className="text-xs text-gray-500">{row.merchant.phone}</div>
-        <div className="text-xs text-gray-400">{row.area}</div>
+        <div className="font-semibold">{row.store?.name || "N/A"}</div>
+        <div className="text-xs text-gray-500">{row.store?.phone || "N/A"}</div>
       </div>
     ),
   },
@@ -42,12 +46,14 @@ export const columns = [
     render: (row: any) => (
       <span
         className={`px-3 py-1 text-xs rounded-full ${
-          row.status === "Delivered"
+          row.status === "PARTIAL_DELIVERY"
+            ? "bg-yellow-100 text-yellow-600"
+            : row.status === "DELIVERED"
             ? "bg-green-100 text-green-600"
             : "bg-red-100 text-red-600"
         }`}
       >
-        {row.status}
+        {row.status?.replace(/_/g, " ")}
       </span>
     ),
   },
@@ -58,12 +64,12 @@ export const columns = [
     render: (row: any) => (
       <div>
         <div className="text-green-600 font-bold text-lg">
-          ৳{row.collectableAmount.toLocaleString()}
+          ৳{(row.cod_breakdown?.cod_collected_amount || 0).toLocaleString()}
         </div>
         <div className="text-xs text-gray-600 mt-1">
-          <div>Delivery Charge: ৳{row.deliveryCharge}</div>
-          <div>COD Charge: ৳{row.codCharge}</div>
-          <div>Weight Charge: ৳{row.weightCharge}</div>
+          <div>Delivery Charge: ৳{row.cod_breakdown?.delivery_charge || 0}</div>
+          <div>COD Charge: ৳{row.cod_breakdown?.cod_charge || 0}</div>
+          <div>Weight Charge: ৳{row.cod_breakdown?.weight_charge || 0}</div>
         </div>
       </div>
     ),
@@ -71,13 +77,17 @@ export const columns = [
   {
     key: "attempt",
     header: "Attempt",
-    headerClassName: "w-15" ,   
-    render: (row: any) => <div className="font-semibold text-center bg-orange-100 w-2/3 mx-auto rounded-md py-0.5 ">{row.attempt}</div>,
+    headerClassName: "w-15",
+    render: (row: any) => (
+      <div className="font-semibold text-center bg-orange-100 w-2/3 mx-auto rounded-md py-0.5">
+        {row.attempt || "1"}
+      </div>
+    ),
   },
   {
     key: "age",
-    header: "Age", // 3 days
+    header: "Age",
     width: "12%",
-    render: (row: any) => <div>{row.age}</div>,
+    render: (row: any) => <div>{row.age?.total_age || "N/A"}</div>,
   },
 ];

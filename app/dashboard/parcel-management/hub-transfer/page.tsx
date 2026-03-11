@@ -1,7 +1,7 @@
 import CustomTabs from "@/components/reusable/CustomTabs";
-import React from "react";
-import AllParcelList from "./_components/AllParcelList";
-import AssignParcelList from "./_components/AssignParcelList";
+import AllParcelList from "./_components/AllParcelListTable";
+import AssignParcelTable from "./_components/AssignParcelTable";
+
 
 const myTabs = [
   {
@@ -18,7 +18,9 @@ const myTabs = [
     value: "assigned-parcel-list",
     content: (
       <>
-        <AssignParcelList />
+
+      <h1>This is still processing...</h1>
+        <AssignParcelTable />
       </>
     ),
   },

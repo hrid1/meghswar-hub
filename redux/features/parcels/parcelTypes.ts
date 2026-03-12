@@ -199,3 +199,40 @@ export interface ParcelsListResponse {
 //   };
 //   message: string;
 // }
+
+export interface ThirdPartyProvider {
+  id: string;
+  provider_code: string;
+  provider_name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetThirdPartyProvidersResponse {
+  success: boolean;
+  data: {
+    providers: ThirdPartyProvider[];
+  };
+  message: string;
+}
+
+//   {
+//     "success": true,
+//     "data": {
+//         "providers": [
+//             {
+//                 "id": "316d6d72-dafb-4150-a03a-08661af29e70",
+//                 "provider_code": "CARRYBEE",
+//                 "provider_name": "Carrybee Courier",
+//                 "description": "Standard delivery integration via API",
+//                 "is_active": true,
+//                 "created_at": "2026-01-25T19:28:54.116Z",
+//                 "updated_at": "2026-01-25T19:28:54.116Z"
+//             }
+//         ]
+//     },
+//     "message": "Active providers retrieved successfully",
+//     "timestamp": "2026-03-12T14:49:04.527Z"
+// }

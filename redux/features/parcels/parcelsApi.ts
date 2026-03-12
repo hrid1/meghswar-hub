@@ -1,6 +1,9 @@
 import { baseApi } from "../api/baseApi";
 import { TAG_TYPES } from "../tagList";
-import { GetParcelsForAssignmentResponse } from "./parcelTypes";
+import {
+  GetParcelsForAssignmentResponse,
+  GetThirdPartyProvidersResponse,
+} from "./parcelTypes";
 
 const parcelsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -90,8 +93,6 @@ const parcelsApi = baseApi.injectEndpoints({
       invalidatesTags: [TAG_TYPES.Parcels],
     }),
 
-
-
     // get assigned parcels
     getHubOutgoingParcels: builder.query<
       any,
@@ -105,35 +106,84 @@ const parcelsApi = baseApi.injectEndpoints({
       providesTags: [TAG_TYPES.Parcels],
     }),
 
-    
     // get incoming parcels
     getHubIncomingParcels: builder.query<
-    any,
-    { page?: number; limit?: number }
-  >({
-    query: ({ page = 1, limit = 20 }) => ({
-      url: "/hubs/parcels/incoming",
-      method: "GET",
-      params: { page, limit },
+      any,
+      { page?: number; limit?: number }
+    >({
+      query: ({ page = 1, limit = 20 }) => ({
+        url: "/hubs/parcels/incoming",
+        method: "GET",
+        params: { page, limit },
+      }),
+      providesTags: [TAG_TYPES.Parcels],
     }),
-    providesTags: [TAG_TYPES.Parcels],
-  }),
 
-  // {
-  //   "parcel_ids": [
-  //     "{{parcel_3}}",
-  //     "{{parcel_4}}"
-  //   ]
-  // }
-  // receive incoming parcels from other hub
-  receiveIncomingParcels: builder.mutation({
-    query: (parcelIds: string[]) => ({
-      url: "/hubs/parcels/bulk-accept",
-      method: "PATCH",
-      body: { parcel_ids: parcelIds },
+    // {
+    //   "parcel_ids": [
+    //     "{{parcel_3}}",
+    //     "{{parcel_4}}"
+    //   ]
+    // }
+    // receive incoming parcels from other hub
+    receiveIncomingParcels: builder.mutation({
+      query: (parcelIds: string[]) => ({
+        url: "/hubs/parcels/bulk-accept",
+        method: "PATCH",
+        body: { parcel_ids: parcelIds },
+      }),
+      invalidatesTags: [TAG_TYPES.Parcels],
     }),
-    invalidatesTags: [TAG_TYPES.Parcels],
-  }),
+
+    // ================Assign Parcel to Third Party Provider (carrybee)================
+
+
+    // /carrybee/parcels/assigned
+    getAssignedParcelsToThirdPartyProvider: builder.query<
+      any,
+      void | undefined
+    >({
+      query: () => ({
+        url: "/carrybee/parcels/for-assignment",
+        method: "GET",
+      }),
+      providesTags: [TAG_TYPES.Parcels],
+    }),
+
+    // get third party providers
+    getThirdPartyProviders: builder.query<
+      GetThirdPartyProvidersResponse,
+      void | undefined
+    >({
+      query: () => ({
+        url: "/third-party-providers/active",
+        method: "GET",
+      }),
+      providesTags: [TAG_TYPES.Parcels],
+    }),
+
+    // assign parcel to third party provider
+    assignParcelToThirdPartyProvider: builder.mutation({
+      query: (data: {
+        parcel_ids: string[];
+        third_party_provider_id: string;
+        notes: string;
+      }) => ({
+        url: `carrybee/parcels/assign/carrybee`,
+        method: "POST",
+        body: {
+          parcel_ids: data.parcel_ids,
+          provider_id: data.third_party_provider_id,
+          notes: data.notes,
+        },
+      }),
+      invalidatesTags: [TAG_TYPES.Parcels],
+    }),
+
+    
+
+    
+
   }),
 });
 
@@ -146,4 +196,6 @@ export const {
   useGetHubOutgoingParcelsQuery,
   useGetHubIncomingParcelsQuery,
   useReceiveIncomingParcelsMutation,
+  useAssignParcelToThirdPartyProviderMutation,
+  useGetThirdPartyProvidersQuery,
 } = parcelsApi;

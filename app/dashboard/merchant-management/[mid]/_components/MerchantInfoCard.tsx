@@ -1,4 +1,5 @@
 import React from "react";
+import type { Merchant } from "@/redux/features/merchant/merchantTypes";
 
 interface MerchantInfoProps {
   businessName: string;
@@ -52,14 +53,27 @@ function MerchantInfoCard({
   );
 }
 
-export default function MerchantInfoCards() {
+interface MerchantInfoCardsProps {
+  merchant?: Merchant | null;
+}
+
+export default function MerchantInfoCards({ merchant }: MerchantInfoCardsProps) {
+  const businessName =
+    merchant?.business_name || merchant?.full_name || "—";
+  const contactName = merchant?.full_name || "—";
+  const address =
+    merchant?.address ||
+    [merchant?.thana, merchant?.district].filter(Boolean).join(", ") ||
+    "—";
+  const phone = merchant?.phone || "—";
+
   return (
     <div>
       <MerchantInfoCard
-        businessName="Booklet Design BD"
-        contactName="Johir Raihan"
-        address="Plot#142, Safwan Road, Block#B, Bashundhara Residential Area, Baridhara, Dhaka – 1229"
-        phone="+8801234567890"
+        businessName={businessName}
+        contactName={contactName}
+        address={address}
+        phone={phone}
       />
     </div>
   );

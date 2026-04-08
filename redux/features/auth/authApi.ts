@@ -1,15 +1,28 @@
 import { baseApi } from "../api/baseApi";
 
+/** Hub block returned with HUB_MANAGER on `/auth/me` */
+export interface AuthHub {
+  id: string;
+  hub_code: string;
+  branch_name: string;
+  area: string;
+  address: string;
+}
 
 export interface User {
-  id: string;
+  /** Some responses use `user_id` instead of `id` */
+  id?: string;
+  user_id?: string;
   full_name: string;
   phone: string;
   email: string;
   role: "ADMIN" | "MERCHANT" | "HUB_MANAGER" | "RIDER";
   is_active: boolean;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
+  hub_manager_id?: string;
+  hub_id?: string;
+  hub?: AuthHub;
 }
 
 export interface AuthResponse {
@@ -33,6 +46,13 @@ export const authApi = baseApi.injectEndpoints({
     }),
     getCurrentUser: builder.query<User, void>({
       query: () => ({ url: "/auth/me", method: "GET" }),
+      transformResponse: (response: { data?: User } | User) => {
+        const raw = "data" in response && response.data ? response.data : (response as User);
+        return {
+          ...raw,
+          id: raw.id ?? raw.user_id,
+        };
+      },
     }),
   }),
 });

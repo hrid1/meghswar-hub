@@ -1,25 +1,40 @@
 "use client";
 
 import { DataTable } from "@/components/reusable/DataTable";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import CustomDialog from "@/components/reusable/CustomDialog";
 import { Button } from "@/components/ui/button";
 import { Search, ChevronDown } from "lucide-react";
 import { parcelColumns } from "./_components/parcelCol";
-import { useGetParcelsForAssignmentQuery, useAssignRiderToParcelsMutation } from "@/redux/features/parcels/parcelsApi";
+import {
+  useGetParcelsForAssignmentQuery,
+  useAssignRiderToParcelsMutation,
+} from "@/redux/features/parcels/parcelsApi";
 import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
 import { SearchableSelect } from "@/components/reusable/SearchableSelect";
 import { toast } from "sonner";
 
+
+
+
 export default function ThirdPartyTable() {
-  const { data, isLoading } = useGetParcelsForAssignmentQuery({ page: 1, limit: 20 });
-  const [assignRiderToParcels, { isLoading: isAssigning }] = useAssignRiderToParcelsMutation();
-  const {data: ridersData} = useGetRidersQuery({ isActive: true, page: 1, limit: 100 });
+  const { data, isLoading } = useGetParcelsForAssignmentQuery({
+    page: 1,
+    limit: 20,
+  });
+  const [assignRiderToParcels, { isLoading: isAssigning }] =
+    useAssignRiderToParcelsMutation();
+  const { data: ridersData } = useGetRidersQuery({
+    isActive: true,
+    page: 1,
+    limit: 100,
+  });
   const allRiders = ridersData?.data?.riders || [];
-  const availableRiders = allRiders.filter((rider: any) => rider.is_active);
-  console.log("availableRiders", availableRiders);
-  
-  const parcels = data?.data?.parcels || []; 
+  console.log("allRiders", allRiders);
+  // const availableRiders = allRiders.filter((rider: any) => rider.is_active);
+  // console.log("availableRiderss", availableRiders);
+
+  const parcels = data?.data?.parcels || [];
   console.log("parcels", parcels);
 
   // table selections
@@ -41,10 +56,12 @@ export default function ThirdPartyTable() {
   // toggle a single row by ID
   const handleToggleRow = (rowId: string | number, row: any) => {
     setSelectedRowIds((prev) =>
-      prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
+      prev.includes(rowId)
+        ? prev.filter((id) => id !== rowId)
+        : [...prev, rowId],
     );
   };
-  
+
   // toggle all rows
   const handleToggleAll = (nextSelected: (string | number)[], rows: any[]) => {
     setSelectedRowIds(nextSelected);
@@ -92,10 +109,12 @@ export default function ThirdPartyTable() {
     try {
       await assignRiderToParcels({
         rider_id: selectedRiderId,
-        parcel_ids: parcelIds
+        parcel_ids: parcelIds,
       }).unwrap();
 
-      toast.success(`Successfully assigned ${parcelIds.length} parcel(s) to rider`);
+      toast.success(
+        `Successfully assigned ${parcelIds.length} parcel(s) to rider`,
+      );
       setOpenModal(false);
       setSelectedRiderId("");
       setSelectedParcel(null);
@@ -120,11 +139,14 @@ export default function ThirdPartyTable() {
   return (
     <div className="p-6 container mx-auto">
       <h1 className="text-2xl font-bold mb-6">Parcels for Assignment</h1>
-      
+
       {/* 🔍 SEARCH + FILTER */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={20}
+          />
           <input
             type="text"
             placeholder="Search by ID, customer, merchant, area..."
@@ -138,10 +160,11 @@ export default function ThirdPartyTable() {
         <div className="flex items-center gap-4">
           {selectedRowIds.length > 0 && (
             <span className="text-sm text-gray-600">
-              {selectedRowIds.length} parcel{selectedRowIds.length > 1 ? 's' : ''} selected
+              {selectedRowIds.length} parcel
+              {selectedRowIds.length > 1 ? "s" : ""} selected
             </span>
           )}
-          
+
           <Button
             disabled={selectedRowIds.length === 0}
             className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
@@ -151,7 +174,8 @@ export default function ThirdPartyTable() {
               // Fetch riders list here if needed
             }}
           >
-            Assign Rider {selectedRowIds.length > 0 && `(${selectedRowIds.length})`}
+            Assign Rider{" "}
+            {selectedRowIds.length > 0 && `(${selectedRowIds.length})`}
           </Button>
         </div>
       </div>
@@ -180,35 +204,36 @@ export default function ThirdPartyTable() {
       <CustomDialog open={openModal} setOpen={setOpenModal}>
         <form className="flex flex-col gap-4 " onSubmit={handleAssignRider}>
           <h2 className="text-xl font-semibold mb-2">Assign Rider</h2>
-          
+
           <div className="bg-orange-50 p-3 rounded-lg mb-2">
             <p className="text-sm text-gray-700">
-              {selectedParcel 
+              {selectedParcel
                 ? `Assigning 1 parcel: ${selectedParcel.parcel_tx_id || selectedParcel.tracking_number}`
-                : `Assigning ${selectedRowIds.length} parcels to rider`
-              }
+                : `Assigning ${selectedRowIds.length} parcels to rider`}
             </p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700">Select Rider</label>
-           {/* Reusable searchable select with conditional search */}
-        <div className="w-full ">
-          <SearchableSelect
-            options={availableRiders.map((rider: any) => ({
-              value: rider.id,
-              label: rider.full_name,
-            }))}
-            value={selectedRiderId}
-            onChange={setSelectedRiderId}
-            placeholder="Select a rider"
-            searchable={true}
-            searchPlaceholder="Search rider by name..."
-            emptyMessage="No riders found"
-            selectHeight="max-h-[250px]"
-            required={true}
-          />
-          </div>
+            <label className="text-sm font-medium text-gray-700">
+              Select Rider
+            </label>
+            {/* Reusable searchable select with conditional search */}
+            <div className="w-full ">
+              <SearchableSelect
+                options={allRiders.map((rider: any) => ({
+                  value: rider.id,
+                  label: rider.user?.full_name,
+                }))}
+                value={selectedRiderId}
+                onChange={setSelectedRiderId}
+                placeholder="Select a rider"
+                searchable={true}
+                searchPlaceholder="Search rider by name..."
+                emptyMessage="No riders found"
+                selectHeight="max-h-[250px]"
+                required={true}
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 mt-4">

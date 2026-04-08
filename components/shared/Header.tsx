@@ -1,6 +1,7 @@
 'use client';
 
 import { Bell, Menu, User } from 'lucide-react';
+import { useGetCurrentUserQuery } from '@/redux/features/auth/authApi';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -15,6 +16,17 @@ export function Header({
   setCollapsed,
   setSidebarOpen,
 }: HeaderProps) {
+  const { data: currentUser, isLoading } = useGetCurrentUserQuery();
+  console.log("data", currentUser)
+
+  const displayName = currentUser?.full_name || "User";
+  const displayRole = currentUser?.role
+    ? currentUser.role.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+    : "Administrator";
+  const avatarText = displayName.charAt(0).toUpperCase();
+
+  const hubName = 9;
+
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-40 px-4 md:px-6 flex items-center justify-between shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
       <div className="flex items-center gap-4">
@@ -53,11 +65,17 @@ export function Header({
         
         <div className="flex items-center gap-3 cursor-pointer p-1.5 hover:bg-gray-50 rounded-xl transition-colors">
            <div className="hidden md:block text-right">
-             <p className="text-sm font-semibold text-gray-700 leading-none">Meghswor</p>
-             <p className="text-xs text-gray-500 mt-1">Administrator</p>
+             <p className="text-sm font-semibold text-gray-700 leading-none">
+               {isLoading ? "Loading..." : displayName}
+             </p>
+             <p className="text-xs text-gray-500 mt-1">{displayRole}</p>
            </div>
            <div className="w-9 h-9 bg-gradient-to-tr from-gray-700 to-gray-900 rounded-lg flex items-center justify-center text-white shadow-sm">
-              <User className="w-5 h-5" />
+              {currentUser ? (
+                <span className="text-sm font-semibold">{avatarText}</span>
+              ) : (
+                <User className="w-5 h-5" />
+              )}
            </div>
         </div>
       </div>

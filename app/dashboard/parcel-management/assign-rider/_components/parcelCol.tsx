@@ -36,24 +36,13 @@ export const parcelColumns = (onClickUpdate: any) => [
   },
   {
     key: "additionalNote",
-    header: "Product / Note",
+    header: "Additional Note",
     width: "18%",
     render: (row: any) => (
       <div>
         <p className="text-sm font-medium">{row.product_description || "No description"}</p>
         <p className="text-xs text-gray-500 mt-1">Weight: {row.product_weight} kg</p>
         <p className="text-xs text-gray-500">Type: {row.delivery_type === 1 ? "Regular" : "Express"}</p>
-      </div>
-    ),
-  },
-  {
-    key: "merchant",
-    header: "Merchant",
-    width: "15%",
-    render: (row: any) => (
-      <div>
-        <div className="font-semibold">{row.store?.business_name || "N/A"}</div>
-        <div className="text-xs text-gray-400 mt-1">Store ID: {row.store?.id?.slice(0, 8)}...</div>
       </div>
     ),
   },
@@ -69,6 +58,18 @@ export const parcelColumns = (onClickUpdate: any) => [
       </div>
     ),
   },
+  {
+    key: "merchant",
+    header: "Merchant",
+    width: "15%",
+    render: (row: any) => (
+      <div>
+        <div className="font-semibold">{row.store?.business_name || "N/A"}</div>
+        <div className="text-xs text-gray-400 mt-1">Store ID: {row.store?.id?.slice(0, 8)}...</div>
+      </div>
+    ),
+  },
+  
   {
     key: "amount",
     header: "Amount",

@@ -330,7 +330,7 @@ export default function HubReceiveTable() {
           onClick={handleReceiveTransfers}
           disabled={selectedRowIds.length === 0 || isReceiving}
         >
-          {isReceiving ? "Receiving..." : `Receive Transfers (${selectedRowIds.length})`}
+          {isReceiving ? "Receiving..." : `Receive Transfers (${selectedRowIds.length}) `}
         </Button>
       </div>
 

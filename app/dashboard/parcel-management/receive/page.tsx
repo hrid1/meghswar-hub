@@ -1,13 +1,18 @@
+// app/(dashboard)/receive-parcels/page.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, Printer, ChevronDown } from "lucide-react";
+import { Search, Printer, ChevronDown, RefreshCw } from "lucide-react";
 import { DataTable } from "@/components/reusable/DataTable";
-import { useGetReceivedParcelsQuery, useReceiveParcelsMutation } from "@/redux/features/parcels/parcelsApi";
+import { 
+  useGetReceivedParcelsQuery, 
+  useReceiveParcelsMutation 
+} from "@/redux/features/parcels/parcelsApi";
 import ParcelSummary from "./_components/ParcelSummary";
 import { getParcelColumns } from "./_components/ParcelColumns";
-import { toast } from "sonner";
 
+import { toast } from "sonner";
+import { useUpdateParcelCharges } from "./_components/useUpdateHubCharges";
 
 // Define proper types for the parcel data
 interface DeliveryArea {
@@ -63,16 +68,16 @@ interface TransformedParcel {
 }
 
 export default function ParcelTable() {
-  const { data: receivedParcels, isLoading, error } = useGetReceivedParcelsQuery(null);
+  const { data: receivedParcels, isLoading, error, refetch } = useGetReceivedParcelsQuery(null);
   const [receiveParcels, { isLoading: isReceiving }] = useReceiveParcelsMutation();
+  const { updateCharges, isUpdating } = useUpdateParcelCharges();
 
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
   const [search, setSearch] = useState("");
+  const [updatingCellId, setUpdatingCellId] = useState<string | null>(null);
 
   // Extract parcels data from API response
   const parcelsData = receivedParcels?.data?.parcels || [];
-  
-  console.log("receivedParcelsData", parcelsData);
 
   // Transform API data to match the expected format for the table
   const transformedParcels = useMemo((): TransformedParcel[] => {
@@ -90,7 +95,7 @@ export default function ParcelTable() {
       deliveryCharge: parseFloat(parcel.delivery_charge) || 0,
       codCharge: parseFloat(parcel.cod_charge) || 0,
       weightCharge: parseFloat(parcel.weight_charge) || 0,
-      weight: 0.5,
+      weight: parseFloat(parcel.weight_charge) / 40 || 0.5, // Calculate weight from charge
       delivery: parseFloat(parcel.total_charge) || 0,
       totalWeight: "1K",
       deliveryArea: `${parcel.delivery_area.area}, ${parcel.delivery_area.zone}`,
@@ -99,6 +104,17 @@ export default function ParcelTable() {
       tracking_number: parcel.tracking_number,
     }));
   }, [parcelsData]);
+
+  // Handle updating charges
+  const handleUpdateCharges = async (id: string, charges: { delivery_charge?: number; weight_charge?: number }) => {
+    try {
+      await updateCharges(id, charges);
+      // Refetch the data to get updated values
+      await refetch();
+    } catch (error) {
+      console.error("Update failed:", error);
+    }
+  };
 
   /* ------------------------------- Filtering -------------------------------- */
   const filteredData = useMemo(() => {
@@ -132,6 +148,8 @@ export default function ParcelTable() {
 
   /* ------------------------------- API Calls -------------------------------- */
   const handleReceiveParcels = async () => {
+    if (selectedRowIds.length === 0) return;
+
     try {
       // Get the original UUIDs of selected parcels
       const selectedOriginalIds = filteredData
@@ -146,6 +164,9 @@ export default function ParcelTable() {
       console.log("Receive response:", response);
       toast.success(`Successfully received ${selectedRowIds.length} parcels`);
       setSelectedRowIds([]); // Clear selection after successful receive
+      
+      // Refetch to update the data
+      await refetch();
 
     } catch (error) {
       console.error("Failed to receive parcels:", error);
@@ -170,10 +191,22 @@ export default function ParcelTable() {
     );
   }
 
+  // Get columns with update handler
+  const columns = getParcelColumns(handleUpdateCharges);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <h1 className="text-2xl font-bold">Receive Parcels</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Receive Parcels</h1>
+        <button
+          onClick={() => refetch()}
+          className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
+          title="Refresh"
+        >
+          <RefreshCw className="w-5 h-5" />
+        </button>
+      </div>
 
       {/* Search */}
       <div className="relative">
@@ -197,7 +230,7 @@ export default function ParcelTable() {
       />
 
       {/* Action Buttons */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div className="relative">
             <button className="px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors">
@@ -211,10 +244,10 @@ export default function ParcelTable() {
 
         <div className="flex items-center gap-4 flex-wrap">
           <button
-            disabled={selectedRowIds.length === 0}
+            disabled={selectedRowIds.length === 0 || isReceiving}
             onClick={handleReceiveParcels}
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              selectedRowIds.length === 0
+              selectedRowIds.length === 0 || isReceiving
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
@@ -231,7 +264,7 @@ export default function ParcelTable() {
 
       {/* DataTable */}
       <DataTable
-        columns={getParcelColumns()}
+        columns={columns}
         data={filteredData}
         selectable={true}
         getRowId={(row) => row.id}

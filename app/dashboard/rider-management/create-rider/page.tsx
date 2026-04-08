@@ -738,6 +738,7 @@ interface RiderFormData {
   bankName: string;
   bankAccountNumber: string;
   bankBranchName: string;
+  bankAccountName: string;
   
   // File uploads (handled separately)
   profilePhoto?: File;
@@ -838,6 +839,7 @@ const CreateRiderForm = () => {
         password: data.password,
         guardian_mobile_no: data.guardianMobile.replace(/[^0-9]/g, ''), // Remove non-numeric characters
         bike_type: bikeTypeMap[data.bikeType] || data.bikeType,
+        
         nid_number: data.nidNumber,
         license_no: data.licenseNumber,
         present_address: data.presentAddress,
@@ -857,6 +859,8 @@ const CreateRiderForm = () => {
         },
         body: JSON.stringify(payload),
       });
+
+      
 
       if (!riderResponse.ok) {
         const errorData = await riderResponse.json().catch(() => null);
@@ -1171,7 +1175,7 @@ const CreateRiderForm = () => {
 
             {/* Assignment & Financials */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Assign HUB *
                 </label>
@@ -1200,7 +1204,7 @@ const CreateRiderForm = () => {
                 {errors.hub && (
                   <p className="mt-1 text-sm text-red-600">{errors.hub.message}</p>
                 )}
-              </div>
+              </div> */}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -1261,6 +1265,31 @@ const CreateRiderForm = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Bank Branch Name
+                </label>
+                <Controller
+                  name="bankBranchName"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="relative">
+                      <select
+                        {...field}
+                        className="w-full p-3 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors bg-white"
+                      >
+                          <option value="">Select Branch</option>
+                        <option value="dhaka-bank">Dhaka Bank</option>
+                        <option value="brac-bank">BRAC Bank Branch</option>
+                        <option value="dutch-bangla">Dutch Bangla Bank Branch</option>
+                        <option value="city-bank">City Bank Branch</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+                    </div>
+                  )}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Bank Account No.
                 </label>
                 <input
@@ -1273,15 +1302,16 @@ const CreateRiderForm = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Bank Branch Name
+                  Bank Account Name
                 </label>
                 <input
                   type="text"
-                  {...register('bankBranchName')}
+                  {...register('bankAccountName')}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
-                  placeholder="Enter branch name"
+                  placeholder="Enter account name"
                 />
               </div>
+              
             </div>
 
             {/* Document Uploads */}

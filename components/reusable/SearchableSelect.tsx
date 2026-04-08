@@ -48,12 +48,12 @@ export function SearchableSelect({
 
   // Filter options only if search is enabled
   const filteredOptions = searchable
-    ? options.filter((option) =>
-        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    ? options?.filter((option) =>
+        option?.label?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : options;
 
-  const selectedLabel = options.find((opt) => opt.value === value)?.label;
+  const selectedLabel = options?.find((opt) => opt?.value === value)?.label;
 
   // Reset search when dropdown closes
   React.useEffect(() => {

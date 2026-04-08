@@ -3,10 +3,21 @@ import { TAG_TYPES } from "../tagList";
 import {
   GetParcelsForAssignmentResponse,
   GetThirdPartyProvidersResponse,
+  HubChargesRequest,
+  HubChargesResponse,
 } from "./parcelTypes";
 
 const parcelsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    // get all parcels
+    getAllParcels: builder.query<any, void | undefined>({
+      query: () => ({
+        url: "/hubs/parcels",
+        method: "GET",
+      }),
+      providesTags: [TAG_TYPES.Parcels],
+    }),
+
     // get received parcels
     getReceivedParcels: builder.query({
       query: () => "/hubs/parcels/received",
@@ -135,8 +146,20 @@ const parcelsApi = baseApi.injectEndpoints({
       invalidatesTags: [TAG_TYPES.Parcels],
     }),
 
-    // ================Assign Parcel to Third Party Provider (carrybee)================
+    // /hubs/
+    inHubParcels: builder.query<
+      any,
+      { page?: number; limit?: number }
+    >({
+      query: ({ page = 1, limit = 20 }) => ({
+        url: "/parcels/in-hub",
+        method: "GET",
+        params: { page, limit },
+      }),
+      providesTags: [TAG_TYPES.Parcels],
+    }),
 
+    // ================Assign Parcel to Third Party Provider (carrybee)================
 
     // /carrybee/parcels/assigned
     getAssignedParcelsToThirdPartyProvider: builder.query<
@@ -180,14 +203,22 @@ const parcelsApi = baseApi.injectEndpoints({
       invalidatesTags: [TAG_TYPES.Parcels],
     }),
 
-    
-
-    
-
+    updateHubCharges: builder.mutation<
+      HubChargesResponse,
+      { id: string; charges: HubChargesRequest }
+    >({
+      query: ({ id, charges }) => ({
+        url: `/hubs/parcels/${id}/hub-charges`,
+        method: "PATCH",
+        body: charges,
+      }),
+      invalidatesTags: [TAG_TYPES.Parcels],
+    }),
   }),
 });
 
 export const {
+  useGetAllParcelsQuery,
   useGetReceivedParcelsQuery,
   useReceiveParcelsMutation,
   useGetParcelsForAssignmentQuery,
@@ -198,4 +229,6 @@ export const {
   useReceiveIncomingParcelsMutation,
   useAssignParcelToThirdPartyProviderMutation,
   useGetThirdPartyProvidersQuery,
+  useUpdateHubChargesMutation,
+  useInHubParcelsQuery,
 } = parcelsApi;

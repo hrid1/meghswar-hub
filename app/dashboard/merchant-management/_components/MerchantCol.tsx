@@ -46,14 +46,19 @@ export const merchantCol = [
     key: "merchantAddress",
     title: "Merchant Address",
     width: 180,
-    render: (row: any) => <p className="text-gray-500"> {row.comission}</p>,
+    render: (row: any) => (
+      <p className="text-gray-500"> {row.merchantAddress}</p>
+    ),
   },
   {
     key: "action",
     title: "Action",
     width: 100,
     render: (row: any) => (
-      <Link className="cursor-pointer" href={`/merchant-management/${row.mId}`}>
+      <Link
+        className="cursor-pointer"
+        href={`/dashboard/merchant-management/${row.mId}`}
+      >
         <Button>
           <Eye />
         </Button>

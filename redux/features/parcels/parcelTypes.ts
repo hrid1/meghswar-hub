@@ -236,3 +236,21 @@ export interface GetThirdPartyProvidersResponse {
 //     "message": "Active providers retrieved successfully",
 //     "timestamp": "2026-03-12T14:49:04.527Z"
 // }
+
+
+export interface HubChargesRequest {
+  delivery_charge?: number;
+  weight_charge?: number;
+}
+
+export interface HubChargesResponse {
+  success: boolean;
+  data: {
+    id: string;
+    parcel_tx_id: string;
+    tracking_number: string;
+    total_charge: number;
+  };
+  message: string;
+  timestamp: string;
+}

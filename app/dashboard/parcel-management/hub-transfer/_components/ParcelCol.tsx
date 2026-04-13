@@ -1,35 +1,58 @@
 // ParcelCol.tsx
+
+/** Avoid rendering nested API objects (e.g. merchant) if a field is mis-typed. */
+function asPlainText(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return "";
+}
+
 export const parcelColumns = (onClickUpdate: any) => [
   {
     key: "parcelId",
     header: "Parcel ID",
-    width: "12%",
+    width: "15%",
     render: (row: any) => (
       <div className="font-medium">
-        <span className="font-semibold">{row.parcel_tx_id || row.id}</span>
-        <div className="text-xs text-gray-500">{row.tracking_number}</div>
+        <span className="font-semibold">
+          {asPlainText(row.parcel_tx_id) || asPlainText(row.id) || "—"}
+        </span>
+        <div className="text-xs text-gray-500">
+          {asPlainText(row.tracking_number) || "—"}
+        </div>
       </div>
     ),
   },
   {
     key: "customerInfo",
     header: "Customer",
-    width: "18%",
+    width: "15%",
     wrap: true,
     render: (row: any) => {
-      // Handle the case where row might be undefined or missing fields
       if (!row) return <span>No data</span>;
-      
-      const address = row.customer_address || "";
+
+      const c = row.customer;
+      const customerName =
+        asPlainText(row.customer_name) || asPlainText(c?.customer_name) || "N/A";
+      const customerPhone =
+        asPlainText(row.customer_phone) || asPlainText(c?.phone_number) || "N/A";
+      const secondary =
+        asPlainText(row.customer_secondary_phone) ||
+        asPlainText(c?.secondary_number);
+      const address =
+        asPlainText(row.customer_address) ||
+        asPlainText(c?.customer_address) ||
+        "";
       const needsTruncation = address.length > 50;
-      
+
       return (
         <div className="flex flex-col">
-          <span className="font-semibold">{row.customer_name || "N/A"}</span>
-          <span className="text-sm text-gray-500">{row.customer_phone || "N/A"}</span>
-          {row.customer_secondary_phone && (
-            <span className="text-xs text-gray-400">{row.customer_secondary_phone}</span>
-          )}
+          <span className="font-semibold">{customerName}</span>
+          <span className="text-sm text-gray-500">{customerPhone}</span>
+          {secondary ? (
+            <span className="text-xs text-gray-400">{secondary}</span>
+          ) : null}
           <div className="relative group">
             <span className="text-xs text-gray-400 line-clamp-2">
               {address || "No address provided"}
@@ -55,7 +78,7 @@ export const parcelColumns = (onClickUpdate: any) => [
     render: (row: any) => {
       if (!row) return <span>No data</span>;
       
-      const description = row.product_description || "";
+      const description = asPlainText(row.product_description);
       const needsTruncation = description.length > 40;
       
       return (
@@ -72,7 +95,7 @@ export const parcelColumns = (onClickUpdate: any) => [
             </div>
           )}
           <div className="text-xs text-gray-400 mt-1">
-            Weight: {row.product_weight || "0"} kg
+            Weight: {asPlainText(row.product_weight) || "0"} kg
           </div>
         </div>
       );
@@ -82,12 +105,19 @@ export const parcelColumns = (onClickUpdate: any) => [
     key: "store",
     header: "Store",
     width: "12%",
-    render: (row: any) => (
-      <div>
-        <div className="font-semibold">{row.store?.business_name || "N/A"}</div>
-        <div className="text-xs text-gray-500">ID: {row.store?.id?.substring(0, 8) || "N/A"}...</div>
-      </div>
-    ),
+    render: (row: any) => {
+      const storeId = asPlainText(row.store?.id);
+      return (
+        <div>
+          <div className="font-semibold">
+            {asPlainText(row.store?.business_name) || "N/A"}
+          </div>
+          <div className="text-xs text-gray-500">
+            ID: {storeId ? `${storeId.slice(0, 8)}…` : "N/A"}
+          </div>
+        </div>
+      );
+    },
   },
   {
     key: "amount",
@@ -110,10 +140,11 @@ export const parcelColumns = (onClickUpdate: any) => [
     header: "Status",
     width: "12%",
     render: (row: any) => {
-      if (!row || !row.status) return <span>N/A</span>;
-      
+      const statusStr = asPlainText(row?.status);
+      if (!row || !statusStr) return <span>N/A</span>;
+
       const getStatusColor = (status: string) => {
-        const statusLower = status?.toLowerCase() || '';
+        const statusLower = status?.toLowerCase() || "";
         if (statusLower.includes('hub')) return 'bg-blue-100 text-blue-600';
         if (statusLower.includes('delivered')) return 'bg-green-100 text-green-600';
         if (statusLower.includes('return')) return 'bg-red-100 text-red-600';
@@ -123,9 +154,9 @@ export const parcelColumns = (onClickUpdate: any) => [
 
       return (
         <span
-          className={`px-3 py-1 text-xs rounded-full ${getStatusColor(row.status)}`}
+          className={`px-3 py-1 text-xs rounded-full ${getStatusColor(statusStr)}`}
         >
-          {row.status?.replace(/_/g, ' ') || 'N/A'}
+          {statusStr.replace(/_/g, " ")}
         </span>
       );
     },
@@ -135,14 +166,16 @@ export const parcelColumns = (onClickUpdate: any) => [
     header: "Delivery",
     width: "10%",
     render: (row: any) => {
-      const da = row.delivery_area;
+      const da = row.delivery_area ?? row.delivery_coverage_area;
       const areaStr =
         da == null
           ? null
           : typeof da === "string"
             ? da
             : typeof da === "object" && da !== null
-              ? [da.area, da.zone, da.city].filter(Boolean).join(", ") || da.division || "—"
+              ? [da.area, da.zone, da.city].filter(Boolean).join(", ") ||
+                asPlainText(da.division) ||
+                "—"
               : null;
       return (
         <div>

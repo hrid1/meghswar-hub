@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <main
           className={` contai ner mx-auto
-            pt-20 px-2 xl:px-6
+            pt-16 px-2 xl:px-4
             transition-all duration-300 ease-in-out 
             ${collapsed ? "md:ml-20" : "md:ml-60"}
           `}

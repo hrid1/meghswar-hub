@@ -7,16 +7,27 @@ export interface DeliveryArea {
   division?: string;
 }
 
+/** Nested customer from `/hubs/parcels/for-assignment` (and similar) responses */
+export interface ParcelCustomerNested {
+  id?: string;
+  customer_name?: string;
+  phone_number?: string;
+  secondary_number?: string | null;
+  customer_address?: string;
+}
+
 // Define types for your parcel data
 export interface Parcel {
     id: string;
     parcel_tx_id: string;
     tracking_number: string;
     merchant_order_id: string | null;
+    /** Flattened fields; may mirror `customer` */
     customer_name: string;
     customer_phone: string;
     customer_secondary_phone: string | null;
     customer_address: string;
+    customer?: ParcelCustomerNested | null;
     product_description: string;
     product_weight: string;
     total_charge: string;
@@ -30,6 +41,8 @@ export interface Parcel {
       business_name: string;
     };
     delivery_area: string | DeliveryArea | null;
+    /** Same shape as `delivery_area` when API sends both */
+    delivery_coverage_area?: string | DeliveryArea | null;
     assigned_rider: string | null;
   }
   
@@ -93,7 +106,7 @@ export interface Parcel {
   export interface Parcel2 {
     id: string;
     customer_id: string | null;
-    customer: null | any; // Define customer type if needed
+    customer: ParcelCustomerNested | null;
     merchant_id: string;
     store_id: string;
     store: Store;
@@ -101,7 +114,8 @@ export interface Parcel {
     tracking_number: string;
     parcel_tx_id: string;
     merchant_order_id: string;
-    delivery_area: string;
+    delivery_area: string | DeliveryArea | null;
+    delivery_coverage_area?: string | DeliveryArea | null;
     delivery_coverage_area_id: string | null;
     customer_name: string;
     customer_phone: string;

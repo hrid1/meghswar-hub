@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2 } from "lucide-react"
+import { EyeOffIcon, Loader2 } from "lucide-react"
+import { EyeIcon } from "lucide-react"
 import * as React from "react"
 import { useLoginMutation } from "@/redux/features/auth/authApi"
 import { setCredentials } from "@/redux/features/auth/authSlice"
@@ -34,6 +35,7 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = React.useState("manager@hub.com")
   const [password, setPassword] = React.useState("Manager123!")
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
+  const [showPassword, setShowPassword] = React.useState(false)
 
   React.useEffect(() => {
     if (accessToken) router.replace("/dashboard")
@@ -112,10 +114,20 @@ export default function LoginPage() {
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password
               </Label>
+                    <div className="relative">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="absolute right-0 top-7 -translate-y-1/2"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                  </Button>
+                </div>
               <Input
                 id="password"
                 placeholder="Enter your password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoCapitalize="none"
                 autoComplete="current-password"
                 disabled={isLoading}

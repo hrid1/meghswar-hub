@@ -11,6 +11,21 @@ import { useLoginMutation } from "@/redux/features/auth/authApi"
 import { setCredentials } from "@/redux/features/auth/authSlice"
 import { useAppDispatch, useAppSelector } from "@/redux/store/hook"
 
+function loginErrorMessage(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "data" in error &&
+    (error as { data: unknown }).data &&
+    typeof (error as { data: unknown }).data === "object"
+  ) {
+    const data = (error as { data: Record<string, unknown> }).data
+    const msg = data.message
+    if (typeof msg === "string" && msg.trim()) return msg
+  }
+  return "Unable to sign in. Please check your email and password."
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const dispatch = useAppDispatch()
@@ -18,6 +33,7 @@ export default function LoginPage() {
   const [login, { isLoading }] = useLoginMutation()
   const [identifier, setIdentifier] = React.useState("manager@hub.com")
   const [password, setPassword] = React.useState("Manager123!")
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     if (accessToken) router.replace("/dashboard")
@@ -25,6 +41,7 @@ export default function LoginPage() {
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
+    setErrorMessage(null)
     try {
       const data = await login({ identifier, password }).unwrap()
       dispatch(
@@ -35,8 +52,8 @@ export default function LoginPage() {
         })
       )
       router.push("/dashboard")
-    } catch {
-      // no-op for now; hook will surface errors if you want to render them
+    } catch (error) {
+      setErrorMessage(loginErrorMessage(error))
     }
   }
 
@@ -84,7 +101,10 @@ export default function LoginPage() {
                 autoCorrect="off"
                 disabled={isLoading}
                 value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
+                onChange={(e) => {
+                  setIdentifier(e.target.value)
+                  setErrorMessage(null)
+                }}
                 className="h-11 border-gray-300 focus-visible:border-[#FE5000]   focus-visible:ring-0 focus-visible:outline-none"
               />
             </div>
@@ -100,7 +120,10 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 disabled={isLoading}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setErrorMessage(null)
+                }}
                 className="h-11 border-gray-300 focus-visible:border-[#FE5000]  focus-visible:ring-0 focus-visible:outline-none"
               />
             </div>
@@ -112,6 +135,14 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
+            {errorMessage ? (
+              <p
+                role="alert"
+                className="text-sm  text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2 text-center"
+              >
+                {errorMessage}
+              </p>
+            ) : null}
             <Button 
               disabled={isLoading}
               className="w-full h-11 bg-orange-500 hover:bg-orange-600 text-white font-semibold"

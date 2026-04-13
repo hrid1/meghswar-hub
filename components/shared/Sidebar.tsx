@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -84,26 +85,96 @@ interface SidebarProps {
 export function Sidebar({
   open,
   collapsed,
-  setCollapsed,
+  setCollapsed: _setCollapsed,
   onClose,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [flyoutHref, setFlyoutHref] = useState<string | null>(null);
+  const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number } | null>(
+    null,
+  );
+  const flyoutAnchorRef = useRef<HTMLButtonElement | null>(null);
   const dispatch = useAppDispatch();
 
-  const toggleExpand = (href: string) => {
-    if (collapsed) {
-      setCollapsed(false);
-      setTimeout(() => {
-        setExpandedItems((prev) =>
-          prev.includes(href)
-            ? prev.filter((i) => i !== href)
-            : [...prev, href],
-        );
-      }, 150);
+  /** Icon-only rail on desktop; mobile drawer keeps labels when open. */
+  const railMode = collapsed && !open;
+
+  const closeFlyout = useCallback(() => {
+    setFlyoutHref(null);
+    setFlyoutPos(null);
+  }, []);
+
+  useEffect(() => {
+    closeFlyout();
+  }, [pathname, closeFlyout]);
+
+  useEffect(() => {
+    if (!railMode) closeFlyout();
+  }, [railMode, closeFlyout]);
+
+  const updateFlyoutPos = useCallback(() => {
+    const el = flyoutAnchorRef.current;
+    if (!el) {
+      setFlyoutPos(null);
       return;
     }
+    const r = el.getBoundingClientRect();
+    const gap = 8;
+    const panelW = 220;
+    let left = r.right + gap;
+    if (left + panelW > window.innerWidth - gap) {
+      left = Math.max(gap, r.left - panelW - gap);
+    }
+    const maxH = Math.min(window.innerHeight * 0.72, 28 * 16);
+    let top = r.top;
+    if (top + maxH > window.innerHeight - gap) {
+      top = Math.max(gap, window.innerHeight - gap - maxH);
+    }
+    setFlyoutPos({ top, left });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!flyoutHref) {
+      setFlyoutPos(null);
+      return;
+    }
+    updateFlyoutPos();
+    window.addEventListener("scroll", updateFlyoutPos, true);
+    window.addEventListener("resize", updateFlyoutPos);
+    return () => {
+      window.removeEventListener("scroll", updateFlyoutPos, true);
+      window.removeEventListener("resize", updateFlyoutPos);
+    };
+  }, [flyoutHref, updateFlyoutPos]);
+
+  useEffect(() => {
+    if (!flyoutHref) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement;
+      if (
+        t.closest("[data-sidebar-rail-popover]") ||
+        t.closest("[data-sidebar-rail-trigger]")
+      ) {
+        return;
+      }
+      closeFlyout();
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [flyoutHref, closeFlyout]);
+
+  useEffect(() => {
+    if (!flyoutHref) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeFlyout();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [flyoutHref, closeFlyout]);
+
+  const toggleExpand = (href: string) => {
     setExpandedItems((prev) =>
       prev.includes(href)
         ? prev.filter((item) => item !== href)
@@ -120,6 +191,10 @@ export function Sidebar({
     router.push("/login");
   };
 
+  const flyoutItem = flyoutHref
+    ? menuItems.find((i) => i.href === flyoutHref && i.children)
+    : undefined;
+
   return (
     <>
       <div
@@ -131,84 +206,106 @@ export function Sidebar({
 
       <aside
         className={`
-          fixed left-0 top-0 bottom-0 z-50 bg-white border-r border-gray-100
-          transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1)
-          ${open ? "translate-x-0" : "-translate-x-full"} 
+          fixed left-0 top-0 bottom-0 z-50 w-[min(280px,88vw)] bg-white border-r border-gray-100
+          transition-[width,transform] duration-300 cubic-bezier(0.4, 0, 0.2, 1)
+          ${open ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0 md:top-16 md:h-[calc(100vh-4rem)]
           ${collapsed ? "md:w-20" : "md:w-60"}
         `}
+        aria-label="Main navigation"
       >
-        <div className="h-full flex flex-col justify-between">
-          <div className="flex-1 overflow-y-auto sidebar-scroll py-5 px-1 space-y-1">
+        <div className="flex h-full min-h-0 min-w-0 flex-col justify-between">
+          <div
+            className={`flex-1 min-h-0 min-w-0 overflow-y-auto py-4 space-y-0.5 ${
+              railMode
+                ? "px-1.5 md:[scrollbar-width:none] md:[&::-webkit-scrollbar]:hidden"
+                : "px-2.5"
+            }`}
+          >
             {menuItems.map((item) => {
               const isExpanded = expandedItems.includes(item.href);
               const hasActiveChild = isChildActive(item.children);
               const active = isActive(item.href);
+              const flyoutOpen = flyoutHref === item.href;
 
               const itemClasses = `
-                relative flex items-center w-full p-2 py-3 rounded-xl transition-all duration-200 group
-                ${collapsed ? "justify-center" : "justify-between"}
+                relative flex items-center w-full rounded-xl transition-all duration-200 group/menu
+                ${railMode ? "justify-center p-2.5 min-h-[2.75rem]" : "justify-between gap-2 px-3 py-2.5"}
                 ${
-                  active || hasActiveChild
+                  active || hasActiveChild || flyoutOpen
                     ? "bg-orange-50 text-orange-600"
                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 }
               `;
 
               return (
-                <div key={item.href} className="mb-2">
-                  {collapsed && (
-                    <div className="absolute  left-full top-2 ml-3 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 group-hover:opacity-100  whitespace-nowrap z-50 pointer-events-none shadow-xl transform translate-x-2 group-hover:translate-x-0 transition-transform">
-                      {item.label}
-                    </div>
-                  )}
-
+                <div key={item.href} className="relative mb-0.5">
                   {item.children ? (
-                    <button
-                      onClick={() => toggleExpand(item.href)}
+                    <>
+                      <button
+                        type="button"
+                        ref={item.href === flyoutHref ? flyoutAnchorRef : undefined}
+                        data-sidebar-rail-trigger={railMode ? "" : undefined}
+                        aria-expanded={railMode ? flyoutOpen : isExpanded}
+                        aria-haspopup={railMode ? "true" : undefined}
+                        aria-label={railMode ? `${item.label}, submenu` : undefined}
+                        title={railMode ? item.label : undefined}
+                        onClick={() => {
+                          if (railMode) {
+                            setFlyoutHref((h) => (h === item.href ? null : item.href));
+                            return;
+                          }
+                          toggleExpand(item.href);
+                        }}
+                        className={itemClasses}
+                      >
+                        <div
+                          className={`flex min-w-0 items-center ${railMode ? "justify-center" : "flex-1 gap-3"}`}
+                        >
+                          <item.icon
+                            className={`${railMode ? "h-6 w-6" : "h-5 w-5"} shrink-0 transition-colors ${
+                              hasActiveChild || flyoutOpen
+                                ? "text-orange-600"
+                                : "text-gray-400 group-hover/menu:text-gray-600"
+                            }`}
+                          />
+
+                          {!railMode && (
+                            <span className="flex-1 truncate text-left text-sm font-medium">
+                              {item.label}
+                            </span>
+                          )}
+                        </div>
+
+                        {!railMode && (
+                          <ChevronDown
+                            className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                          />
+                        )}
+                      </button>
+
+                    </>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      aria-label={railMode ? item.label : undefined}
+                      title={railMode ? item.label : undefined}
                       className={itemClasses}
                     >
                       <div
-                        className={`flex items-center ${collapsed ? "justify-center w-full" : "gap-3"}`}
+                        className={`flex min-w-0 items-center ${railMode ? "justify-center" : "gap-3"}`}
                       >
                         <item.icon
-                          className={`
-                           ${collapsed ? "w-6 h-6" : "w-5 h-5"} 
-                           shrink-0 transition-colors 
-                           ${hasActiveChild ? "text-orange-600" : "text-gray-400 group-hover:text-gray-600"}
-                         `}
+                          className={`${railMode ? "h-6 w-6" : "h-5 w-5"} shrink-0 transition-colors ${
+                            active
+                              ? "text-orange-600"
+                              : "text-gray-400 group-hover/menu:text-gray-600"
+                          }`}
                         />
 
-                        {!collapsed && (
-                          <span className="font-medium text-sm text-left flex-1 truncate">
-                            {item.label}
-                          </span>
-                        )}
-                      </div>
-
-                      {!collapsed && (
-                        <ChevronDown
-                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                        />
-                      )}
-                    </button>
-                  ) : (
-                    <Link href={item.href} className={itemClasses}>
-                      <div
-                        className={`flex items-center ${collapsed ? "justify-center w-full" : "gap-3"}`}
-                      >
-                        <item.icon
-                          className={`
-                           ${collapsed ? "w-6 h-6" : "w-5 h-5"} 
-                           shrink-0 transition-colors
-                           ${active ? "text-orange-600" : "text-gray-400 group-hover:text-gray-600"}
-                         `}
-                        />
-
-                        {!collapsed && (
-                          <span className="font-medium text-sm truncate">
-                            {item.label}
-                          </span>
+                        {!railMode && (
+                          <span className="truncate text-sm font-medium">{item.label}</span>
                         )}
                       </div>
                     </Link>
@@ -217,21 +314,26 @@ export function Sidebar({
                   <div
                     className={`
                     overflow-hidden transition-all duration-300 ease-in-out
-                    ${!collapsed && isExpanded ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"}
+                    ${
+                      !railMode && isExpanded
+                        ? "max-h-[500px] opacity-100 mt-1"
+                        : "max-h-0 opacity-0"
+                    }
                   `}
                   >
-                    {item.children && (
-                      <div className="ml-5 pl-4 border-l-2 border-gray-100 space-y-1 py-1">
+                    {item.children && !railMode && (
+                      <div className="ml-3 space-y-0.5 border-l-2 border-gray-100 py-1 pl-3">
                         {item.children.map((child) => (
                           <Link
                             key={child.href}
                             href={child.href}
+                            onClick={onClose}
                             className={`
-                              block px-3 py-2 text-sm rounded-lg transition-colors border truncate
+                              block truncate rounded-lg border border-transparent px-3 py-2 text-sm transition-colors
                               ${
                                 isActive(child.href)
-                                  ? "text-orange-600 bg-orange-50 font-medium"
-                                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                  ? "bg-orange-50 font-medium text-orange-600"
+                                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                               }
                             `}
                           >
@@ -247,23 +349,59 @@ export function Sidebar({
           </div>
 
           <div
-            className={`p-4 border-t border-gray-100 ${collapsed ? "flex justify-center" : ""}`}
+            className={`border-t border-gray-100 p-3 ${railMode ? "flex justify-center px-2" : ""}`}
           >
             <button
+              type="button"
               onClick={handleLogout}
+              aria-label={railMode ? "Log out" : undefined}
+              title={railMode ? "Log out" : undefined}
               className={`
-               flex items-center rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors group
-               ${collapsed ? "p-3 justify-center" : "w-full px-4 py-3 gap-3"}
+               flex items-center rounded-xl text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 group/logout
+               ${railMode ? "p-2.5" : "w-full gap-3 px-3 py-2.5"}
              `}
             >
-              <LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              {!collapsed && (
-                <span className="text-sm font-medium">Logout</span>
-              )}
+              <LogOut className="h-5 w-5 shrink-0 transition-transform group-hover/logout:translate-x-0.5" />
+              {!railMode && <span className="text-sm font-medium">Logout</span>}
             </button>
           </div>
         </div>
       </aside>
+
+      {typeof window !== "undefined" &&
+        flyoutItem?.children &&
+        flyoutPos &&
+        createPortal(
+          <div
+            data-sidebar-rail-popover=""
+            style={{ top: flyoutPos.top, left: flyoutPos.left }}
+            className="fixed z-[100] w-[min(220px,calc(100vw-16px))] max-h-[min(72vh,28rem)] overflow-y-auto rounded-xl border border-gray-100 bg-white py-1.5 shadow-xl shadow-gray-200/50"
+          >
+            <p className="border-b border-gray-100 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              {flyoutItem.label}
+            </p>
+            <div className="py-1">
+              {flyoutItem.children.map((child) => (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  onClick={() => {
+                    closeFlyout();
+                    onClose();
+                  }}
+                  className={`mx-1.5 block rounded-lg px-3 py-2 text-sm transition-colors ${
+                    isActive(child.href)
+                      ? "bg-orange-50 font-medium text-orange-600"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
+                >
+                  {child.label}
+                </Link>
+              ))}
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

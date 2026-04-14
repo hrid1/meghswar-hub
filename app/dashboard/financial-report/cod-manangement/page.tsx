@@ -7,7 +7,7 @@ import {
   useCollectedCODAmountMutation,
 } from "@/redux/features/financial-report/FinancialReportApi";
 import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
-import type { Rider } from "@/redux/features/rider/riderType";
+
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -19,7 +19,9 @@ const BIKE_LABEL: Record<string, string> = {
 };
 
 export default function CODPage() {
-  const [selectedRider, setSelectedRider] = useState<Rider | null>(null);
+  const [selectedRider, setSelectedRider] = useState<any | null>(null);
+
+  console.log("selectedRider", selectedRider);
   const [countAmount, setCountAmount] = useState("");
 
   const { data: ridersData } = useGetRidersQuery({
@@ -27,7 +29,8 @@ export default function CODPage() {
     page: 1,
     limit: 100,
   });
-  const riders: Rider[] = ridersData?.data?.riders ?? [];
+  const riders: any[] = ridersData?.data?.riders ?? [];
+  console.log("riders", riders);
 
   const { data: codData, isLoading: codLoading } = useGetCodManagementListQuery(
     { riderId: selectedRider?.id ?? "" },
@@ -95,9 +98,9 @@ export default function CODPage() {
             onChange={(e) => handleSelectRider(e.target.value)}
           >
             <option value="">Select rider</option>
-            {riders.map((r: Rider) => (
+            {riders.map((r: any) => (
               <option key={r.id} value={r.id}>
-                {r.full_name}
+                {r.user.full_name}
               </option>
             ))}
           </select>
@@ -110,16 +113,16 @@ export default function CODPage() {
               {selectedRider.photo ? (
                 <img
                   src={selectedRider.photo}
-                  alt={selectedRider.full_name}
+                  alt={selectedRider?.full_name}
                   className="w-24 h-24 rounded-full object-cover"
                 />
               ) : (
                 <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-semibold text-gray-500">
-                  {selectedRider.full_name.charAt(0)}
+                  {selectedRider?.user?.full_name.charAt(0)}
                 </div>
               )}
               <div>
-                <p className="font-semibold text-lg">{selectedRider.full_name}</p>
+                <p className="font-semibold text-lg">{selectedRider?.user?.full_name}</p>
                 <p className="text-sm text-gray-500">
                   Rider&apos;s Bike Type: {BIKE_LABEL[selectedRider.bike_type] ?? selectedRider.bike_type}
                 </p>
@@ -128,7 +131,7 @@ export default function CODPage() {
 
             <div className="text-right text-sm text-gray-600">
               <p>Rider&apos;s License: {selectedRider.license_no || "—"}</p>
-              <p>Mobile: {selectedRider.phone}</p>
+              <p>Mobile: {selectedRider?.user?.phone}</p>
             </div>
           </div>
         )}

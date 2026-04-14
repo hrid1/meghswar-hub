@@ -3,204 +3,182 @@
 import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 import { parcelColumns } from "./_component/parcelCol";
-import { mockParcels } from "./_component/mockdata";
-import CustomDialog from "@/components/reusable/CustomDialog";
-import { Button } from "@/components/ui/button";
+import { useGetParcelReportsQuery } from "@/redux/features/parcels/parcelsApi";
+import { Search, RefreshCw, Loader2 } from "lucide-react";
+import { useEffect, useState as useStateInner } from "react";
+
+function useDebounce<T>(value: T, delay = 400): T {
+  const [debounced, setDebounced] = useStateInner<T>(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
+const ISSUE_TYPES = [
+  { value: "", label: "All Issue Types" },
+  { value: "INCORRECT_PHONE", label: "Incorrect Phone" },
+  { value: "WRONG_ADDRESS", label: "Wrong Address" },
+  { value: "NOT_AVAILABLE", label: "Not Available" },
+  { value: "DAMAGED", label: "Damaged" },
+  { value: "FRAUD", label: "Fraud" },
+];
 
 export default function ParcelReportTable() {
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [searchInput, setSearchInput] = useState("");
+  const [issueType, setIssueType] = useState("");
+
+  const debouncedSearch = useDebounce(searchInput, 400);
+
+  const { data: parcelReports, isLoading, isError, refetch } =
+    useGetParcelReportsQuery({
+      page,
+      limit,
+      search: debouncedSearch || undefined,
+      issue_type: issueType || undefined,
+    });
+
+  const reportsData = parcelReports?.data || [];
+  const pagination = parcelReports?.pagination;
+
+  const totalPages = pagination?.totalPages ?? 1;
+  const totalCount = pagination?.total ?? 0;
+
   // table selections
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
-
-  // modal
-  const [openModal, setOpenModal] = useState(false);
-
-  // for single update
   const [selectedParcel, setSelectedParcel] = useState<any>(null);
 
-  // radio value
-  const [selectedStatus, setSelectedStatus] = useState("");
-
-  // search + filter state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-
-  // toggle a single row by ID
-  const handleToggleRow = (rowId: string | number, row: any) => {
+  const handleToggleRow = (rowId: string | number) => {
     setSelectedRowIds((prev) =>
       prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
     );
   };
-  
-  // toggle all rows
-  const handleToggleAll = (nextSelected: (string | number)[], rows: any[]) => {
+
+  const handleToggleAll = (nextSelected: (string | number)[]) => {
     setSelectedRowIds(nextSelected);
   };
 
-  // 🔍 SEARCH + FILTER
-  const filteredParcels = mockParcels
-    .filter((p) => {
-      const q = searchQuery.toLowerCase();
-      return (
-        p.id.toLowerCase().includes(q) ||
-        p.customerInfo.name.toLowerCase().includes(q) ||
-        p.customerInfo.phone.includes(q) ||
-        p.merchant.name.toLowerCase().includes(q)
-      );
-    })
-    .filter((p) => (filterStatus ? p.status === filterStatus : true));
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+    setPage(1);
+  };
 
-  // SUBMIT (single + bulk)
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-
-    if (!selectedStatus) return;
-
-    let parcelIds;
-
-    // single update
-    if (selectedParcel) {
-      parcelIds = [selectedParcel.id];
-    } else {
-      // bulk update by selected IDs
-      parcelIds = selectedRowIds;
-    }
-
-    try {
-      const res = await fetch("/api/update-parcels", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          parcelIds,
-          status: selectedStatus,
-        }),
-      });
-
-      const data = await res.json();
-      console.log("API Response:", data);
-
-      setOpenModal(false);
-      setSelectedStatus("");
-      setSelectedParcel(null);
-    } catch (err) {
-      console.error("API error:", err);
-    }
+  const handleIssueTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setIssueType(e.target.value);
+    setPage(1);
   };
 
   return (
-    <div className="p-6">
-      {/* 🔍 SEARCH + FILTER */}
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search parcels..."
-            className="border p-2 rounded w-60"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-
-          <select
-            className="border p-2 rounded"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Pending">Pending</option>
-            <option value="Delivery Rescheduled">Delivery Rescheduled</option>
-            <option value="Customer Not Available">
-              Customer Not Available
-            </option>
-          </select>
-        </div>
-
-        {/* 🔥 BULK UPDATE BUTTON */}
-        <Button
-          disabled={selectedRowIds.length === 0}
-          className="bg-red-600/80 text-white"
-          onClick={() => {
-            if (selectedRowIds.length === 0) {
-              alert("Please select at least one parcel.");
-              return;
-            }
-            setSelectedParcel(null); // bulk mode
-            setOpenModal(true);
-          }}
+    <div className="p-6 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800">Parcel Reports</h1>
+        <button
+          onClick={() => refetch()}
+          className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
+          title="Refresh"
         >
-          Bulk Update Status
-        </Button>
+          <RefreshCw className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* TABLE */}
-      <DataTable
-        columns={parcelColumns((row: any) => {
-          setSelectedParcel(row); // single mode
-          setOpenModal(true);
-        })}
-        data={filteredParcels}
-        selectable={true}
-        getRowId={(row) => row.id}
-        selectedRowIds={selectedRowIds}
-        onToggleRow={handleToggleRow}
-        onToggleAll={handleToggleAll}
-      />
+      {/* Search + Filter */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search by tracking number, customer..."
+            className="pl-9 pr-4 py-2 border rounded-lg w-72 focus:outline-none focus:ring-2 focus:ring-orange-200 text-sm"
+            value={searchInput}
+            onChange={handleSearchChange}
+          />
+        </div>
 
-      {/* MODAL */}
-      <CustomDialog open={openModal} setOpen={setOpenModal}>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-3 my-4">
-            {/* OPTION 1 */}
-            <label
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition
-        ${
-          selectedStatus === "Delivery Rescheduled"
-            ? "border-orange-500 bg-orange-50"
-            : "border-gray-300 hover:bg-gray-50"
-        }
-      `}
-            >
-              <input
-                type="radio"
-                name="status"
-                value="Delivery Rescheduled"
-                checked={selectedStatus === "Delivery Rescheduled"}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="hidden"
-              />
-              <span className="font-medium text-gray-700">
-                Delivery Rescheduled
-              </span>
-            </label>
+        {/* Issue Type Filter */}
+        <select
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
+          value={issueType}
+          onChange={handleIssueTypeChange}
+        >
+          {ISSUE_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
 
-            {/* OPTION 2 */}
-            <label
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition
-        ${
-          selectedStatus === "Customer Not Available"
-            ? "border-orange-500 bg-orange-50"
-            : "border-gray-300 hover:bg-gray-50"
-        }
-      `}
+        {/* Result count */}
+        <span className="text-sm text-gray-500 ml-auto">
+          {totalCount > 0 && `${totalCount} report${totalCount !== 1 ? "s" : ""} found`}
+        </span>
+      </div>
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex justify-center items-center h-48">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          <span className="ml-2 text-gray-500">Loading reports...</span>
+        </div>
+      )}
+
+      {/* Error */}
+      {isError && (
+        <div className="flex justify-center items-center h-48 text-red-500">
+          Failed to load parcel reports. Please try again.
+        </div>
+      )}
+
+      {/* Table */}
+      {!isLoading && !isError && (
+        <DataTable
+          columns={parcelColumns((row: any) => {
+            setSelectedParcel(row);
+          })}
+          data={reportsData}
+          selectable={true}
+          getRowId={(row) => row.id}
+          selectedRowIds={selectedRowIds}
+          onToggleRow={handleToggleRow}
+          onToggleAll={handleToggleAll}
+        />
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !isError && reportsData.length === 0 && (
+        <div className="text-center py-16 text-gray-400">
+          No reports found{searchInput || issueType ? " for the current filters" : ""}.
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-sm text-gray-500">
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 border rounded-md text-sm disabled:opacity-40 hover:bg-gray-50 transition-colors"
             >
-              <input
-                type="radio"
-                name="status"
-                value="Customer Not Available"
-                checked={selectedStatus === "Customer Not Available"}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="hidden"
-              />
-              <span className="font-medium text-gray-700">
-                Customer Not Available
-              </span>
-            </label>
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1 border rounded-md text-sm disabled:opacity-40 hover:bg-gray-50 transition-colors"
+            >
+              Next
+            </button>
           </div>
-
-          <Button type="submit" className="bg-red-500 text-white">
-            Confirm & Update
-          </Button>
-        </form>
-      </CustomDialog>
+        </div>
+      )}
     </div>
   );
 }

@@ -268,3 +268,60 @@ export interface HubChargesResponse {
   message: string;
   timestamp: string;
 }
+
+
+//====================== parcel reports =================================
+
+// Customer interface
+interface Customer {
+  name: string;
+  phone: string;
+  address: string;
+}
+
+// Merchant interface
+interface Merchant {
+  name: string;
+  company: string;
+  phone: string;
+}
+
+// Reported by (rider) interface
+interface ReportedBy {
+  name: string;
+  photo: string; // URL to photo
+}
+
+// Report details interface
+interface Report {
+  type: string; // e.g., "INCORRECT_PHONE"
+  reason: string;
+  reported_at: string; // ISO date string
+}
+
+// Individual parcel report interface
+interface ParcelReport {
+  id: string; // UUID
+  tracking_number: string;
+  customer: Customer;
+  merchant: Merchant;
+  zone: string;
+  reported_by: ReportedBy;
+  report: Report;
+}
+
+// Pagination interface
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Main API response interface
+export interface ParcelReportsResponse {
+  success: boolean;
+  data: ParcelReport[];
+  pagination: Pagination;
+  message: string;
+}

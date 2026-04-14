@@ -5,6 +5,7 @@ import {
   GetThirdPartyProvidersResponse,
   HubChargesRequest,
   HubChargesResponse,
+  ParcelReportsResponse,
 } from "./parcelTypes";
 
 const parcelsApi = baseApi.injectEndpoints({
@@ -203,6 +204,20 @@ const parcelsApi = baseApi.injectEndpoints({
       invalidatesTags: [TAG_TYPES.Parcels],
     }),
 
+    // parcel reports
+    // /hubs/parcels/reports?hub_id=8f8c6c8a-e8b4-4c37-88d0-249b09c69758&search=TRK-20260413-00031&issue_type=INCORRECT_PHONE&page=1&limit=10
+    getParcelReports: builder.query<
+      ParcelReportsResponse,
+      { page?: number; limit?: number; hub_id?: string; search?: string; issue_type?: string }
+    >({
+      query: ({ page = 1, limit = 20, hub_id, search, issue_type }) => ({
+        url: "/hubs/parcels/reports",
+        method: "GET",
+        params: { page, limit, hub_id, search, issue_type },
+      }),
+      providesTags: [TAG_TYPES.Parcels],
+    }),
+
     updateHubCharges: builder.mutation<
       HubChargesResponse,
       { id: string; charges: HubChargesRequest }
@@ -215,6 +230,9 @@ const parcelsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [TAG_TYPES.Parcels],
     }),
+
+
+
   }),
 });
 
@@ -232,4 +250,5 @@ export const {
   useGetThirdPartyProvidersQuery,
   useUpdateHubChargesMutation,
   useInHubParcelsQuery,
+  useGetParcelReportsQuery,
 } = parcelsApi;

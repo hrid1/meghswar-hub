@@ -315,24 +315,24 @@ export const assignParcelColumns = (
   },
 
   // 10. Action
-  {
-    key: "action",
-    header: "Action",
-    width: "6%",
-    render: (row: any) => (
-      <div className="flex items-center flex-wrap gap-1 justify-center">
-        <button className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
-          <EyeIcon className="w-4 h-4" />
-        </button>
-        {onClickUpdate && (
-          <button
-            onClick={() => onClickUpdate(row)}
-            className="px-2 py-1 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
-          >
-            <TruckIcon className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-    ),
-  },
+  // {
+  //   key: "action",
+  //   header: "Action",
+  //   width: "6%",
+  //   render: (row: any) => (
+  //     <div className="flex items-center flex-wrap gap-1 justify-center">
+  //       <button className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+  //         <EyeIcon className="w-4 h-4" />
+  //       </button>
+  //       {onClickUpdate && (
+  //         <button
+  //           onClick={() => onClickUpdate(row)}
+  //           className="px-2 py-1 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+  //         >
+  //           <TruckIcon className="w-4 h-4" />
+  //         </button>
+  //       )}
+  //     </div>
+  //   ),
+  // },
 ];

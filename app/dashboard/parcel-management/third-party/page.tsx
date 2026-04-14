@@ -1,5 +1,6 @@
 import CustomTabs from "@/components/reusable/CustomTabs";
 import ParcelForAssignmentTable from "./_components/parcelForAssignmentTable";
+import AllPacelListTable from "./_components/AllPacelListTable";
 
 const myTabs = [
   {
@@ -7,7 +8,7 @@ const myTabs = [
     value: "all-parcel-list",
     content: (
       <>
-        <ParcelForAssignmentTable />
+        <AllPacelListTable />
       </>
     ),
   },
@@ -16,9 +17,7 @@ const myTabs = [
     value: "assigned-parcel-list",
     content: (
       <>
-
-      <h1>This is still processing...</h1>
-       
+        <ParcelForAssignmentTable />
       </>
     ),
   },

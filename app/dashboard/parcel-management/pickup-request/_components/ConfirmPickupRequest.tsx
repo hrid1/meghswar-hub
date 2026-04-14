@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { confirmedPickupColumns } from "./riderAssignCol";
 import { useGetConfirmedPickupsQuery } from "@/redux/features/pickup-request/pickupRequestApi";
 
-export default function PickupRequestTableRider() {
+export default function ConfirmPickupRequest() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data, isLoading } = useGetConfirmedPickupsQuery({
@@ -31,7 +31,7 @@ export default function PickupRequestTableRider() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">
-        Assigned  Pickup Requests
+        Confirmed Pickup Requests
       </h1>
 
       <div className="flex items-center gap-4 mb-4">

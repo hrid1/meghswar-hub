@@ -4,7 +4,6 @@ import CustomSearchInput from "@/components/reusable/CustomSearchInput";
 import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 
-
 import { useGetAllParcelsQuery } from "@/redux/features/parcels/parcelsApi";
 import { columns } from "./_components/AllParcelCol";
 export default function TestTablePage() {
@@ -12,8 +11,6 @@ export default function TestTablePage() {
   const parcelsData = parcels?.data?.parcels || [];
   console.log("parcelsData", parcelsData);
   const [search, setSearch] = useState("");
-
-
 
   // =============================
   // 3️⃣ Row Selection State
@@ -33,6 +30,17 @@ export default function TestTablePage() {
     );
   });
 
+  const merchants = [
+    { id: 1, name: "Merchant 1" },
+    { id: 2, name: "Merchant 2" },
+    { id: 3, name: "Merchant 3" },
+  ];
+
+  const riders = [
+    { id: 1, name: "Rider 1" },
+    { id: 2, name: "Rider 2" },
+    { id: 3, name: "Rider 3" },
+  ];
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -47,7 +55,9 @@ export default function TestTablePage() {
   if (isError) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">Error loading parcels: {(error as any)?.message || "Unknown error"}</p>
+        <p className="text-red-500">
+          Error loading parcels: {(error as any)?.message || "Unknown error"}
+        </p>
       </div>
     );
   }
@@ -58,35 +68,41 @@ export default function TestTablePage() {
       <h1 className="text-2xl font-bold">All Parcel</h1>
 
       {/* Search and Filters */}
-      <div className="grid grid-cols-7 gap-5">
+      <div className="grid grid-cols-7 gap-4">
         <CustomSearchInput
+          className="col-span-2 w-[90%]"
           value={search}
           onChange={(e: any) => setSearch(e.target.value)}
           placeholder="Search parcels..."
         />
-        <CustomSearchInput
-          value={search}
-          onChange={(e: any) => setSearch(e.target.value)}
-          placeholder="Search parcels..."
-        />
-        <CustomSearchInput
-          value={search}
-          onChange={(e: any) => setSearch(e.target.value)}
-          placeholder="Search parcels..."
-        />
-        <CustomSearchInput
-          value={search}
-          onChange={(e: any) => setSearch(e.target.value)}
-          placeholder="Search parcels..."
-        />
-        <CustomSearchInput
-          value={search}
-          onChange={(e: any) => setSearch(e.target.value)}
-          placeholder="Search parcels..."
-        />
-        <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-          Select
-        </button>
+
+        <select className="border p-2 rounded-md -ml-5">
+          <option value="">All Merchants </option>
+          {merchants.map((merchant: any) => (
+            <option key={merchant.id} value={merchant.id}>
+              {merchant.name}
+            </option>
+          ))}
+        </select>
+
+        <select className="border p-2 rounded-md ml-5">
+          <option value="">All Riders</option>
+          {riders.map((rider: any) => (
+            <option key={rider.id} value={rider.id}>
+              {rider.name}
+            </option>
+          ))}
+        </select>
+
+        <select className="border p-2 rounded-md ml-5 ">
+          <option value="">All Status</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Pending">Pending</option>
+          <option value="Delivery Rescheduled">Delivery Rescheduled</option>
+          <option value="Customer Not Available">Customer Not Available</option>
+        </select>
+
+        
         <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
           Export
         </button>
@@ -100,7 +116,9 @@ export default function TestTablePage() {
         selectedRowIds={selectedRowIds}
         onToggleRow={(rowId) => {
           setSelectedRowIds((prev) =>
-            prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
+            prev.includes(rowId)
+              ? prev.filter((id) => id !== rowId)
+              : [...prev, rowId],
           );
         }}
         onToggleAll={(nextSelected) => {

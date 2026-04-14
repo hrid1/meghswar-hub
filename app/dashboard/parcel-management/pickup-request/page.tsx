@@ -2,6 +2,7 @@ import CustomTabs from "@/components/reusable/CustomTabs";
 import React from "react";
 import PickupRequestTable from "./_components/RequestList";
 import PickupRequestTableRider from "./_components/AssignedRider";
+import ConfirmPickupRequest from "./_components/ConfirmPickupRequest";
 
 const myTabs = [
   {
@@ -19,6 +20,15 @@ const myTabs = [
     content: (
       <>
         <PickupRequestTableRider />
+      </>
+    ),
+  },
+  {
+    name: "Confirmed Pickup ",
+    value: "confirmed-pickup",
+    content: (
+      <>
+        <ConfirmPickupRequest />
       </>
     ),
   },

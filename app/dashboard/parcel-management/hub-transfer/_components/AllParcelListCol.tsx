@@ -1,17 +1,15 @@
+// ParcelCol.tsx
 "use client";
 
 import { txt } from "@/lib/utils";
-import { Building2, EyeIcon, TruckIcon } from "lucide-react";
+import { EyeIcon, TruckIcon } from "lucide-react";
 
-export const assignParcelColumns = (
-  onClickUpdate?: (row: any) => void,
-  onAssignHub?: (row: any) => void
-) => [
+export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
   // 1. Parcel ID
   {
     key: "parcelId",
     header: "ID",
-    width: "12%",
+    width: "13%",
     wrap: true,
     render: (row: any) => (
       <div className="flex flex-col items-start min-w-0">
@@ -32,7 +30,7 @@ export const assignParcelColumns = (
   {
     key: "store",
     header: "Store",
-    width: "12%",
+    width: "13%",
     render: (row: any) => {
       const storeName =
         txt(row.store_name) || txt(row.store?.business_name) || "N/A";
@@ -52,7 +50,7 @@ export const assignParcelColumns = (
   {
     key: "customerInfo",
     header: "Customer",
-    width: "17%",
+    width: "18%",
     wrap: true,
     render: (row: any) => {
       if (!row) return <span>No data</span>;
@@ -101,7 +99,7 @@ export const assignParcelColumns = (
   {
     key: "special_instructions",
     header: "Instructions",
-    width: "12%",
+    width: "13%",
     wrap: true,
     render: (row: any) => {
       const note = txt(row.special_instructions) || "";
@@ -128,7 +126,7 @@ export const assignParcelColumns = (
   {
     key: "delivery",
     header: "Delivery Area",
-    width: "10%",
+    width: "11%",
     render: (row: any) => {
       const da = row.delivery_area ?? row.delivery_coverage_area;
       const areaStr =
@@ -166,7 +164,7 @@ export const assignParcelColumns = (
   {
     key: "status",
     header: "Status",
-    width: "10%",
+    width: "11%",
     render: (row: any) => {
       const status = txt(row?.status) || "N/A";
 
@@ -201,7 +199,7 @@ export const assignParcelColumns = (
   {
     key: "amount",
     header: "Amount",
-    width: "11%",
+    width: "12%",
     render: (row: any) => {
       const codAmount = parseFloat(row.cod_amount || 0);
       const totalCharge = parseFloat(row.total_charge || 0);
@@ -238,7 +236,7 @@ export const assignParcelColumns = (
   {
     key: "age",
     header: "Age",
-    width: "10%",
+    width: "12%",
     render: (row: any) => {
       const createdAt = row.created_at ? new Date(row.created_at) : null;
       const updatedAt = row.updated_at ? new Date(row.updated_at) : null;
@@ -284,41 +282,11 @@ export const assignParcelColumns = (
     },
   },
 
-  // 9. Assign Hub  ← extra column
-  {
-    key: "assignHub",
-    header: "Assign Hub",
-    width: "10%",
-    render: (row: any) => {
-      const assignedHub =
-        row.assigned_hub?.name || row.hub?.name || row.hub_name || null;
-
-      return (
-        <div className="flex flex-col items-start gap-1">
-          {assignedHub ? (
-            <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full truncate max-w-full">
-              {assignedHub}
-            </span>
-          ) : (
-            <span className="text-xs text-gray-400">Not assigned</span>
-          )}
-          <button
-            onClick={() => onAssignHub?.(row)}
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors whitespace-nowrap"
-          >
-            <Building2 className="w-3 h-3" />
-            {assignedHub ? "Reassign" : "Assign"}
-          </button>
-        </div>
-      );
-    },
-  },
-
-  // 10. Action
+  // 9. Action
   {
     key: "action",
     header: "Action",
-    width: "6%",
+    width: "7%",
     render: (row: any) => (
       <div className="flex items-center flex-wrap gap-1 justify-center">
         <button className="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">

@@ -5,8 +5,9 @@ import React, { useMemo, useState } from "react";
 import { useGetHubOutgoingParcelsQuery } from "@/redux/features/parcels/parcelsApi";
 import { Loader2 } from "lucide-react";
 import type { Parcel2 } from "@/redux/features/parcels/parcelTypes";
-import { parcelColumns1 } from "./AssignParcelCols";
+// import { parcelColumns1 } from "./AssignParcelCols";
 import { Button } from "@/components/ui/button";
+import { assignParcelColumns } from "./AssignParcelCols";
 
 export default function AssignParcelTable() {
   const [page, setPage] = useState(1);
@@ -119,7 +120,7 @@ export default function AssignParcelTable() {
 
       {/* TABLE */}
       <DataTable
-        columns={parcelColumns1((row: Parcel2) => {
+        columns={assignParcelColumns((row: Parcel2) => {
           console.log("row", row);
         })} 
         data={filteredParcels}

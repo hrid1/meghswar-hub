@@ -8,7 +8,8 @@ import { parcelColumns } from "./AllParcelListCol";
 import { useGetParcelsForAssignmentQuery } from "@/redux/features/parcels/parcelsApi";
 import { Loader2 } from "lucide-react";
 import { Parcel } from "@/redux/features/parcels/parcelTypes";
-import AssignHubModal from "./AssignHubModal";
+import AssignThirdpartyModal from "./AssignThirdpartyModal";
+
 
 export default function PickupRequestTable() {
   const [page, setPage] = useState(1);
@@ -32,7 +33,7 @@ export default function PickupRequestTable() {
   // Modal state (Third Party)
   const [openModal, setOpenModal] = useState(false);
   // Modal state (Assign to Hub)
-  const [openHubModal, setOpenHubModal] = useState(false);
+  const [openThirdpartyModal, setOpenThirdpartyModal] = useState(false);
 
   // For single update
   const [selectedParcel, setSelectedParcel] = useState<Parcel | null>(null);
@@ -189,7 +190,7 @@ export default function PickupRequestTable() {
             disabled={selectedRowIds.length === 0}
             className="bg-orange-600 hover:bg-orange-700 text-white"
             onClick={() => {
-              setOpenHubModal(true);
+              setOpenThirdpartyModal(true);
             }}
           >
             Assign To Hub ({selectedRowIds.length})
@@ -308,9 +309,9 @@ export default function PickupRequestTable() {
         </form>
       </CustomDialog>
 
-      <AssignHubModal
-        open={openHubModal}
-        setOpen={setOpenHubModal}
+      <AssignThirdpartyModal
+        open={openThirdpartyModal}
+        setOpen={setOpenThirdpartyModal}
         selectedParcel={selectedParcel}
         selectedRowIds={selectedRowIds}
         onSuccess={() => {

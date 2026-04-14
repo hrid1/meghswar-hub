@@ -16,7 +16,7 @@ export const getParcelColumns = (
   {
     key: "id",
     header: "ID",
-    width: "13%",
+    width: "%10",
     render: (row: any) => (
       <div className="">
         <p className="text-nowrap flex items-center">
@@ -31,16 +31,16 @@ export const getParcelColumns = (
             <Copy className="w-3 ml-1 cursor-pointer hover:text-orange-500" />
           </span>
         </p>
-        <p className="text-xs text-gray-500">{row.tracking_number}</p>
+        {/* <p className="text-xs text-gray-700">{row.tracking_number}</p> */}
       </div>
     ),
   },
-  {
-    key: "merchant",
-    header: "Merchant",
-    width: "12%",
-    render: (row: any) => <p className="text-nowrap font-medium">{row.merchant}</p>,
-  },
+  // {
+  //   key: "merchant",
+  //   header: "Merchant",
+  //   width: "12%",
+  //   render: (row: any) => <p className="text-nowrap font-medium">{row.merchant}</p>,
+  // },
   {
     key: "additionalNote",
     header: "Additional Note",
@@ -76,9 +76,9 @@ export const getParcelColumns = (
       return (
         <div className="text-sm break-words">
           <div className="font-semibold">{row.customer}</div>
-          <div className="text-gray-600 text-xs">{row.phone}</div>
+        
           <div className="relative group mt-1">
-            <div className="text-gray-500 text-xs cursor-help">
+            <div className="text-gray-700 text-xs cursor-help">
               {shortAddress}
             </div>
             {address.length > 35 && (
@@ -89,6 +89,10 @@ export const getParcelColumns = (
               </div>
             )}
           </div>
+
+
+          <div className="text-gray-600 text-xs">{row.phone}</div>
+          <div className="text-gray-600 text-xs">{row.secondary_phone}</div>
         </div>
       );
     },
@@ -108,7 +112,7 @@ export const getParcelColumns = (
         <div className="text-green-600 font-bold text-sm">
           ৳{row.collectableAmount?.toLocaleString() || 0}
         </div>
-        <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+        <div className="text-xs text-gray-700 mt-1 space-y-0.5">
           <div>Delivery: ৳{row.deliveryCharge || 0}</div>
           <div>COD: ৳{row.codCharge || 0}</div>
           <div>Weight: ৳{row.weightCharge || 0}</div>
@@ -133,7 +137,6 @@ export const getParcelColumns = (
           }
         }}
         suffix=" kg"
-        disabled={row.status !== "pending"} // Only allow editing for pending parcels
       />
     ),
   },
@@ -152,43 +155,11 @@ export const getParcelColumns = (
           }
         }}
         prefix="৳"
-        disabled={row.status !== "pending"}
       />
     ),
   },
-  {
-    key: "weightCharge",
-    header: "Weight (৳)",
-    width: "8%",
-    render: (row: any) => (
-      <EditableCell
-        value={row.weightCharge || 0}
-        onSave={async (newValue) => {
-          if (onUpdateCharges) {
-            await onUpdateCharges(row.originalId, {
-              weight_charge: newValue,
-            });
-          }
-        }}
-        prefix="৳"
-        disabled={row.status !== "pending"}
-      />
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    width: "8%",
-    render: (row: any) => (
-      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-        row.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-        row.status === "received" ? "bg-green-100 text-green-800" :
-        "bg-gray-100 text-gray-800"
-      }`}>
-        {row.status}
-      </span>
-    ),
-  },
+ 
+  
   {
     key: "action",
     header: "Action",

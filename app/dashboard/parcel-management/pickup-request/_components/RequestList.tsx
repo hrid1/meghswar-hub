@@ -40,6 +40,8 @@ export default function PickupRequestTable() {
   });
   const riders = ridersData?.data?.riders || [];
 
+  console.log("ridersData", ridersData);
+
   console.log("riders", riders);
 
   const [bulkAssignRider, { isLoading: assigning }] = useAssignRiderMutation();
@@ -154,9 +156,9 @@ export default function PickupRequestTable() {
             </SelectTrigger>
 
             <SelectContent>
-              {riders.map((rider: any) => (
+              {riders?.map((rider: any) => (
                 <SelectItem key={rider.id} value={rider.id}>
-                  {rider.full_name}
+                  {rider?.user?.full_name}
                 </SelectItem>
               ))}
             </SelectContent>

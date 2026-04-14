@@ -208,7 +208,8 @@ const parcelsApi = baseApi.injectEndpoints({
       { id: string; charges: HubChargesRequest }
     >({
       query: ({ id, charges }) => ({
-        url: `/hubs/parcels/${id}/hub-charges`,
+        // /parcels/:id/hub-charges
+        url: `/parcels/${id}/hub-charges`,
         method: "PATCH",
         body: charges,
       }),

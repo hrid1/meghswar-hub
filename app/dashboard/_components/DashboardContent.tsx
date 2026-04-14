@@ -1,3 +1,6 @@
+
+
+"use client";
 import React from "react";
 import StatsCard from "./StatsCard";
 import SummaryForToday from "./SummaryForToday";
@@ -6,8 +9,15 @@ import ParcelFlow from "./ParcelFlow";
 import PendingActions from "./PendingActions";
 import RiderStatus from "./RiderStatus";
 import OnGoingDelivery from "./OnGoingDelivery";
+import { useGetMyHubQuery } from "@/redux/features/hubs/hubsApi";
 
 export default function DashboardContent() {
+
+
+  const { data: myHub, isLoading: isLoadingMyHub } = useGetMyHubQuery();
+  console.log(myHub);
+  if (isLoadingMyHub) return <div>Loading...</div>;
+  if (!myHub) return <div>No hub found</div>;
   return (
     <div className="mt-5 space-y-6">
       <StatsCard />

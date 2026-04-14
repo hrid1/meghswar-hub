@@ -51,7 +51,7 @@ export default function ParcelSummary({
       textColor: "text-white",
       value: totalWeight,
       label: "Weight",
-      suffix: "kg",
+      suffix: "৳",
     },
   ];
 

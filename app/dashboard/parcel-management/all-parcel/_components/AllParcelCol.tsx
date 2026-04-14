@@ -1,4 +1,5 @@
 import { txt } from "@/lib/utils";
+import { EditIcon, EyeIcon } from "lucide-react";
 
 // =============================
   // 1️⃣ Columns Configuration
@@ -83,7 +84,7 @@ import { txt } from "@/lib/utils";
           <div className="flex items-center space-x-3">
             <div className="min-w-0">
               <p className="font-semibold text-sm truncate">{storeName}</p>
-              <p className="text-xs text-gray-500 truncate">{txt(row.merchant_order_id) || "N/A"}</p>
+              <p className="text-xs text-gray-500 truncate">{txt(row.store?.id) || "N/A"}</p>
             </div>
           </div>
         );
@@ -91,21 +92,21 @@ import { txt } from "@/lib/utils";
     },
 
     // 4. Area
-    {
-      key: "area",
-      header: "Area",
-      width: "11%",
-      render: (row: any) => {
-        const area = row.delivery_area?.area || row.area || "";
-        const zone = row.delivery_area?.zone || "";
-        return (
-          <div className="text-sm">
-            <div>{area}</div>
-            <div className="text-xs text-gray-500">{zone}</div>
-          </div>
-        );
-      },
-    },
+    // {
+    //   key: "area",
+    //   header: "Area",
+    //   width: "11%",
+    //   render: (row: any) => {
+    //     const area = row.delivery_area?.area || row.area || "";
+    //     const zone = row.delivery_area?.zone || "";
+    //     return (
+    //       <div className="text-sm">
+    //         <div>{area}</div>
+    //         <div className="text-xs text-gray-500">{zone}</div>
+    //       </div>
+    //     );
+    //   },
+    // },
 
     // 5. Rider
     {
@@ -145,7 +146,7 @@ import { txt } from "@/lib/utils";
       header: "Status",
       width: "13%",
       render: (row: any) => {
-        const status = txt(row.status) || "PENDING";
+        const status = txt(row.status) || "N/A";
         const styles: Record<string, string> = {
           "PENDING": "bg-orange-100 text-orange-700",
           "IN_PROGRESS": "bg-green-100 text-green-700",
@@ -153,6 +154,7 @@ import { txt } from "@/lib/utils";
           "DELIVERED": "bg-blue-100 text-blue-700",
           "RETURNED": "bg-red-100 text-red-700",
           "CANCELLED": "bg-gray-100 text-gray-700",
+          "N/A": "bg-gray-100 text-gray-700",
         };
 
         const displayStatus = status.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (l: any) => l.toUpperCase());
@@ -173,26 +175,31 @@ import { txt } from "@/lib/utils";
     {
       key: "amount",
       header: "Amount",
-      width: "11%",
+      width: "13%",
       render: (row: any) => {
         const totalCharge = parseFloat(row.total_charge || row.amount || 0);
-        const codAmount = parseFloat(row.cod_amount || 0);
-        const displayAmount = row.is_cod ? codAmount : totalCharge;
-
-      
         const deliveryCharge = parseFloat(row.delivery_charge || 0);
-        const weightCharge = parseFloat(row.weight_charge || 0);
         const codCharge = parseFloat(row.cod_charge || 0);
-        // const totalCharge = parseFloat(row.total_charge || 0);
-        
+        const weightCharge = parseFloat(row.weight_charge || 0);
+        const discount = parseFloat(row.discount || 0);
+
         return (
-          <div className="font-semibold text-gray-900">
-            ৳ {displayAmount.toLocaleString()}
-            {row.is_cod && (
-              <div className="text-xs text-gray-500">
-                COD: ৳ {codAmount.toLocaleString()}
-              </div>
-            )}
+          <div className="text-sm space-y-0.5">
+            <div className="font-bold text-green-600">
+              ৳ {totalCharge.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500">
+              Delivery Charge: &nbsp;৳ {deliveryCharge.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500">
+              COD Charge: &nbsp;৳ {codCharge.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-500">
+              Weight Charge: &nbsp;৳ {weightCharge.toLocaleString()}
+            </div>
+            <div className="text-xs text-orange-500 font-medium">
+              Discount: &nbsp;৳ {discount.toLocaleString()}
+            </div>
           </div>
         );
       },
@@ -210,22 +217,59 @@ import { txt } from "@/lib/utils";
       ),
     },
 
-    // 9. Delivery Time / Created At
+    // 9. Age / Dates
     {
       key: "deliveryTime",
-      header: "Created",
+      header: "Age",
       width: "13%",
       render: (row: any) => {
         const createdAt = row.created_at ? new Date(row.created_at) : null;
-        const formattedDate = createdAt ? createdAt.toLocaleDateString() : "N/A";
-        const formattedTime = createdAt ? createdAt.toLocaleTimeString() : "";
-        
+        const updatedAt = row.updated_at ? new Date(row.updated_at) : null;
+
+        const ageDays = createdAt
+          ? Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+          : null;
+
+        const fmt = (d: Date) =>
+          d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
+          ", " +
+          d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+
         return (
-          <div className="text-right">
-            <div className="font-semibold text-sm">{row.deliveryTime || formattedDate}</div>
-            <div className="text-xs text-gray-500">{formattedTime}</div>
+          <div className="text-sm space-y-1.5">
+            {ageDays !== null && (
+              <span className="inline-block bg-orange-100 text-orange-600 text-xs font-semibold px-3 py-1 rounded-full">
+                {ageDays} {ageDays === 1 ? "Day" : "Days"}
+              </span>
+            )}
+            {createdAt && (
+              <div>
+                <div className="text-xs text-gray-500 font-medium">Created:</div>
+                <div className="text-xs text-gray-700">{fmt(createdAt)}</div>
+              </div>
+            )}
+            {updatedAt && (
+              <div>
+                <div className="text-xs text-gray-500 font-medium">Last Updated:</div>
+                <div className="text-xs text-gray-700">{fmt(updatedAt)}</div>
+              </div>
+            )}
           </div>
         );
       },
+    },
+
+    //  10. Action
+    {
+      key: "action",
+      header: "Action",
+      width: "10%",
+      render: (row: any) => (
+        <div className="text-center font-semibold text-gray-900 flex items-center  flex-wrap gap-1 justify-center">
+          <button className="px-3 py-1 text-xs bg-green-500 text-white rounded-md hover:bg-green-600"><EyeIcon className="w-4 h-4" /></button>
+          <button className="px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600"><EditIcon className="w-4 h-4" /></button>
+        
+        </div>
+      ),
     },
   ];

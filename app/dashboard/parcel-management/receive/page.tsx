@@ -31,6 +31,7 @@ interface Parcel {
   store_name: string;
   customer_name: string;
   customer_phone: string;
+  customer_secondary_phone: string;
   customer_address: string;
   delivery_area: DeliveryArea;
   delivery_charge: string;
@@ -52,6 +53,7 @@ interface TransformedParcel {
   additionalNote: string;
   customer: string;
   phone: string;
+  secondary_phone: string;
   address: string;
   zone: string;
   collectableAmount: number;
@@ -89,6 +91,7 @@ export default function ParcelTable() {
       additionalNote: parcel.special_instructions || "No instructions",
       customer: parcel.customer_name,
       phone: parcel.customer_phone,
+      secondary_phone: parcel.customer_secondary_phone,
       address: parcel.customer_address,
       zone: `${parcel.delivery_area.zone}, ${parcel.delivery_area.area}`,
       collectableAmount: parseFloat(parcel.cod_amount) || 0,
@@ -142,7 +145,7 @@ export default function ParcelTable() {
       totalCollectable: rows.reduce((s, p) => s + p.collectableAmount, 0),
       totalCOD: rows.reduce((s, p) => s + p.codCharge, 0),
       totalDeliveryCharge: rows.reduce((s, p) => s + p.deliveryCharge, 0),
-      totalWeight: rows.reduce((s, p) => s + p.weight, 0),
+      totalWeight: rows.reduce((s, p) => s + p.weightCharge, 0),
     };
   }, [selectedRowIds, filteredData]);
 
@@ -194,6 +197,12 @@ export default function ParcelTable() {
   // Get columns with update handler
   const columns = getParcelColumns(handleUpdateCharges);
 
+  const merchants = [
+    { id: 1, name: "Merchant 1" },
+    { id: 2, name: "Merchant 2" },
+    { id: 3, name: "Merchant 3" },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -233,9 +242,15 @@ export default function ParcelTable() {
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <button className="px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors">
-              Select Merchant <ChevronDown className="w-4 h-4" />
-            </button>
+    
+            <select className="border p-2 rounded-md  ">
+              <option value="">All Merchants</option>
+              {merchants.map((merchant: any) => (
+                <option key={merchant.id} value={merchant.id}>
+                  {merchant.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="font-semibold text-gray-700">
             {selectedRowIds.length} Parcel{selectedRowIds.length !== 1 ? 's' : ''} Selected

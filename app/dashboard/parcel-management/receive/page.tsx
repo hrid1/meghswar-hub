@@ -28,7 +28,12 @@ interface Parcel {
   parcel_tx_id: string;
   tracking_number: string;
   merchant_order_id: string;
-  store_name: string;
+    merchant: {
+        user: {
+          full_name: string;
+          phone: string;
+        }
+    };
   customer_name: string;
   customer_phone: string;
   customer_secondary_phone: string;
@@ -72,6 +77,8 @@ interface TransformedParcel {
 export default function ParcelTable() {
   const { data: receivedParcels, isLoading, error, refetch } = useGetReceivedParcelsQuery(null);
   const [receiveParcels, { isLoading: isReceiving }] = useReceiveParcelsMutation();
+
+  console.log("receivedParcels", receivedParcels);
   const { updateCharges, isUpdating } = useUpdateParcelCharges();
 
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
@@ -86,7 +93,7 @@ export default function ParcelTable() {
     return parcelsData.map((parcel: Parcel) => ({
       id: parcel.parcel_tx_id,
       originalId: parcel.id,
-      merchant: parcel.store_name,
+      merchant: parcel.merchant.user.full_name,
       merchantInvoice: parcel.merchant_order_id,
       additionalNote: parcel.special_instructions || "No instructions",
       customer: parcel.customer_name,

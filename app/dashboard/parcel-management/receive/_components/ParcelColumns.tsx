@@ -35,12 +35,12 @@ export const getParcelColumns = (
       </div>
     ),
   },
-  // {
-  //   key: "merchant",
-  //   header: "Merchant",
-  //   width: "12%",
-  //   render: (row: any) => <p className="text-nowrap font-medium">{row.merchant}</p>,
-  // },
+  {
+    key: "merchant",
+    header: "Merchant",
+    width: "12%",
+    render: (row: any) => <p className="text-nowrap font-medium">{row.merchant}</p>,
+  },
   {
     key: "additionalNote",
     header: "Additional Note",

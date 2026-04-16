@@ -228,11 +228,10 @@ import { EditIcon, EyeIcon } from "lucide-react";
       header: "Age",
       width: "13%",
       render: (row: any) => {
-        const createdAt = row.created_at ? new Date(row.created_at) : null;
-        const updatedAt = row.updated_at ? new Date(row.updated_at) : null;
+        const receivedAt = row.received_at ? new Date(row.received_at) : null;
 
-        const ageDays = createdAt
-          ? Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
+        const ageDays = receivedAt
+          ? Math.floor((Date.now() - receivedAt.getTime()) / (1000 * 60 * 60 * 24))
           : null;
 
         const fmt = (d: Date) =>
@@ -242,21 +241,19 @@ import { EditIcon, EyeIcon } from "lucide-react";
 
         return (
           <div className="text-sm space-y-1.5">
-            {ageDays !== null && (
+            {ageDays !== null ? (
               <span className="inline-block bg-orange-100 text-orange-600 text-xs font-semibold px-3 py-1 rounded-full">
                 {ageDays} {ageDays === 1 ? "Day" : "Days"}
               </span>
+            ) : (
+              <span className="inline-block bg-gray-100 text-gray-400 text-xs font-semibold px-3 py-1 rounded-full">
+                N/A
+              </span>
             )}
-            {createdAt && (
+            {receivedAt && (
               <div>
-                <div className="text-xs text-gray-500 font-medium">Created:</div>
-                <div className="text-xs text-gray-700">{fmt(createdAt)}</div>
-              </div>
-            )}
-            {updatedAt && (
-              <div>
-                <div className="text-xs text-gray-500 font-medium">Last Updated:</div>
-                <div className="text-xs text-gray-700">{fmt(updatedAt)}</div>
+                <div className="text-xs text-gray-500 font-medium">Received:</div>
+                <div className="text-xs text-gray-700">{fmt(receivedAt)}</div>
               </div>
             )}
           </div>

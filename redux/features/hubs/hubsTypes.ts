@@ -35,7 +35,9 @@ export interface MyHubData {
 }
 export interface MyHubResponse {
   success: boolean;
-  data: MyHubData;
+  data: {
+    hub: MyHubData;
+  };
   message: string;
   timestamp: string;
 }

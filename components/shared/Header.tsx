@@ -2,6 +2,7 @@
 
 import { Bell, Menu, User } from 'lucide-react';
 import { useGetCurrentUserQuery } from '@/redux/features/auth/authApi';
+import { useGetMyHubQuery } from '@/redux/features/hubs/hubsApi';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -25,7 +26,12 @@ export function Header({
     : "Administrator";
   const avatarText = displayName.charAt(0).toUpperCase();
 
-  const hubName = 9;
+
+
+  const { data: hubData } = useGetMyHubQuery();
+
+  const branchName = hubData?.data.hub.branch_name
+  // console.log("branchName", branchName)
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-40 px-4 md:px-6 flex items-center justify-between shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
@@ -49,7 +55,7 @@ export function Header({
             <span className="text-white font-bold text-lg">H</span>
           </div>
           <div className="hidden md:block">
-             <h1 className="font-bold text-lg text-gray-800 leading-none">Hub Panel</h1>
+             <h1 className="font-bold text-lg text-gray-800 leading-none">{branchName} Hub Panel</h1>
              <p className="text-[11px] text-gray-400 font-medium tracking-wide uppercase mt-1">Management System</p>
           </div>
         </div>

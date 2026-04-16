@@ -184,6 +184,26 @@ export default function CODPage() {
           <p className="font-semibold text-lg mb-4">
             Returned Parcels to Collect
           </p>
+
+          <div className="flex items-center justify-between mb-4">
+
+            <input type="text" placeholder="Search by parcel ID/Name/Phone" className=" border p-2 rounded-lg w-full max-w-xs" />
+
+            <div>
+              <select
+                className="border p-2 rounded-lg"
+              >
+                <option value="">Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Collected">Collected</option>
+                <option value="Returned">Returned</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Refunded">Refunded</option>
+                <option value="Refunded">Refunded</option>
+              </select>
+            </div>
+           
+          </div>
           
           {/* table */}
           <ReturnParcelTable

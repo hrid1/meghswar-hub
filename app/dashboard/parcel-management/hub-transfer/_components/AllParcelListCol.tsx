@@ -13,14 +13,11 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
     wrap: true,
     render: (row: any) => (
       <div className="flex flex-col items-start min-w-0">
-        <span className="text-sm font-medium truncate w-full">
+        <span className="text-xs font-medium truncate w-full">
           PID: {txt(row.parcel_tx_id) || txt(row.id) || "—"}
         </span>
         <span className="text-xs text-gray-500 truncate w-full">
           MID: {txt(row.merchant_order_id) || "—"}
-        </span>
-        <span className="text-xs text-gray-400 truncate w-full">
-          {txt(row.tracking_number) || ""}
         </span>
       </div>
     ),
@@ -34,12 +31,12 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
     render: (row: any) => {
       const storeName =
         txt(row.store_name) || txt(row.store?.business_name) || "N/A";
-      const storeId = txt(row.store?.id);
+      const storeId = txt(row.store?.store_code);
       return (
         <div className="min-w-0">
           <p className="font-semibold text-sm truncate">{storeName}</p>
-          <p className="text-xs text-gray-500 truncate">
-            {storeId ? `ID: ${storeId.slice(0, 8)}…` : "N/A"}
+          <p className="text-xs text-gray-500 ">
+            {storeId ? `ID: ${storeId}` : "N/A"}
           </p>
         </div>
       );
@@ -72,10 +69,7 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
       return (
         <div className="text-sm min-w-0">
           <div className="font-semibold text-gray-900 truncate">{customerName}</div>
-          <div className="text-gray-600 text-xs mt-0.5">{customerPhone}</div>
-          {secondary && (
-            <div className="text-gray-400 text-xs">{secondary}</div>
-          )}
+       
           <div className="relative group mt-1">
             <div className="text-gray-500 text-xs cursor-default break-words">
               {shortAddress || "No address provided"}
@@ -90,6 +84,11 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
               </div>
             )}
           </div>
+
+          <div className="text-gray-600 text-xs mt-0.5">{customerPhone}</div>
+          {secondary && (
+            <div className="text-gray-400 text-xs">{secondary}</div>
+          )}
         </div>
       );
     },
@@ -124,40 +123,16 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
 
   // 5. Delivery Area
   {
-    key: "delivery",
+    key: "deliveryArea",
     header: "Delivery Area",
-    width: "11%",
-    render: (row: any) => {
-      const da = row.delivery_area ?? row.delivery_coverage_area;
-      const areaStr =
-        da == null
-          ? "—"
-          : typeof da === "string"
-            ? da
-            : typeof da === "object" && da !== null
-              ? [da.area, da.zone, da.city].filter(Boolean).join(", ") ||
-                txt(da.division) ||
-                "—"
-              : "—";
-
-      return (
-        <div className="text-xs space-y-0.5">
-          <div className="font-medium text-gray-700">
-            {row.delivery_type === 1
-              ? "Standard"
-              : row.delivery_type === 2
-                ? "Express"
-                : "N/A"}
-          </div>
-          {areaStr && areaStr !== "—" && (
-            <div className="text-gray-500">{areaStr}</div>
-          )}
-          {row.assigned_rider && (
-            <div className="text-green-600 font-medium">Rider Assigned</div>
-          )}
-        </div>
-      );
-    },
+    width: "10%",
+    render: (row: any) => (
+      <div className="text-sm">
+        <div className="text-gray-500 font-semibold text-xs">{row.delivery_area?.city}</div>
+        <div className="text-gray-600 text-xs">{row.delivery_area?.area} &gt; {row.delivery_area?.zone}</div>
+        
+      </div>
+    ),
   },
 
   // 6. Status

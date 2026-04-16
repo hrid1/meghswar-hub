@@ -101,7 +101,13 @@ export const getParcelColumns = (
     key: "deliveryArea",
     header: "Delivery Area",
     width: "10%",
-    render: (row: any) => <p className="text-sm">{row.deliveryArea}</p>,
+    render: (row: any) => (
+      <div className="text-sm">
+        <div className="text-gray-600 text-xs">{row.city}</div>
+        <div className="text-gray-600 text-xs">{row.area} &gt; {row.zone}</div>
+        
+      </div>
+    ),
   },
   {
     key: "amount",

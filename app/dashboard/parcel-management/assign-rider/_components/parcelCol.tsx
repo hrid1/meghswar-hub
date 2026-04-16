@@ -9,7 +9,7 @@ export const parcelColumns = (onClickUpdate: any) => [
     width: "10%",
     render: (row: any) => (
       <div className="">
-        <span className="font-semibold block flex items-center">
+        <span className="font-medium text-xs flex items-center">
           {row.parcel_tx_id || row.tracking_number}{" "}
           <Copy className="w-3 h-3 ml-1 cursor-pointer text-gray-400" />
         </span>
@@ -26,15 +26,15 @@ export const parcelColumns = (onClickUpdate: any) => [
     render: (row: any) => (
       <div className="flex flex-col">
         <span className="font-semibold">{row.customer_name}</span>
-        <span className="text-sm text-gray-500">{row.customer_phone}</span>
+        <span className="text-xs text-gray-400 mt-1 line-clamp-2">
+          {row.customer_address}
+        </span>
+        <span className="text-xs text-gray-500">{row.customer_phone}</span>
         {row.customer_secondary_phone && (
           <span className="text-xs text-gray-400">
             Alt: {row.customer_secondary_phone}
           </span>
         )}
-        <span className="text-xs text-gray-400 mt-1 line-clamp-2">
-          {row.customer_address}
-        </span>
       </div>
     ),
   },
@@ -57,10 +57,12 @@ export const parcelColumns = (onClickUpdate: any) => [
     render: (row: any) => (
       <div className="text-sm text-gray-600">
         <div className=" text-gray-500 font-semibold">
-          {row.delivery_area?.city}, 
+          {row.delivery_area?.city},
         </div>
 
-        <div className="text-xs">{row.delivery_area?.zone} &gt; {row.delivery_area?.area}</div>
+        <div className="text-xs">
+          {row.delivery_area?.zone} &gt; {row.delivery_area?.area}
+        </div>
       </div>
     ),
   },
@@ -70,9 +72,10 @@ export const parcelColumns = (onClickUpdate: any) => [
     width: "15%",
     render: (row: any) => (
       <div>
-        <div className="font-semibold">{row.store?.business_name || "N/A"}</div>
+        <div className="font-semibold text-sm">{row.store?.business_name || "N/A"}</div>
         <div className="text-xs text-gray-400 mt-1">
-          Store ID: {row.store?.id?.slice(0, 8)}...
+         
+           Store ID: {row.store?.store_code}
         </div>
       </div>
     ),

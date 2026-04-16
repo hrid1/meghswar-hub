@@ -12,7 +12,7 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
     wrap: true,
     render: (row: any) => (
       <div className="flex flex-col min-w-0">
-        <span className="text-sm font-medium truncate">
+        <span className="text-xs font-medium truncate">
           {txt(row.tracking_number) || txt(row.id) || "—"}
         </span>
         <span className="text-xs text-gray-400 truncate">
@@ -31,13 +31,14 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
     render: (row: any) => {
       const name = txt(row.customer?.name) || "N/A";
       const phone = txt(row.customer?.phone) || "—";
+      const secondaryPhone = txt(row.customer?.secondary_phone) || "";
       const address = txt(row.customer?.address) || "";
       const short = address.length > 40 ? address.slice(0, 40) + "..." : address;
 
       return (
         <div className="text-sm min-w-0">
           <div className="font-semibold text-gray-900 truncate">{name}</div>
-          <div className="text-xs text-gray-600 mt-0.5">{phone}</div>
+         
           <div className="relative group mt-0.5">
             <div className="text-xs text-gray-400 break-words cursor-default">
               {short || "No address"}
@@ -51,6 +52,8 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
               </div>
             )}
           </div>
+
+          <div className="text-xs text-gray-600 mt-0.5">{phone} {secondaryPhone && `Alt: ${secondaryPhone}`}</div>
         </div>
       );
     },

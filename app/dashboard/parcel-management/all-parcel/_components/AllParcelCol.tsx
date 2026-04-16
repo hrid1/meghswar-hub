@@ -35,6 +35,9 @@ import { EditIcon, EyeIcon } from "lucide-react";
           txt(row.customer_name) || txt(c?.customer_name) || "N/A";
         const customerPhone =
           txt(row.customer_phone) || txt(c?.phone_number) || "—";
+
+          const customerSecondaryPhone =
+          txt(row.customer_secondary_phone) || txt(c?.secondary_number) || "";
         const address =
           txt(row.customer_address) || txt(c?.customer_address) || txt(row.address) || "";
         const shortAddress =
@@ -45,8 +48,7 @@ import { EditIcon, EyeIcon } from "lucide-react";
         return (
           <div className="text-sm min-w-0">
             <div className="font-semibold text-gray-900 truncate">{customerName}</div>
-            <div className="text-gray-600 text-xs mt-0.5">{customerPhone}</div>
-
+            
             {/* Address with hover tooltip */}
             <div className="relative group mt-1">
               <div className="text-gray-500 text-xs cursor-default break-words">
@@ -62,6 +64,9 @@ import { EditIcon, EyeIcon } from "lucide-react";
                 </div>
               )}
             </div>
+
+            <div className="text-gray-600 text-xs mt-0.5">{customerPhone} {customerSecondaryPhone && `${customerSecondaryPhone}`}</div>
+
           </div>
         );
       },
@@ -211,7 +216,7 @@ import { EditIcon, EyeIcon } from "lucide-react";
       header: "Attempt",
       width: "6%",
       render: (row: any) => (
-        <div className="text-center font-semibold text-gray-900">
+        <div className="text-center font-semibold  bg-orange-100 text-orange-700 px-3 py-1 rounded-full">
           {txt(row.attempt) || 0}
         </div>
       ),

@@ -1,5 +1,6 @@
 import { txt } from "@/lib/utils";
 import { EditIcon, EyeIcon } from "lucide-react";
+import Link from "next/link";
 
 // =============================
   // 1️⃣ Columns Configuration
@@ -268,7 +269,7 @@ import { EditIcon, EyeIcon } from "lucide-react";
       width: "10%",
       render: (row: any) => (
         <div className="text-center font-semibold text-gray-900 flex items-center  flex-wrap gap-1 justify-center">
-          <button className="px-3 py-1 text-xs bg-green-500 text-white rounded-md hover:bg-green-600"><EyeIcon className="w-4 h-4" /></button>
+          <Link href={`/dashboard/parcel-management/all-parcel/${row.id}`} className="px-3 py-1 text-xs bg-green-500 text-white rounded-md hover:bg-green-600"><EyeIcon className="w-4 h-4" /></Link>
           <button className="px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600"><EditIcon className="w-4 h-4" /></button>
         
         </div>

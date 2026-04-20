@@ -7,6 +7,8 @@ import {
   HubChargesResponse,
   ParcelReportsResponse,
 } from "./parcelTypes";
+// GET /hubs/dashboard/parcels/:id
+
 
 const parcelsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -14,6 +16,14 @@ const parcelsApi = baseApi.injectEndpoints({
     getAllParcels: builder.query<any, void | undefined>({
       query: () => ({
         url: "/hubs/parcels",
+        method: "GET",
+      }),
+      providesTags: [TAG_TYPES.Parcels],
+    }),
+
+    getParcelById: builder.query<any, string>({
+      query: (id) => ({
+        url: `/hubs/dashboard/parcels/${id}`,
         method: "GET",
       }),
       providesTags: [TAG_TYPES.Parcels],
@@ -251,4 +261,5 @@ export const {
   useUpdateHubChargesMutation,
   useInHubParcelsQuery,
   useGetParcelReportsQuery,
+  useGetParcelByIdQuery,
 } = parcelsApi;

@@ -2,17 +2,19 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, Printer, ChevronDown, RefreshCw } from "lucide-react";
+import { Search, Printer, ChevronDown, RefreshCw, Plus } from "lucide-react";
 import { DataTable } from "@/components/reusable/DataTable";
-import { 
-  useGetReceivedParcelsQuery, 
-  useReceiveParcelsMutation 
+import {
+  useGetReceivedParcelsQuery,
+  useReceiveParcelsMutation,
 } from "@/redux/features/parcels/parcelsApi";
 import ParcelSummary from "./_components/ParcelSummary";
 import { getParcelColumns } from "./_components/ParcelColumns";
 
 import { toast } from "sonner";
 import { useUpdateParcelCharges } from "./_components/useUpdateHubCharges";
+import { useRouter } from "next/navigation";
+import { Link } from "@/components/reusable/Link";
 
 // Define proper types for the parcel data
 interface DeliveryArea {
@@ -28,12 +30,12 @@ interface Parcel {
   parcel_tx_id: string;
   tracking_number: string;
   merchant_order_id: string;
-    merchant: {
-        user: {
-          full_name: string;
-          phone: string;
-        }
+  merchant: {
+    user: {
+      full_name: string;
+      phone: string;
     };
+  };
   customer_name: string;
   customer_phone: string;
   customer_secondary_phone: string;
@@ -75,8 +77,14 @@ interface TransformedParcel {
 }
 
 export default function ParcelTable() {
-  const { data: receivedParcels, isLoading, error, refetch } = useGetReceivedParcelsQuery(null);
-  const [receiveParcels, { isLoading: isReceiving }] = useReceiveParcelsMutation();
+  const {
+    data: receivedParcels,
+    isLoading,
+    error,
+    refetch,
+  } = useGetReceivedParcelsQuery(null);
+  const [receiveParcels, { isLoading: isReceiving }] =
+    useReceiveParcelsMutation();
 
   console.log("receivedParcels", receivedParcels);
   const { updateCharges, isUpdating } = useUpdateParcelCharges();
@@ -118,7 +126,10 @@ export default function ParcelTable() {
   }, [parcelsData]);
 
   // Handle updating charges
-  const handleUpdateCharges = async (id: string, charges: { delivery_charge?: number; weight_charge?: number }) => {
+  const handleUpdateCharges = async (
+    id: string,
+    charges: { delivery_charge?: number; weight_charge?: number },
+  ) => {
     try {
       await updateCharges(id, charges);
       // Refetch the data to get updated values
@@ -131,14 +142,16 @@ export default function ParcelTable() {
   /* ------------------------------- Filtering -------------------------------- */
   const filteredData = useMemo(() => {
     return transformedParcels.filter((p) =>
-      Object.values(p).join(" ").toLowerCase().includes(search.toLowerCase())
+      Object.values(p).join(" ").toLowerCase().includes(search.toLowerCase()),
     );
   }, [transformedParcels, search]);
 
   /* ------------------------------ Select Rows ------------------------------- */
   const handleToggleRow = (rowId: string | number) => {
     setSelectedRowIds((prev) =>
-      prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
+      prev.includes(rowId)
+        ? prev.filter((id) => id !== rowId)
+        : [...prev, rowId],
     );
   };
 
@@ -165,21 +178,20 @@ export default function ParcelTable() {
     try {
       // Get the original UUIDs of selected parcels
       const selectedOriginalIds = filteredData
-        .filter(row => selectedRowIds.includes(row.id))
-        .map(row => row.originalId);
-      
+        .filter((row) => selectedRowIds.includes(row.id))
+        .map((row) => row.originalId);
+
       console.log("Receiving parcels with IDs:", selectedOriginalIds);
-      
+
       // Call the mutation with the array of IDs
       const response = await receiveParcels(selectedOriginalIds).unwrap();
-      
+
       console.log("Receive response:", response);
       toast.success(`Successfully received ${selectedRowIds.length} parcels`);
       setSelectedRowIds([]); // Clear selection after successful receive
-      
+
       // Refetch to update the data
       await refetch();
-
     } catch (error) {
       console.error("Failed to receive parcels:", error);
       toast.error("Failed to receive parcels. Please try again.");
@@ -198,7 +210,9 @@ export default function ParcelTable() {
   if (error) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-red-500">Error loading parcels. Please try again.</div>
+        <div className="text-red-500">
+          Error loading parcels. Please try again.
+        </div>
       </div>
     );
   }
@@ -213,17 +227,20 @@ export default function ParcelTable() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 pt-4">
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Receive Parcels</h1>
-        <button
-          onClick={() => refetch()}
-          className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
-          title="Refresh"
-        >
-          <RefreshCw className="w-5 h-5" />
-        </button>
+        <Link href="/dashboard/parcel-management/receive/create-parcel">
+          <button
+            
+            className="button-primary"
+            title="Create Parcel"
+          >
+            <Plus className="w-5 h-5" />
+            Create Parcel
+          </button>
+        </Link>
       </div>
 
       {/* Search */}
@@ -251,7 +268,6 @@ export default function ParcelTable() {
       <div className="flex justify-between items-center flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div className="relative">
-    
             <select className="border p-2 rounded-md  ">
               <option value="">All Merchants</option>
               {merchants.map((merchant: any) => (
@@ -262,7 +278,8 @@ export default function ParcelTable() {
             </select>
           </div>
           <div className="font-semibold text-gray-700">
-            {selectedRowIds.length} Parcel{selectedRowIds.length !== 1 ? 's' : ''} Selected
+            {selectedRowIds.length} Parcel
+            {selectedRowIds.length !== 1 ? "s" : ""} Selected
           </div>
         </div>
 
@@ -276,10 +293,12 @@ export default function ParcelTable() {
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >
-            {isReceiving ? "Receiving..." : `Receive (${selectedRowIds.length})`}
+            {isReceiving
+              ? "Receiving..."
+              : `Receive (${selectedRowIds.length})`}
           </button>
 
-          <button className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2">
+          <button className="button-primary flex items-center gap-2">
             <Printer className="w-5 h-5" />
             Print / Bulk Print
           </button>

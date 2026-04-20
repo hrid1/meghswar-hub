@@ -325,3 +325,88 @@ export interface ParcelReportsResponse {
   pagination: Pagination;
   message: string;
 }
+
+
+// ===================================== Parcel Details =====================================
+export interface ParcelDetailResponse {
+  success: boolean;
+  data: ParcelData;
+  message: string;
+}
+
+export interface ParcelData {
+  parcel_id: string;
+  tracking_number: string;
+  merchant_info: MerchantInfo;
+  assigned_rider: AssignedRider | null;
+  customer_info: CustomerInfo;
+  live_status_controls: LiveStatusControls;
+  package_information: PackageInformation;
+  financial_summary: FinancialSummary;
+  parcel_details: ParcelDetails;
+  enum_mappings: EnumMappings;
+}
+
+export interface MerchantInfo {
+  merchant_id: string;
+  merchant_name: string;
+  store_name: string;
+  phone: string;
+  address: string;
+}
+
+export interface AssignedRider {
+  rider_id: string;
+  rider_name: string;
+  phone: string;
+}
+
+export interface CustomerInfo {
+  customer_id: string;
+  customer_name: string;
+  phone_number: string;
+  customer_address: string;
+}
+
+export interface LiveStatusControls {
+  current_status: string;
+}
+
+export interface PackageInformation {
+  product_description: string;
+  special_instructions: string | null;
+  admin_notes: string | null;
+}
+
+export interface FinancialSummary {
+  cod_amount: number;
+  delivery_charge: number;
+  weight_charge: number;
+  cod_charge: number;
+  discount: number;
+  total_charge: number;
+  total_payable: number;
+}
+
+export interface ParcelDetails {
+  parcel_weight: number;
+  parcel_type: number;
+  parcel_type_key: string;
+  parcel_type_label: string;
+  delivery_type: number;
+  delivery_type_key: string;
+  delivery_type_label: string;
+  is_cod: boolean;
+  is_exchange: boolean;
+}
+
+export interface EnumOption {
+  value: number;
+  key: string;
+  label: string;
+}
+
+export interface EnumMappings {
+  parcel_type: EnumOption[];
+  delivery_type: EnumOption[];
+}

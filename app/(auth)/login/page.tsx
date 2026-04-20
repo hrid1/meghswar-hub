@@ -32,8 +32,10 @@ export default function LoginPage() {
   const dispatch = useAppDispatch()
   const accessToken = useAppSelector((state) => state.auth.access_token)
   const [login, { isLoading }] = useLoginMutation()
-  const [identifier, setIdentifier] = React.useState("manager@hub.com")
-  const [password, setPassword] = React.useState("Manager123!")
+  const [identifier, setIdentifier] = React.useState("01321148144")
+  const [password, setPassword] = React.useState("Adabor@123")
+  // const [identifier, setIdentifier] = React.useState("manager@hub.com")
+  // const [password, setPassword] = React.useState("Manager123!")
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [showPassword, setShowPassword] = React.useState(false)
 

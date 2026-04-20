@@ -15,18 +15,26 @@ function parseJwt(token: string) {
 
 export default function proxy(request: NextRequest) {
   const token = request.cookies.get('access_token')?.value;
+  const { pathname } = request.nextUrl;
 
-  const isMerchant = request.nextUrl.pathname.startsWith('/dashboard');
-  
+  const isLoginPage = pathname === '/login' || pathname.startsWith('/login');
+  const isDashboard = pathname.startsWith('/dashboard');
+
+  // If authenticated with a valid HUB_MANAGER token, block access to login
+  if (isLoginPage && token) {
+    const decodedToken = parseJwt(token);
+    if (decodedToken?.role === 'HUB_MANAGER') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
   // Protect dashboard routes
-  if (isMerchant) {
+  if (isDashboard) {
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
     const decodedToken = parseJwt(token);
-
-    console.log("decodedToken", decodedToken);
 
     if (decodedToken?.role !== 'HUB_MANAGER') {
       return NextResponse.redirect(new URL('/login', request.url));

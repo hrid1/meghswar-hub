@@ -4,13 +4,20 @@ import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 import { fakeParcelData } from "./_components/fakeData";
 import { riderTableColumns } from "./_components/RiderCol";
-import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
+import { useGetPendingHubApprovalsQuery, useGetRidersQuery } from "@/redux/features/rider/riderApi";
 
 export default function ParcelReportTable() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [searchQuery, setSearchQuery] = useState("");
+
+
+  const { data: pendingHubApprovalsData, isLoading } = useGetPendingHubApprovalsQuery({
+    page: page,
+    limit: limit,
+    search: searchQuery,
+  });
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
-
-
 
   // filtering
   const filteredParcels = fakeParcelData.filter((p) => {
@@ -30,6 +37,12 @@ export default function ParcelReportTable() {
 
   return (
     <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Verify OTP</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Verify OTP for all active riders.
+        </p>
+      </div>
       {/* SEARCH BAR */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <input
@@ -44,9 +57,9 @@ export default function ParcelReportTable() {
       {/* TABLE */}
       <DataTable
         columns={riderTableColumns(handleAction)}
-        data={filteredParcels}
+        data={pendingHubApprovalsData?.data?.verifications || []}
         selectable={true}
-        getRowId={(row) => row.parcelId}
+        getRowId={(row) => row.parcel_id}
         selectedRowIds={selectedRowIds}
         onToggleRow={(rowId) => {
           setSelectedRowIds((prev) =>

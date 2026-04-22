@@ -1,5 +1,17 @@
 import { getCookie } from "@/redux/features/auth/authSlice";
 
+export type UploadModule =
+  | "merchants/nid"
+  | "merchants/trade-license"
+  | "merchants/tin"
+  | "merchants/bin"
+  | "merchants/logo"
+  | "merchants/general"
+  | "riders/profile"
+  | "riders/nid"
+  | "riders/license"
+  | "riders/parent-nid";
+
 
 const extractValue = (data: any, keys: string[]) => {
   for (const key of keys) {
@@ -37,7 +49,7 @@ export const getReadUrl = async (fileKey: string, apiBaseUrl?: string) => {
 
 export const uploadFileToAws = async (
   file: File,
-  module: string,
+  module: UploadModule,
   apiBaseUrl?: string
 ) => {
   const baseUrl = apiBaseUrl || process.env.NEXT_PUBLIC_API_URL;

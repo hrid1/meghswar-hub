@@ -1,45 +1,163 @@
 "use client";
 
 import { DataTable } from "@/components/reusable/DataTable";
+import CustomPagination from "@/components/reusable/CustomPagination";
 import React, { useState } from "react";
-import { transferHistoryColumns } from "./transferHistoryCol";
-import { useGetTransferHistoryQuery } from "@/redux/features/financial-report/FinancialReportApi";
-import { Loader2, RefreshCw } from "lucide-react";
+import { useGetHubExpensesQuery } from "@/redux/features/financial-report/FinancialReportApi";
+import { HubExpense } from "@/redux/features/financial-report/FinancialReportType";
+import { Loader2, RefreshCw, ExternalLink } from "lucide-react";
 
-const fakeData = [
+const STATUS_STYLES: Record<string, string> = {
+  IN_REVIEW: "bg-yellow-100 text-yellow-700",
+  PENDING:   "bg-orange-100 text-orange-700",
+  APPROVED:  "bg-blue-100 text-blue-700",
+  COMPLETED: "bg-green-100 text-green-700",
+  REJECTED:  "bg-red-100 text-red-700",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  OFFICE_RENT:   "Office Rent",
+  OFFICE_SUPPLY: "Office Supply",
+  UTILITIES:     "Utilities",
+  STATIONARY:    "Stationary",
+  MAINTENANCE:   "Maintenance",
+  SALARY:        "Salary",
+  OTHER:         "Other",
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  OFFICE_RENT:   "bg-purple-100 text-purple-700",
+  OFFICE_SUPPLY: "bg-blue-100 text-blue-700",
+  UTILITIES:     "bg-cyan-100 text-cyan-700",
+  STATIONARY:    "bg-indigo-100 text-indigo-700",
+  MAINTENANCE:   "bg-orange-100 text-orange-700",
+  SALARY:        "bg-green-100 text-green-700",
+  OTHER:         "bg-gray-100 text-gray-600",
+};
+
+const fmtDate = (iso: string) => {
+  const d = new Date(iso);
+  return (
+    d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
+    ", " +
+    d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
+  );
+};
+
+const expenseColumns = [
   {
-    "id": "fceeb52c-fd78-4fcf-a5a8-a2143001908a",
-    "hub_manager_id": "34f0679c-079f-4e8e-a9a8-4b94ca2517a5",
-    "hub_id": "8f8c6c8a-e8b4-4c37-88d0-249b09c69758",
-    "transferred_amount": 50000,
-    "admin_account_id": "8f9c9639-6cd0-4318-9edf-73b05742e40a",
-    "admin_account_name": "Admin Main Account",
-    "admin_account_number": "1234567890",
-    "admin_account_holder_name": "Company Admin",
-    "transaction_reference_id": "TXN-200001",
-    "proof_file_url": "https://cdn.example.com/transfer-proof.jpg",
-    "status": "IN_REVIEW",
-    "reviewed_by": null,
-    "reviewed_at": null,
-    "admin_notes": null,
-    "rejection_reason": null,
-    "notes": "weekly transfer",
-    "transfer_date": "2026-04-13T09:00:00.000Z",
-    "created_at": "2026-04-13T09:00:00.000Z",
-    "updated_at": "2026-04-13T09:00:00.000Z"
-  }
-]
+    key: "category",
+    header: "Category",
+    width: "15%",
+    render: (row: HubExpense) => (
+      <span
+        className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+          CATEGORY_COLORS[row.category] ?? "bg-gray-100 text-gray-600"
+        }`}
+      >
+        {CATEGORY_LABELS[row.category] ?? row.category}
+      </span>
+    ),
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    width: "12%",
+    render: (row: HubExpense) => (
+      <span className="font-bold text-green-600">
+        ৳{Number(row.amount).toLocaleString()}
+      </span>
+    ),
+  },
+  {
+    key: "reason",
+    header: "Reason",
+    width: "25%",
+    wrap: true,
+    render: (row: HubExpense) => (
+      <p className="text-sm text-gray-700 leading-snug">{row.reason}</p>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    width: "12%",
+    render: (row: HubExpense) => {
+      const display = row.status
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+      return (
+        <span
+          className={`px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
+            STATUS_STYLES[row.status] ?? "bg-gray-100 text-gray-600"
+          }`}
+        >
+          {display}
+        </span>
+      );
+    },
+  },
+  {
+    key: "proof_file_url",
+    header: "Proof",
+    width: "10%",
+    render: (row: HubExpense) =>
+      row.proof_file_url ? (
+        <a
+          href={row.proof_file_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-orange-600 bg-orange-50 rounded-md hover:bg-orange-100 transition-colors"
+        >
+          View
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      ) : (
+        <span className="text-xs text-gray-400">—</span>
+      ),
+  },
+  {
+    key: "rejection_reason",
+    header: "Rejection",
+    width: "14%",
+    wrap: true,
+    render: (row: HubExpense) =>
+      row.rejection_reason ? (
+        <p className="text-xs text-red-500">{row.rejection_reason}</p>
+      ) : (
+        <span className="text-xs text-gray-400">—</span>
+      ),
+  },
+  {
+    key: "created_at",
+    header: "Created At",
+    width: "14%",
+    render: (row: HubExpense) => (
+      <div>
+        <div className="text-xs text-gray-700">{fmtDate(row.created_at)}</div>
+        {row.reviewed_at && (
+          <div className="text-xs text-gray-400 mt-0.5">
+            Reviewed: {fmtDate(row.reviewed_at)}
+          </div>
+        )}
+      </div>
+    ),
+  },
+];
 
 export default function HubExpenseTable() {
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+  const limit = 10;
 
-  const { data: transferHistory, isLoading, isError, refetch } =
-    useGetTransferHistoryQuery({ page, limit });
+  const { data, isLoading, isError, refetch } = useGetHubExpensesQuery({
+    page,
+    limit,
+  });
 
-  const items = transferHistory?.data?.items || [];
-  const meta = transferHistory?.data?.meta;
+  const items = data?.data?.items ?? [];
+  const meta = data?.data?.meta;
   const totalPages = meta?.totalPages ?? 1;
   const totalCount = meta?.total ?? 0;
 
@@ -48,10 +166,10 @@ export default function HubExpenseTable() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Hub Expense</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Hub Expenses</h2>
           {totalCount > 0 && (
             <p className="text-sm text-gray-500 mt-0.5">
-              {totalCount} hub expense{totalCount !== 1 ? "s" : ""} total
+              {totalCount} expense{totalCount !== 1 ? "s" : ""} total
             </p>
           )}
         </div>
@@ -67,23 +185,23 @@ export default function HubExpenseTable() {
       {/* Loading */}
       {isLoading && (
         <div className="flex justify-center items-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-          <span className="ml-2 text-gray-500">Loading hub expenses...</span>
+          <Loader2 className="h-7 w-7 animate-spin text-orange-500" />
+          <span className="ml-2 text-gray-500 text-sm">Loading expenses…</span>
         </div>
       )}
 
       {/* Error */}
       {isError && (
         <div className="flex justify-center items-center h-48 text-red-500 text-sm">
-          Failed to load hub expenses. Please try again.
+          Failed to load expenses. Please try again.
         </div>
       )}
 
       {/* Table */}
       {!isLoading && !isError && (
         <DataTable
-          columns={transferHistoryColumns}
-          data={fakeData}
+          columns={expenseColumns}
+          data={items}
           selectable={true}
           getRowId={(row) => row.id}
           selectedRowIds={selectedRowIds}
@@ -95,39 +213,20 @@ export default function HubExpenseTable() {
             )
           }
           onToggleAll={(nextSelected) => setSelectedRowIds(nextSelected)}
+          emptyMessage="No expenses recorded yet."
         />
       )}
 
-      {/* Empty */}
-      {/* {!isLoading && !isError && items.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          No hub expenses found.
-        </div>
-      )} */}
-
       {/* Pagination */}
-      {!isLoading && totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
-          <span className="text-sm text-gray-500">
-            Page {page} of {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1 border rounded-md text-sm disabled:opacity-40 hover:bg-gray-50 transition-colors"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1 border rounded-md text-sm disabled:opacity-40 hover:bg-gray-50 transition-colors"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+      {!isLoading && !isError && (
+        <CustomPagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          totalItems={totalCount}
+          itemsPerPage={limit}
+          show={totalPages > 1}
+        />
       )}
     </div>
   );

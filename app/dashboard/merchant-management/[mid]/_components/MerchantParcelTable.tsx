@@ -1,96 +1,121 @@
 "use client";
 
-import React from "react";
-import { marcentParcelColumns } from "./MerchantParcelTableCol";
-import DataTable3 from "@/components/reusable/DataTable3";
+import React, { useState } from "react";
+import { DataTable } from "@/components/reusable/DataTable";
+import { merchantParcelColumns } from "./MerchantParcelTableCol";
+import { Search } from "lucide-react";
+
+const FAKE_PARCELS = [
+  {
+    parcelId: "139679",
+    parcel_tx_id: "139679",
+    customer_name: "Farzana Rahman",
+    customer_phone: "+880123456789",
+    customer_address: "Plot#142, Safwan Road, Block#B, Bashundhara Residential Area, Baridhara, Dhaka - 1229",
+    area: "Area 01: Dhanmondi",
+    status: "DELIVERED",
+    rider: "Ahmed Wasi",
+    riderPhone: "+8801234567890",
+    riderImg: "https://i.pravatar.cc/50?img=11",
+    store_name: "Fulkoli Book Store",
+    total_charge: 1187,
+    delivery_charge: 125,
+    cod_charge: 12,
+    weight_charge: 50,
+    discount: 0,
+    created_at: "2025-03-20T08:35:00.000Z",
+    updated_at: "2025-03-20T08:35:00.000Z",
+    received_at: "2025-03-20T08:35:00.000Z",
+  },
+  {
+    parcelId: "139680",
+    parcel_tx_id: "139680",
+    customer_name: "Farzana Rahman",
+    customer_phone: "+880123456789",
+    customer_address: "Plot#142, Safwan Road, Block#B, Bashundhara Residential Area, Baridhara, Dhaka - 1229",
+    area: "Area 01: Dhanmondi",
+    status: "PARTIAL_DELIVERY",
+    rider: "Ahmed Wasi",
+    riderPhone: "+8801234567890",
+    riderImg: "https://i.pravatar.cc/50?img=11",
+    store_name: "Fulkoli Book Store",
+    total_charge: 1187,
+    delivery_charge: 125,
+    cod_charge: 12,
+    weight_charge: 50,
+    discount: 0,
+    created_at: "2025-03-20T08:35:00.000Z",
+    updated_at: "2025-03-20T08:35:00.000Z",
+    received_at: "2025-03-20T08:35:00.000Z",
+  },
+  {
+    parcelId: "139681",
+    parcel_tx_id: "139681",
+    customer_name: "Farzana Rahman",
+    customer_phone: "+880123456789",
+    customer_address: "Plot#142, Safwan Road, Block#B, Bashundhara Residential Area, Baridhara, Dhaka - 1229",
+    area: "Area 01: Dhanmondi",
+    status: "RETURNED",
+    rider: "Ahmed Wasi",
+    riderPhone: "+8801234567890",
+    riderImg: "https://i.pravatar.cc/50?img=11",
+    store_name: "Fulkoli Book Store",
+    total_charge: 1187,
+    delivery_charge: 125,
+    cod_charge: 12,
+    weight_charge: 50,
+    discount: 0,
+    created_at: "2025-03-20T08:35:00.000Z",
+    updated_at: "2025-03-20T08:35:00.000Z",
+    received_at: "2025-03-20T08:35:00.000Z",
+  },
+];
 
 export default function MerchantParcelTable() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+
+  const filtered = FAKE_PARCELS.filter((p) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      p.parcel_tx_id.toLowerCase().includes(q) ||
+      p.customer_name.toLowerCase().includes(q) ||
+      p.store_name.toLowerCase().includes(q)
+    );
+  });
+
   return (
-    <div className="p-6 container mx-auto">
-      <h1 className="text-2xl font-bold">All Parcel</h1>
-      {/* 🔍 SEARCH + FILTER */}
+    <div className="p-6">
       <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-4">
+        <h2 className="text-xl font-bold">Merchant Parcels</h2>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search parcels..."
-            className="border p-2 rounded w-60"
-            // value={searchQuery}
-            // onChange={(e) => setSearchQuery(e.target.value)}
+            className="border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[#FE5000]/30"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      {/*  */}
-
-      <DataTable3
-        columns={marcentParcelColumns}
-        data={parcelHistoryData}
-        selectedRows={[]}
-      
+      <DataTable
+        columns={merchantParcelColumns}
+        data={filtered}
+        selectable={true}
+        getRowId={(row) => row.parcel_tx_id || row.parcelId}
+        selectedRowIds={selectedRowIds}
+        onToggleRow={(rowId) =>
+          setSelectedRowIds((prev) =>
+            prev.includes(rowId)
+              ? prev.filter((id) => id !== rowId)
+              : [...prev, rowId]
+          )
+        }
+        onToggleAll={(nextSelected) => setSelectedRowIds(nextSelected)}
+        emptyMessage="No parcels found for this merchant."
       />
     </div>
   );
 }
-
-const parcelHistoryData = [
-  {
-    parcleId: "PCL-20240101",
-    customerInfo: {
-      name: "Rahim Uddin",
-      phone: "01711223344",
-      address: "Bashundhara R/A, Block C, Road 12, Dhaka",
-    },
-    area: "Dhaka",
-    status: "Delivered",
-    rider: {
-      name: "Rider Hasan",
-      phone: "01799887766",
-    },
-    store: "Booklet Design BD",
-    amount: 450,
-    days: "2 days",
-    createdAt: "2025-01-01 10:30 AM",
-    updateAt: "2025-01-02 3:45 PM",
-  },
-
-  {
-    parcleId: "PCL-20240102",
-    customerInfo: {
-      name: "Mitu Akter",
-      phone: "01855443322",
-      address: "Mirpur-10, Lane 5, Dhaka",
-    },
-    area: "Mirpur",
-    status: "Return To Merchant",
-    rider: {
-      name: "Rider Karim",
-      phone: "01677889922",
-    },
-    store: "Fashion Hub",
-    amount: 320,
-    days: "3 days",
-    createdAt: "2025-01-03 9:15 AM",
-    updateAt: "2025-01-05 2:20 PM",
-  },
-
-  {
-    parcleId: "PCL-20240103",
-    customerInfo: {
-      name: "Sufian Chowdhury",
-      phone: "01922334455",
-      address: "Uttara Sector 7, House 14, Dhaka",
-    },
-    area: "Uttara",
-    status: "Pending",
-    rider: {
-      name: "Rider Jamil",
-      phone: "01566778899",
-    },
-    store: "Tech Store BD",
-    amount: 550,
-    days: "1 day",
-    createdAt: "2025-01-06 11:50 AM",
-    updateAt: "2025-01-06 11:55 AM",
-  },
-];

@@ -77,13 +77,13 @@ export default function ParcelReportTable() {
           : photoUrls[photoValue] || "https://i.pravatar.cc/150?img=default";
 
       return {
-        riderId: rider.id,
-        rider: rider.full_name,
+        rider_code: rider.rider_code || "N/A",
+        rider: rider.user.full_name || "N/A",
         riderImg,
-        riderPhone: rider.phone,
-        vehicleType: rider.bike_type === "MOTORCYCLE" ? "Bike" : rider.bike_type,
-        licenseNo: "N/A",
-        nid: "N/A",
+        riderPhone: rider.user?.phone || "N/A",
+        vehicleType:  rider.bike_type || "N/A",
+        licenseNo: rider.license_no || "N/A",
+        nid: rider.nid_number || "N/A",
         deliveryCompleted: 0,
         deliveryReturn: 0,
         totalCash: 0,
@@ -106,8 +106,15 @@ export default function ParcelReportTable() {
     if (type === "delete") setOpenDeleteModal(true);
   };
 
+
+  console.log(riders);
+
   return (
     <div className="p-6">
+
+      <div>
+        <h2 className="text-2xl font-bold mb-4">All Rider List</h2>
+      </div>
       {/* LOADING STATE */}
       {isLoading && <div className="text-center py-8">Loading riders...</div>}
 
@@ -115,6 +122,7 @@ export default function ParcelReportTable() {
       {!isLoading && (
         <DataTable
           columns={Ridercolumns(handleAction)}
+          // cellPaddingX="px-1"
           data={riders}
           selectable={true}
           getRowId={(row) => row.riderId}

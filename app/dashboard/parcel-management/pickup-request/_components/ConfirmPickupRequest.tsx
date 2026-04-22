@@ -1,54 +1,70 @@
 "use client";
 
 import { DataTable } from "@/components/reusable/DataTable";
+import CustomPagination from "@/components/reusable/CustomPagination";
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { confirmedPickupColumns } from "./riderAssignCol";
-import { useGetConfirmedPickupsQuery } from "@/redux/features/pickup-request/pickupRequestApi";
+import { useGetAcceptedPickupsQuery } from "@/redux/features/pickup-request/pickupRequestApi";
+import { Search } from "lucide-react";
 
 export default function ConfirmPickupRequest() {
+  const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading } = useGetConfirmedPickupsQuery({
+  const { data, isLoading } = useGetAcceptedPickupsQuery({
+    page,
+    limit: 20,
+    search: searchQuery || undefined,
+  });
+
+  const pickupRequests = data?.data.pickupRequests ?? [];
+  const pagination = data?.data.pagination ?? {
+    total: 0,
     page: 1,
     limit: 20,
-  });
-
-  const pickupRequests = data?.data.pickupRequests || [];
-
-  const filteredParcels = pickupRequests.filter((p) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      p.request_code.toLowerCase().includes(q) ||
-      p.store_name.toLowerCase().includes(q)
-    );
-  });
-
-  if (isLoading) {
-    return <div className="p-6">Loading confirmed pickups...</div>;
-  }
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">
-        Confirmed Pickup Requests
-      </h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Confirmed Pickup Requests</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Pickups accepted by the hub and assigned to riders.
+        </p>
+      </div>
 
       <div className="flex items-center gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Search requests..."
-          className="border p-2 rounded w-60"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by store or request ID..."
+            className="border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#FE5000]/30"
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+          />
+        </div>
       </div>
 
       <DataTable
         columns={confirmedPickupColumns()}
-        data={filteredParcels}
+        data={pickupRequests}
+        isLoading={isLoading}
         selectable={false}
         getRowId={(row) => row.id}
+        emptyMessage="No confirmed pickup requests found."
+      />
+
+      <CustomPagination
+        page={pagination.page}
+        totalPages={pagination.totalPages}
+        onPageChange={setPage}
+        totalItems={pagination.total}
+        itemsPerPage={pagination.limit}
+        show={pagination.totalPages > 0}
       />
     </div>
   );

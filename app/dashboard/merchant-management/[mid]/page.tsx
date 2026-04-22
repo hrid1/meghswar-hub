@@ -7,6 +7,7 @@ import MerchantInfoCards from "./_components/MerchantInfoCard";
 import StatsGrids from "./_components/StatsGrid";
 import ParcelFlowChart from "./_components/ParcelFlowChart";
 import { Loader2 } from "lucide-react";
+import MerchantParcelTable from "./_components/MerchantParcelTable";
 
 export default function MerchantDetailPage() {
   const { mid } = useParams();
@@ -53,6 +54,8 @@ export default function MerchantDetailPage() {
         graph={overview?.graph}
         rangeLabel={overview?.range}
       />
+
+      <MerchantParcelTable />
     </div>
   );
 }

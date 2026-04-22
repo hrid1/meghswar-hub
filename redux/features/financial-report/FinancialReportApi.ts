@@ -1,11 +1,28 @@
 import { baseApi } from "../api/baseApi";
 import { TAG_TYPES } from "../tagList";
-import { ClearedDeliveryResponse, CollectedCODAmountResponse, CreateTransferRequest, CreateTransferResponse, FinancialDashboardStatsResponse, TransferHistoryResponse } from "./FinancialReportType";
+import {
+  BankAccountDetailsResponse,
+  ClearedDeliveryResponse,
+  CollectedCODAmountResponse,
+  CreateTransferRequest,
+  CreateTransferResponse,
+  FinancialDashboardStatsResponse,
+  TransferHistoryResponse,
+  HubExpenseListResponse,
+  CreateHubExpenseRequest,
+  CreateHubExpenseResponse,
+} from "./FinancialReportType";
 
 
 
 const financialReportApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+
+    // get bank account details
+    getAdminBankAccountList: builder.query<BankAccountDetailsResponse, void>({
+      query: () => "/admin/accounts/list/active",
+      providesTags: [TAG_TYPES.FinancialReport],
+    }),
 
     // get financial dashboard stats
     getFinancialDashboardStats: builder.query<FinancialDashboardStatsResponse, void>({
@@ -39,6 +56,32 @@ const financialReportApi = baseApi.injectEndpoints({
       providesTags: [TAG_TYPES.FinancialReport],
     }),
 
+    // get hub expenses list
+    getHubExpenses: builder.query<
+      HubExpenseListResponse,
+      { page?: number; limit?: number }
+    >({
+      query: ({ page = 1, limit = 10 }) => ({
+        url: "/hubs/finance/expenses",
+        method: "GET",
+        params: { page, limit },
+      }),
+      providesTags: [TAG_TYPES.FinancialReport],
+    }),
+
+    // create hub expense
+    createHubExpense: builder.mutation<
+      CreateHubExpenseResponse,
+      CreateHubExpenseRequest
+    >({
+      query: (body) => ({
+        url: "/hubs/finance/expense",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: [TAG_TYPES.FinancialReport],
+    }),
+
     // collect COD amount
     collectedCODAmount: builder.mutation<
       CollectedCODAmountResponse,   
@@ -54,6 +97,15 @@ const financialReportApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetCodManagementListQuery, useCollectedCODAmountMutation, useGetFinancialDashboardStatsQuery, useGetTransferHistoryQuery } = financialReportApi;
+export const {
+  useGetAdminBankAccountListQuery,
+  useGetCodManagementListQuery,
+  useCollectedCODAmountMutation,
+  useGetFinancialDashboardStatsQuery,
+  useGetTransferHistoryQuery,
+  useCreateTransferMutation,
+  useGetHubExpensesQuery,
+  useCreateHubExpenseMutation,
+} = financialReportApi;
 
 

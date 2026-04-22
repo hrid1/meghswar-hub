@@ -160,16 +160,16 @@ export function DataTable<T>({
           <tr>
             {/* Selection column - fixed small width */}
             {selectable && (
-              <th className="px-2 py-3 w-10 min-w-10 max-w-10">
+              <th className="px-2 py-3 w-10 min-w-10 max-w-10 flex justify-center items-center">
                 <input
-                  ref={headerCheckboxRef}
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={handleToggleAll}
-                  className="h-4 w-4 accent-[#FE5000] mx-auto block"
-                  aria-label="Select all rows"
-                />
-              </th>
+                ref={headerCheckboxRef}
+                type="checkbox"
+                checked={allSelected}
+                onChange={handleToggleAll}
+                className={`h-4 w-4 accent-[#FE5000] mx-auto block ${cellPaddingX}`}
+                aria-label="Select all rows"
+              />
+            </th>
             )}
 
             {renderHeaderCells()}
@@ -207,7 +207,7 @@ export function DataTable<T>({
                 >
                   {/* Row checkbox - fixed small width */}
                   {selectable && (
-                    <td className="px-2 py-3 w-10 min-w-10 max-w-10">
+                    <td className="px-2 py-3 w-10 min-w-10 max-w-10 border ">
                       <input
                         type="checkbox"
                         checked={checked}

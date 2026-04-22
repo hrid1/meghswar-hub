@@ -143,17 +143,100 @@ export interface TransferHistoryResponse {
 
   
 
+// ========================Hub Expenses=======================
+
+export type HubExpenseCategory =
+  | "OFFICE_RENT"
+  | "OFFICE_SUPPLY"
+  | "UTILITIES"
+  | "STATIONARY"
+  | "MAINTENANCE"
+  | "SALARY"
+  | "OTHER";
+
+export type HubExpenseStatus =
+  | "IN_REVIEW"
+  | "APPROVED"
+  | "REJECTED"
+  | "COMPLETED"
+  | "PENDING";
+
+export interface HubExpense {
+  id: string;
+  hub_id: string;
+  hub_manager_id: string;
+  amount: string;
+  category: HubExpenseCategory;
+  reason: string;
+  proof_file_url: string;
+  status: HubExpenseStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HubExpenseListResponse {
+  success: boolean;
+  data: {
+    items: HubExpense[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
+export interface CreateHubExpenseRequest {
+  amount: number;
+  category: HubExpenseCategory;
+  reason: string;
+  proof_file_url: string;
+}
+
+export interface CreateHubExpenseResponse {
+  success: boolean;
+  message: string;
+  data: HubExpense;
+}
+
+// ========================Bank Account Details=======================
+
+export type ProviderType = "BANK" | "MFS" | "CARD" | "OTHER";
+
+export interface BankAccount {
+  id: string;
+  account_name: string;
+  account_number: string;
+  account_holder_name: string;
+  district: string;
+  branch_name: string;
+  routing: string;
+  provider_type: ProviderType;
+  current_balance: string;
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankAccountDetailsResponse {
+  success: boolean;
+  message: string;
+  data: BankAccount[];
+}
+
 // ========================Create Transfer=======================
 
 export interface CreateTransferRequest {
   transferred_amount: number;
   admin_account_id: string;
-  admin_account_name: string;
-  admin_account_number: string;
-  admin_account_holder_name: string;
   transaction_reference_id: string;
   proof_file_url: string;
-  notes: string;
+  notes?: string;
 }
 
 

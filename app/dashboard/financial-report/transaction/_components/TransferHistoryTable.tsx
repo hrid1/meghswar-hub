@@ -83,7 +83,7 @@ export default function TransferHistoryTable() {
       {!isLoading && !isError && (
         <DataTable
           columns={transferHistoryColumns}
-          data={fakeData}
+          data={items || []}
           selectable={true}
           getRowId={(row) => row.id}
           selectedRowIds={selectedRowIds}

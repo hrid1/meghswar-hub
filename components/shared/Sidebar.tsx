@@ -47,7 +47,7 @@ const menuItems = [
     href: "/dashboard/rider-management",
     children: [
       { label: "Rider List", href: "/dashboard/rider-management/rider-list" },
-      { label: "Rider Status", href: "/dashboard/rider-management/rider-status" },
+      // { label: "Rider Status", href: "/dashboard/rider-management/rider-status" },
       { label: "Rider Transfer", href: "/dashboard/rider-management/rider-transfer" },
       { label: "Create Rider", href: "/dashboard/rider-management/create-rider" },
       { label: "Performance", href: "/dashboard/rider-management/performance" },
@@ -182,7 +182,11 @@ export function Sidebar({
     );
   };
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) =>
+    href === "/dashboard"
+      ? pathname === href
+      : pathname === href || pathname.startsWith(href + "/");
+
   const isChildActive = (children?: { href: string }[]) =>
     children?.some((child) => pathname.startsWith(child.href));
 

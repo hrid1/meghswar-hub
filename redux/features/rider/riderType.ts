@@ -82,16 +82,82 @@ export interface RiderResponse {
   };
 }
 
-export interface SingleRider extends Omit<Rider, "user"> {
-  full_name: string;
-  phone: string;
-  email: string;
-}
+// export interface SingleRider extends Omit<Rider, "user"> {
+//   full_name: string;
+//   phone: string;
+//   email: string;
+// }
+
+// export interface RiderByIdResponse {
+//   success: boolean;
+//   message: string;
+//   data: SingleRider;
+// }
 
 export interface RiderByIdResponse {
   success: boolean;
+  data: RiderData;
   message: string;
-  data: SingleRider;
+}
+
+export interface RiderData {
+  id: string;
+  rider_code: string | null;
+  user_id: string;
+  hub_id: string;
+  photo: string | null;
+  guardian_mobile_no: string;
+  bike_type: "MOTORCYCLE" | "SCOOTER" | "BICYCLE";
+  nid_number: string;
+  license_no: string;
+  present_address: string;
+  permanent_address: string;
+  fixed_salary: string;
+  commission_per_delivery: string;
+  bank_name: string | null;
+  bank_account_number: string | null;
+  bank_branch: string | null;
+  nid_front_photo: string | null;
+  nid_back_photo: string | null;
+  license_front_photo: string | null;
+  license_back_photo: string | null;
+  parent_nid_front_photo: string | null;
+  parent_nid_back_photo: string | null;
+  approval_status: "PENDING" | "APPROVED" | "REJECTED";
+  approved_at: string | null;
+  approved_by: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  user: RiderUser;
+  hub: RiderHub;
+  approver: null;
+}
+
+export interface RiderUser {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string;
+  role: "RIDER" | "ADMIN" | "MANAGER";
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RiderHub {
+  id: string;
+  hub_code: string;
+  branch_name: string;
+  area: string;
+  address: string;
+  manager_name: string;
+  manager_phone: string;
+  manager_user_id: string;
+  status: "ACTIVE" | "INACTIVE";
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface RiderPerformanceItem {

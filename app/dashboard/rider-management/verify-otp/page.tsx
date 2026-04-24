@@ -2,31 +2,29 @@
 
 import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
-import { fakeParcelData } from "./_components/fakeData";
+import { fakeDeliveryVerificationData } from "./_components/fakeData";
 import { riderTableColumns } from "./_components/RiderCol";
-import { useGetPendingHubApprovalsQuery, useGetRidersQuery } from "@/redux/features/rider/riderApi";
+import {
+  useGetPendingHubApprovalsQuery,
+  useGetRidersQuery,
+} from "@/redux/features/rider/riderApi";
 
 export default function ParcelReportTable() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [searchQuery, setSearchQuery] = useState("");
 
-
-  const { data: pendingHubApprovalsData, isLoading } = useGetPendingHubApprovalsQuery({
-    page: page,
-    limit: limit,
-    search: searchQuery,
-  });
+ 
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
 
   // filtering
-  const filteredParcels = fakeParcelData.filter((p) => {
+  const filteredParcels = fakeDeliveryVerificationData.filter((p) => {
     const q = searchQuery.toLowerCase();
     return (
-      p.parcelId.toLowerCase().includes(q) ||
-      p.riderName.toLowerCase().includes(q) ||
-      p.riderPhone.includes(q) ||
-      p.merchantName.toLowerCase().includes(q)
+      p.parcel_id.toLowerCase().includes(q) ||
+      p.rider_name?.toLowerCase().includes(q) ||
+      p.rider_phone?.toLowerCase().includes(q) 
+      
     );
   });
 
@@ -38,7 +36,7 @@ export default function ParcelReportTable() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Verify OTP</h1>
+        <h1 className="text-2xl font-bold">Verify OTP: {filteredParcels.length > 0 ? "fake data" : "backend data"}</h1>
         <p className="text-sm text-gray-500 mt-1">
           Verify OTP for all active riders.
         </p>
@@ -57,9 +55,9 @@ export default function ParcelReportTable() {
       {/* TABLE */}
       <DataTable
         columns={riderTableColumns(handleAction)}
-        data={pendingHubApprovalsData?.data?.verifications || []}
+        data={fakeDeliveryVerificationData}
         selectable={true}
-        getRowId={(row) => row.parcel_id}
+        getRowId={(row) => row.verification_id}
         selectedRowIds={selectedRowIds}
         onToggleRow={(rowId) => {
           setSelectedRowIds((prev) =>

@@ -77,7 +77,7 @@ export default function RiderDetailsPage() {
             ) : imageUrl ? (
               <img
                 src={imageUrl}
-                alt={rider.full_name}
+                alt={rider.user.full_name}
                 className="w-32 h-32 rounded-full object-cover"
               />
             ) : (
@@ -90,19 +90,19 @@ export default function RiderDetailsPage() {
           {/* Rider Info */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {[
-              ["Rider's Name", rider.full_name],
-              ["Rider's Mobile No.", rider.phone],
+              ["Rider's Name", rider.user.full_name],
+              ["Rider's Mobile No.", rider.user.phone],
               ["Guardian Mobile No.", rider.guardian_mobile_no],
               ["NID Number", rider.nid_number],
               ["Vehicle Type", rider.bike_type],
               ["License No.", rider.license_no],
               ["Present Address", rider.present_address],
               ["Permanent Address", rider.permanent_address],
-              ["Email", rider.email],
-              ["Hub Branch", rider.hub?.branch_name],
+              ["Email", rider.user.email],
+              ["Hub Branch", rider.hub.branch_name],
               [
                 "Created At",
-                new Date(rider.created_at).toLocaleString(),
+                new Date(rider.user.created_at).toLocaleString(),
               ],
             ].map(([label, value], idx) => (
               <div key={idx}>
@@ -137,13 +137,13 @@ export default function RiderDetailsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div className="bg-green-50 rounded-lg p-4 text-center">
               <Package className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-green-600">0</p>
+              <p className="text-lg font-bold text-green-600">N/A backend</p>
               <p className="text-sm text-green-700">Delivery Completed</p>
             </div>
 
             <div className="bg-purple-50 rounded-lg p-4 text-center">
               <RotateCcw className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-purple-600">0</p>
+              <p className="text-lg font-bold text-purple-600">N/A backend</p>
               <p className="text-sm text-purple-700">Delivery Returned</p>
             </div>
           </div>

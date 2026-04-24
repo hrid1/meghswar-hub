@@ -12,6 +12,7 @@ import {
   MessageCircle, 
   Mail 
 } from 'lucide-react';
+import { useGetParcelByIdQuery } from '@/redux/features/parcels/parcelsApi';
 
 const fakeParcelResponse = {
   "success": true,
@@ -61,7 +62,9 @@ export default function ParcelDetailsPage() {
   const pathname = usePathname();
   const parcelData = fakeParcelResponse.data;
 
-  
+  const { data: parcelData2 } = useGetParcelByIdQuery(id as string);
+
+  console.log(parcelData2);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans text-[#2D3436]">
@@ -70,7 +73,7 @@ export default function ParcelDetailsPage() {
         <div>
           <h1 className="text-sm text-gray-500 font-medium">Dashboard &gt;  Parcel Details :</h1>
           <h2 className="text-2xl font-bold mt-1">Parcel ID</h2>
-          <span className="text-orange-500 text-2xl font-bold">{parcelData.parcel_id}</span>
+          <span className="text-orange-500 text-2xl font-bold">{id}</span>
         </div>
         <button onClick={() => router.back()} className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 transition">
           <ArrowLeft size={18} /> Back to List

@@ -77,6 +77,7 @@ export default function ParcelReportTable() {
           : photoUrls[photoValue] || "https://i.pravatar.cc/150?img=default";
 
       return {
+        riderId: rider.id,
         rider_code: rider.rider_code || "N/A",
         rider: rider.user.full_name || "N/A",
         riderImg,

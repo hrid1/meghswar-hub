@@ -174,7 +174,7 @@ export default function CODPage() {
             </div>
           </div>
 
-          <button className="bg-orange-500 text-white w-full p-3 rounded-xl text-lg font-semibold hover:bg-orange-600">
+          <button onClick={handleConfirmCollect} className="bg-orange-500 text-white w-full p-3 rounded-xl text-lg font-semibold hover:bg-orange-600">
             Confirm & Complete
           </button>
         </div>

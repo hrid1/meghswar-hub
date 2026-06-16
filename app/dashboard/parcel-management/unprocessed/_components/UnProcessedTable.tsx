@@ -1,20 +1,36 @@
 "use client";
 
 import { DataTable } from "@/components/reusable/DataTable";
-import { ChevronDown, Printer } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { columns } from "./unProcessedCol";
 import UpdateStatusModal from "../../hub-transfer/_components/UpdateStatusModal";
-import { useGetDeliveryOutcomesQuery } from "@/redux/features/process-unprocess/processUnprocessApi";
+import {
+  useGetDeliveryOutcomesQuery,
+  useBulkReturnToMerchantMutation,
+  useBulkRescheduleDeliveryMutation,
+} from "@/redux/features/process-unprocess/processUnprocessApi";
+import { toast } from "sonner";
 
 export default function UnProcessedTable() {
-  const { data: unprocessedData, isLoading: isUnprocessedLoading } = useGetDeliveryOutcomesQuery({ page: 1, limit: 10 });
+  const { data: unprocessedData, isLoading: isUnprocessedLoading } =
+    useGetDeliveryOutcomesQuery({ page: 1, limit: 10 });
   const unprocessedParcels = unprocessedData?.data?.parcels || [];
-  console.log("unprocessedParcels", unprocessedParcels);
+
+  const [bulkReturnToMerchant, { isLoading: isReturning }] =
+    useBulkReturnToMerchantMutation();
+  const [bulkRescheduleDelivery, { isLoading: isRescheduling }] =
+    useBulkRescheduleDeliveryMutation();
 
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
   const [search, setSearch] = useState("");
   const [openStatusModal, setOpenStatusModal] = useState(false);
+
+  const parcelIds = useMemo(
+    () => selectedRowIds.map(String),
+    [selectedRowIds]
+  );
+  const isMutating = isReturning || isRescheduling;
 
   /* ------------------------------- Filtering -------------------------------- */
   const filteredData = useMemo(() => {
@@ -34,22 +50,26 @@ export default function UnProcessedTable() {
     setSelectedRowIds(nextSelected);
   };
 
-  /* ------------------------------- API Calls -------------------------------- */
-  const receiveParcels = async () => {
-    await new Promise((res) => setTimeout(res, 800)); // mock API
-    alert(`Received ${selectedRowIds.length} parcels`);
-  };
-
-  //  ------ handle status update
   const handleStatusUpdate = async (type: "reschedule" | "return") => {
     setOpenStatusModal(false);
+    if (parcelIds.length === 0) return;
 
-    await new Promise((res) => setTimeout(res, 500)); // mock API
-
-    if (type === "reschedule") {
-      alert(`Rescheduled ${selectedRowIds.length} parcels`);
-    } else {
-      alert(`Returned ${selectedRowIds.length} parcels to merchant`);
+    try {
+      if (type === "reschedule") {
+        await bulkRescheduleDelivery({ parcel_ids: parcelIds }).unwrap();
+        toast.success(`Rescheduled ${parcelIds.length} parcel(s) for delivery`);
+      } else {
+        await bulkReturnToMerchant({ parcel_ids: parcelIds }).unwrap();
+        toast.success(`Returned ${parcelIds.length} parcel(s) to merchant`);
+      }
+      setSelectedRowIds([]);
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        type === "reschedule"
+          ? "Failed to reschedule delivery"
+          : "Failed to return to merchant"
+      );
     }
   };
 
@@ -72,15 +92,15 @@ export default function UnProcessedTable() {
 
         <div className="flex items-center gap-4 flex-wrap">
           <button
-            disabled={selectedRowIds.length === 0}
+            disabled={selectedRowIds.length === 0 || isMutating}
             onClick={() => setOpenStatusModal(true)}
             className={`px-6 py-2 rounded-lg font-medium ${
-              selectedRowIds.length === 0
-                ? "bg-gray-300 text-gray-500"
+              selectedRowIds.length === 0 || isMutating
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-orange-500 text-white hover:bg-orange-600"
             }`}
           >
-            Update Status
+            {isMutating ? "Updating..." : "Update Status"}
           </button>
         </div>
       </div>
@@ -102,6 +122,7 @@ export default function UnProcessedTable() {
         setOpen={setOpenStatusModal}
         selected={selectedRowIds}
         onAction={handleStatusUpdate}
+        isLoading={isMutating}
       />
     </div>
   );

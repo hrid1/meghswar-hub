@@ -4,24 +4,35 @@ import { DataTable } from "@/components/reusable/DataTable";
 import { ChevronDown } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { columns } from "./DeliveryResheduleCol";
-import UpdateStatusModal from "../../hub-transfer/_components/UpdateStatusModal";
-import { useGetRescheduledDeliveriesQuery, useBulkRescheduleDeliveryMutation } from "@/redux/features/process-unprocess/processUnprocessApi";
+import { useGetRescheduledDeliveriesQuery } from "@/redux/features/process-unprocess/processUnprocessApi";
 import type { RescheduledParcel } from "@/redux/features/process-unprocess/processUnprocessType";
+import CustomDialog from "@/components/reusable/CustomDialog";
+import { Button } from "@/components/ui/button";
+import { SearchableSelect } from "@/components/reusable/SearchableSelect";
+import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
+import { useAssignRiderToParcelsMutation } from "@/redux/features/parcels/parcelsApi";
+import { toast } from "sonner";
 
 export default function DeliveryRescheduleTable() {
-  const { data: rescheduledData, isLoading, isError, error } =
+  const { data: rescheduledData, isLoading, isError, error, refetch } =
     useGetRescheduledDeliveriesQuery({ page: 1, limit: 10 });
-    
-  const [bulkRescheduleDelivery, { isLoading: isBulkRescheduleLoading }] = 
-    useBulkRescheduleDeliveryMutation();
+  const { data: ridersData } = useGetRidersQuery({
+    isActive: true,
+    page: 1,
+    limit: 100,
+  });
+  const [assignRiderToParcels, { isLoading: isAssigning }] =
+    useAssignRiderToParcelsMutation();
     
   const rescheduledParcels: RescheduledParcel[] = rescheduledData?.data?.parcels || [];
+  const allRiders = ridersData?.data?.riders ?? [];
 
   console.log("rescheduledParcels", rescheduledParcels);
   
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedRiderId, setSelectedRiderId] = useState("");
   const [search, setSearch] = useState("");
-  const [openStatusModal, setOpenStatusModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -50,23 +61,35 @@ export default function DeliveryRescheduleTable() {
     setSelectedRowIds(nextSelected);
   };
 
-  /* ------------------------------- Handle Reschedule -------------------------------- */
-  const handleRescheduleDelivery = async () => {
+  /* ------------------------------- Handle Assign Rider -------------------------------- */
+  const handleAssignRider = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedRiderId) {
+      toast.error("Please select a rider");
+      return;
+    }
+
+    const parcelIds = selectedRowIds.map(String);
+    if (parcelIds.length === 0) {
+      toast.error("Please select at least one parcel");
+      return;
+    }
+
     try {
-      setOpenStatusModal(false);
-      
-      const parcelIds = selectedRowIds.map(id => String(id));
-      
-      const response = await bulkRescheduleDelivery({ 
-        parcel_ids: parcelIds 
+      await assignRiderToParcels({
+        rider_id: selectedRiderId,
+        parcel_ids: parcelIds,
       }).unwrap();
-      
-      alert(`Successfully rescheduled ${selectedRowIds.length} deliveries`);
-      setSelectedRowIds([]); // Clear selection after successful action
-      
+
+      toast.success(`Successfully assigned ${parcelIds.length} parcel(s)`);
+      setOpenModal(false);
+      setSelectedRiderId("");
+      setSelectedRowIds([]);
+      refetch();
     } catch (error) {
-      console.error("Failed to reschedule deliveries:", error);
-      alert("Failed to reschedule deliveries. Please try again.");
+      console.error("Assign rider failed:", error);
+      toast.error("Failed to assign rider. Please try again.");
     }
   };
 
@@ -126,17 +149,16 @@ export default function DeliveryRescheduleTable() {
             />
           </div>
 
-          <button
-            disabled={selectedRowIds.length === 0 || isBulkRescheduleLoading}
-            onClick={() => setOpenStatusModal(true)}
-            className={`px-6 py-2 rounded-lg font-medium whitespace-nowrap ${
-              selectedRowIds.length === 0 || isBulkRescheduleLoading
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-orange-500 text-white hover:bg-orange-600"
-            }`}
+          <Button
+            disabled={selectedRowIds.length === 0}
+            className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer whitespace-nowrap"
+            onClick={() => {
+              setOpenModal(true);
+            }}
           >
-            {isBulkRescheduleLoading ? "Processing..." : "Reschedule Delivery"}
-          </button>
+            Assign Rider{" "}
+            {selectedRowIds.length > 0 && `(${selectedRowIds.length})`}
+          </Button>
         </div>
       </div>
 
@@ -207,15 +229,59 @@ export default function DeliveryRescheduleTable() {
         </div>
       )}
 
-      {/* Status Update Modal */}
-      <UpdateStatusModal
-        open={openStatusModal}
-        setOpen={setOpenStatusModal}
-        selected={selectedRowIds}
-        onAction={handleRescheduleDelivery}
-        actionType="reschedule" // You might need to pass this to your modal
-        isLoading={isBulkRescheduleLoading}
-      />
+      <CustomDialog open={openModal} setOpen={setOpenModal}>
+        <form className="flex flex-col gap-4" onSubmit={handleAssignRider}>
+          <h2 className="text-xl font-semibold mb-2">Assign Rider</h2>
+
+          <div className="bg-orange-50 p-3 rounded-lg mb-2">
+            <p className="text-sm text-gray-700">
+              Assigning {selectedRowIds.length} parcel
+              {selectedRowIds.length > 1 ? "s" : ""} to rider
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Select Rider
+            </label>
+            <SearchableSelect
+              options={allRiders.map((rider: any) => ({
+                value: rider.id,
+                label: rider.user?.full_name,
+              }))}
+              value={selectedRiderId}
+              onChange={setSelectedRiderId}
+              placeholder="Select a rider"
+              searchable
+              searchPlaceholder="Search rider by name..."
+              emptyMessage="No riders found"
+              selectHeight="max-h-[250px]"
+              required
+            />
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setOpenModal(false);
+                setSelectedRiderId("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
+              disabled={isAssigning || !selectedRiderId}
+            >
+              {isAssigning ? "Assigning..." : "Confirm Assignment"}
+            </Button>
+          </div>
+        </form>
+      </CustomDialog>
     </div>
   );
 }

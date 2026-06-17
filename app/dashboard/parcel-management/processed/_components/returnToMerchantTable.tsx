@@ -6,15 +6,34 @@ import React, { useMemo, useState } from "react";
 import { columns } from "./returnToMerchantCol";
 import { useGetReturnToMerchantQuery } from "@/redux/features/process-unprocess/processUnprocessApi";
 import type { ReturnParcel } from "@/redux/features/process-unprocess/processUnprocessType";
+import CustomDialog from "@/components/reusable/CustomDialog";
+import { Button } from "@/components/ui/button";
+import { SearchableSelect } from "@/components/reusable/SearchableSelect";
+import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
+import { useAssignRiderToParcelsMutation } from "@/redux/features/parcels/parcelsApi";
+import { toast } from "sonner";
 
 export default function ReturnToMerchantTable() {
-  const { data: returnToMerchantData, isLoading: isReturnToMerchantLoading } =
-    useGetReturnToMerchantQuery({ page: 1, limit: 10 });
+  const {
+    data: returnToMerchantData,
+    isLoading: isReturnToMerchantLoading,
+    refetch,
+  } = useGetReturnToMerchantQuery({ page: 1, limit: 10 });
+  const { data: ridersData } = useGetRidersQuery({
+    isActive: true,
+    page: 1,
+    limit: 100,
+  });
+  const [assignRiderToParcels, { isLoading: isAssigning }] =
+    useAssignRiderToParcelsMutation();
 
   const returnToMerchantParcels: ReturnParcel[] =
     returnToMerchantData?.data?.parcels ?? [];
+  const allRiders = ridersData?.data?.riders ?? [];
 
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedRiderId, setSelectedRiderId] = useState("");
   const [search, setSearch] = useState("");
 
   const filteredData = useMemo(() => {
@@ -48,10 +67,35 @@ export default function ReturnToMerchantTable() {
     setSelectedRowIds(nextSelected);
   };
 
-  const handleAssignRider = () => {
-    // TODO: open assign-rider flow (e.g. navigate to /parcel-management/assign-rider with selected IDs, or open modal)
-    if (selectedRowIds.length === 0) return;
-    console.log("Assign rider for parcel IDs:", selectedRowIds);
+  const handleAssignRider = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedRiderId) {
+      toast.error("Please select a rider");
+      return;
+    }
+
+    const parcelIds = selectedRowIds.map(String);
+    if (parcelIds.length === 0) {
+      toast.error("Please select at least one parcel");
+      return;
+    }
+
+    try {
+      await assignRiderToParcels({
+        rider_id: selectedRiderId,
+        parcel_ids: parcelIds,
+      }).unwrap();
+
+      toast.success(`Successfully assigned ${parcelIds.length} parcel(s)`);
+      setOpenModal(false);
+      setSelectedRiderId("");
+      setSelectedRowIds([]);
+      refetch();
+    } catch (error) {
+      console.error("Assign rider failed:", error);
+      toast.error("Failed to assign rider. Please try again.");
+    }
   };
 
   if (isReturnToMerchantLoading) {
@@ -79,18 +123,16 @@ export default function ReturnToMerchantTable() {
           </div>
         </div>
 
-        <button
-          type="button"
+        <Button
           disabled={selectedRowIds.length === 0}
-          onClick={handleAssignRider}
-          className={`px-6 py-2 rounded-lg font-medium ${
-            selectedRowIds.length === 0
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-orange-500 text-white hover:bg-orange-600"
-          }`}
+          className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
+          onClick={() => {
+            setOpenModal(true);
+          }}
         >
-          Assign Rider
-        </button>
+          Assign Rider{" "}
+          {selectedRowIds.length > 0 && `(${selectedRowIds.length})`}
+        </Button>
       </div>
 
       <DataTable
@@ -103,6 +145,60 @@ export default function ReturnToMerchantTable() {
         onToggleAll={handleToggleAll}
         emptyMessage="No return-to-merchant parcels found"
       />
+
+      <CustomDialog open={openModal} setOpen={setOpenModal}>
+        <form className="flex flex-col gap-4" onSubmit={handleAssignRider}>
+          <h2 className="text-xl font-semibold mb-2">Assign Rider</h2>
+
+          <div className="bg-orange-50 p-3 rounded-lg mb-2">
+            <p className="text-sm text-gray-700">
+              Assigning {selectedRowIds.length} parcel
+              {selectedRowIds.length > 1 ? "s" : ""} to rider
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Select Rider
+            </label>
+            <SearchableSelect
+              options={allRiders.map((rider: any) => ({
+                value: rider.id,
+                label: rider.user?.full_name,
+              }))}
+              value={selectedRiderId}
+              onChange={setSelectedRiderId}
+              placeholder="Select a rider"
+              searchable
+              searchPlaceholder="Search rider by name..."
+              emptyMessage="No riders found"
+              selectHeight="max-h-[250px]"
+              required
+            />
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setOpenModal(false);
+                setSelectedRiderId("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
+              disabled={isAssigning || !selectedRiderId}
+            >
+              {isAssigning ? "Assigning..." : "Confirm Assignment"}
+            </Button>
+          </div>
+        </form>
+      </CustomDialog>
     </div>
   );
 }

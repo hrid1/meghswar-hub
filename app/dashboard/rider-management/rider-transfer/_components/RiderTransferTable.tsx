@@ -4,62 +4,31 @@ import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 import { riderTransferColumns } from "./riderTransferCol";
 import CustomPagination from "@/components/reusable/CustomPagination";
-
-export const riderTransferData = [
-  {
-    riderId: "RID-1001",
-    rider: "Hasan Ali",
-    riderPhone: "01711223344",
-    riderImg: "https://i.pravatar.cc/100?img=11",
-    status: "Active",
-    licenseNo: "DL-784521",
-    totalParcel: 128,
-  },
-
-  {
-    riderId: "RID-1002",
-    rider: "Karim Ahmed",
-    riderPhone: "01855667788",
-    riderImg: "https://i.pravatar.cc/100?img=12",
-    status: "On Leave",
-    licenseNo: "DL-562341",
-    totalParcel: 92,
-  },
-
-  {
-    riderId: "RID-1003",
-    rider: "Jamal Uddin",
-    riderPhone: "01999887766",
-    riderImg: "https://i.pravatar.cc/100?img=13",
-    status: "Inactive",
-    licenseNo: "DL-901234",
-    totalParcel: 54,
-  },
-];
+import { useGetRidersForTransferQuery } from "@/redux/features/rider/riderApi";
 
 export default function RiderTransferTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const { data, isLoading } = useGetRidersForTransferQuery({ page, limit });
+  const riders = data?.data?.riders || [];
+  const pagination = data?.data?.pagination;
 
   // filtering
-  const filteredParcels = riderTransferData.filter((p) => {
+  const filteredRiders = riders.filter((rider) => {
     const q = searchQuery.toLowerCase();
     return (
-      p.riderId.toLowerCase().includes(q) ||
-      p.rider.toLowerCase().includes(q) ||
-      p.riderPhone.includes(q) ||
-      p.licenseNo.toLowerCase().includes(q)
+      rider.id.toLowerCase().includes(q) ||
+      rider.rider_code?.toLowerCase().includes(q) ||
+      rider.full_name.toLowerCase().includes(q) ||
+      rider.phone.includes(q) ||
+      rider.license_no?.toLowerCase().includes(q)
     );
   });
 
-  // pagination
-  const totalPages = Math.ceil(filteredParcels.length / limit);
-  const paginatedData = filteredParcels.slice(
-    (page - 1) * limit,
-    page * limit
-  );
+  const totalItems = pagination?.total ?? filteredRiders.length;
+  const totalPages = pagination?.totalPages ?? Math.ceil(totalItems / limit);
 
   return (
     <div className="p-6">
@@ -77,9 +46,9 @@ export default function RiderTransferTable() {
       {/* TABLE */}
       <DataTable
         columns={riderTransferColumns}
-        data={paginatedData}
+        data={filteredRiders}
         selectable={true}
-        getRowId={(row) => row.riderId}
+        getRowId={(row) => row.id}
         selectedRowIds={selectedRowIds}
         onToggleRow={(rowId) => {
           setSelectedRowIds((prev) =>
@@ -91,13 +60,14 @@ export default function RiderTransferTable() {
         onToggleAll={(nextSelected) => {
           setSelectedRowIds(nextSelected);
         }}
+        isLoading={isLoading}
       />
 
       <CustomPagination
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
-        totalItems={filteredParcels.length}
+        totalItems={totalItems}
         itemsPerPage={limit}
         show
         showItemsPerPage={false}

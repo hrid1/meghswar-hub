@@ -1,12 +1,15 @@
-import React from 'react'
-// import RiderAssignParcelTable from './RiderAssignParcelTable'
+import RiderAssignParcelTable from "./RiderAssignParcelTable";
 
-export default function page() {
+export default async function page({
+  params,
+}: {
+  params: Promise<{ rid: string }>;
+}) {
+  const { rid } = await params;
+
   return (
     <div>
-      {/* <RiderAssignParcelTable/> */}
-
-      <h2>need to fix this page</h2>
+      <RiderAssignParcelTable riderId={rid} />
     </div>
-  )
+  );
 }

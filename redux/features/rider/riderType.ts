@@ -243,3 +243,155 @@ export interface HubApprovalResponse {
   message: string;
   data: PendingHubApproval;
 }
+
+
+// Add these to your riderType.ts file
+
+// ─── Rider Transfer Types ────────────────────────────────────────────────────
+
+export interface RiderTransferRider {
+  id: string;
+  rider_code: string | null;
+  full_name: string;
+  phone: string;
+  photo: string | null;
+  rider_status: "On Duty" | "Break" | "Off Duty" | "On Leave";
+  license_no: string;
+  assigned_parcels_count: number;
+  is_active: boolean;
+  hub: {
+    id: string;
+    branch_name: string;
+  };
+  bike_type?: "MOTORCYCLE" | "SCOOTER" | "BICYCLE"; // Only present in available riders response
+}
+
+export interface RiderTransferCustomerInfo {
+  name: string;
+  phone: string;
+  secondary_phone: string | null;
+  full_address: string;
+}
+
+export interface RiderTransferDeliveryArea {
+  id: string;
+  area: string;
+  zone: string;
+  city: string;
+  division: string;
+}
+
+export interface RiderTransferMerchant {
+  id: string;
+  name: string;
+  phone: string;
+  photo: string | null;
+}
+
+export interface RiderTransferAmount {
+  total_amount: number;
+  delivery_charge: number;
+  cod_charge: number;
+  weight_charge: number;
+  discount: number;
+  cod_amount: number;
+  receivable_amount: number;
+}
+
+export interface RiderTransferParcel {
+  id: string;
+  parcel_id: string;
+  parcel_tx_id: string;
+  tracking_number: string;
+  status: string;
+  customer_info: RiderTransferCustomerInfo;
+  additional_notes: string | null;
+  area: string;
+  delivery_area: RiderTransferDeliveryArea;
+  merchant: RiderTransferMerchant;
+  amount: RiderTransferAmount;
+  parcel_age: string;
+  age_days: number;
+  delivery_type: number;
+  is_cod: boolean;
+  created_at: string;
+  last_updated: string;
+  assigned_at: string;
+}
+
+// Response Types
+export interface RidersForTransferResponse {
+  success: boolean;
+  message: string;
+  data: {
+    riders: RiderTransferRider[];
+    pagination: Pagination;
+  };
+}
+
+export interface AvailableRidersForTransferResponse {
+  success: boolean;
+  message: string;
+  data: {
+    riders: RiderTransferRider[];
+  };
+}
+
+export interface RiderParcelsForTransferResponse {
+  success: boolean;
+  message: string;
+  data: {
+    rider: {
+      id: string;
+      rider_code: string | null;
+      full_name: string;
+      phone: string;
+      photo: string | null;
+      hub: {
+        id: string;
+        branch_name: string;
+      };
+    };
+    parcels: RiderTransferParcel[];
+    pagination: Pagination;
+  };
+}
+
+export interface TransferResult {
+  parcel_id: string;
+  parcel_tx_id: string;
+  tracking_number: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface TransferSummary {
+  total: number;
+  transferred: number;
+  failed: number;
+}
+
+export interface TransferParcelsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    summary: TransferSummary;
+    results: TransferResult[];
+  };
+}
+
+// Request Types
+export interface GetRidersForTransferParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface GetAvailableRidersForTransferParams {
+  exclude_rider_ids?: string[];
+}
+
+export interface TransferParcelsRequest {
+  target_rider_id: string;
+  parcel_ids: string[];
+  notes?: string;
+}

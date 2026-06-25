@@ -10,12 +10,20 @@ import {
   PendingHubApprovalsParams,
   HubApprovalRequest,
   HubApprovalResponse,
+  RidersForTransferResponse,
+  AvailableRidersForTransferResponse,
+  RiderParcelsForTransferResponse,
+  TransferParcelsResponse,
+  GetRidersForTransferParams,
+  GetAvailableRidersForTransferParams,
+  TransferParcelsRequest,
 } from "./riderType";
 
 export const ridersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getRiders: builder.query({
-      query: ({ isActive, page = 1, limit = 20 }) => ({
+    // Existing endpoints
+    getRiders: builder.query<RiderResponse, { isActive?: boolean; page?: number; limit?: number } | void>({
+      query: ({ isActive, page = 1, limit = 20 } = {}) => ({
         url: "/riders",
         method: "GET",
         params: {
@@ -69,6 +77,66 @@ export const ridersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [TAG_TYPES.DeliveryVerifications],
     }),
+
+    // ─── Rider Transfer Endpoints ───────────────────────────────────────────
+
+    getRidersForTransfer: builder.query<
+      RidersForTransferResponse,
+      GetRidersForTransferParams | void
+    >({
+      query: ({ page = 1, limit = 20 } = {}) => ({
+        url: "/hubs/rider-transfer/riders",
+        method: "GET",
+        params: {
+          page,
+          limit,
+        },
+      }),
+      providesTags: [TAG_TYPES.Riders],
+    }),
+
+    getAvailableRidersForTransfer: builder.query<
+      AvailableRidersForTransferResponse,
+      GetAvailableRidersForTransferParams | void
+    >({
+      query: (params) => ({
+        url: "/hubs/rider-transfer/riders/available",
+        method: "GET",
+        params: params ?? {},
+      }),
+      providesTags: [TAG_TYPES.Riders],
+    }),
+
+    getRiderParcelsForTransfer: builder.query<
+      RiderParcelsForTransferResponse,
+      { riderId: string; page?: number; limit?: number }
+    >({
+      query: ({ riderId, page = 1, limit = 20 }) => ({
+        url: `/hubs/rider-transfer/riders/${riderId}/parcels`,
+        method: "GET",
+        params: {
+          page,
+          limit,
+        },
+      }),
+      providesTags: [TAG_TYPES.Parcels],
+    }),
+
+    transferParcels: builder.mutation<
+      TransferParcelsResponse,
+      TransferParcelsRequest
+    >({
+      query: (body) => ({
+        url: "/hubs/rider-transfer/transfer",
+        method: "POST",
+        body: {
+          target_rider_id: body.target_rider_id,
+          parcel_ids: body.parcel_ids,
+          notes: body.notes ?? "",
+        },
+      }),
+      invalidatesTags: [TAG_TYPES.Parcels, TAG_TYPES.Riders],
+    }),
   }),
 });
 
@@ -78,4 +146,8 @@ export const {
   useGetRidersPerformanceQuery,
   useGetPendingHubApprovalsQuery,
   useHubApproveOrDeclineMutation,
+  useGetRidersForTransferQuery,
+  useGetAvailableRidersForTransferQuery,
+  useGetRiderParcelsForTransferQuery,
+  useTransferParcelsMutation,
 } = ridersApi;

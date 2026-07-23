@@ -1,4 +1,5 @@
 "use client";
+import type { HubDashboardParcelFlowResponse } from "@/redux/features/dashboard/dashboardTypes";
 import {
   BarChart,
   Bar,
@@ -10,45 +11,93 @@ import {
   LabelList,
   Cell,
 } from "recharts";
+import { Loader2 } from "lucide-react";
 
-const data = [
-  { name: "Parcels Received", value: 892, color: "#FF7300" },
-  { name: "Parcels Dispatched", value: 756, color: "#00C49F" },
-  { name: "Parcels Reported", value: 103, color: "#FF6B6B" },
-];
+export default function ParcelFlowChart({
+  flow,
+  isLoading = false,
+  isError = false,
+}: {
+  flow?: HubDashboardParcelFlowResponse["data"];
+  isLoading?: boolean;
+  isError?: boolean;
+}) {
+  const metrics = flow?.metrics;
+  const data = [
+    {
+      name: "Received",
+      value: metrics?.parcels_received ?? 0,
+      color: "#FE5000",
+    },
+    {
+      name: "Dispatched",
+      value: metrics?.parcels_dispatched ?? 0,
+      color: "#22C55E",
+    },
+    {
+      name: "Reported",
+      value: metrics?.parcels_reported ?? 0,
+      color: "#EF4444",
+    },
+  ];
 
-export default function ParcelFlowChart() {
+  const rangeLabel =
+    flow?.range.start_date && flow?.range.end_date
+      ? `${new Date(flow.range.start_date).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        })} – ${new Date(flow.range.end_date).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        })}`
+      : "Current range";
+
   return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm">
+    <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="font-semibold text-lg">Parcel Flow</h2>
-          <p className="text-gray-500 text-sm">Today</p>
+          <h2 className="text-xl font-bold text-gray-900">Parcel Flow</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Received, dispatched and reported parcels
+          </p>
         </div>
-        <select className="border border-gray-300 rounded-lg px-2 py-1 text-sm">
-          <option>Today</option>
-          <option>This Week</option>
-          <option>This Month</option>
-        </select>
+        <span className="rounded-lg bg-orange-50 px-3 py-1.5 text-xs font-medium text-[#FE5000]">
+          {rangeLabel}
+        </span>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart
-          data={data}
-          margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="value" barSize={60} radius={[8, 8, 0, 0]}>
-            <LabelList dataKey="value" position="top" />
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+      {isLoading ? (
+        <div className="flex h-[300px] items-center justify-center text-gray-500">
+          <Loader2 className="mr-2 h-5 w-5 animate-spin text-[#FE5000]" />
+          Loading parcel flow…
+        </div>
+      ) : isError ? (
+        <div className="flex h-[300px] items-center justify-center text-sm text-red-600">
+          Failed to load parcel flow.
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart
+            data={data}
+            margin={{ top: 20, right: 10, left: -15, bottom: 10 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#E5E7EB"
+            />
+            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+            <Tooltip formatter={(value) => Number(value).toLocaleString()} />
+            <Bar dataKey="value" barSize={56} radius={[8, 8, 0, 0]}>
+              <LabelList dataKey="value" position="top" />
+              {data.map((entry) => (
+                <Cell key={entry.name} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </section>
   );
 }

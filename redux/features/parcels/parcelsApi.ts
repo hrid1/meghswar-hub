@@ -6,6 +6,7 @@ import {
   HubChargesRequest,
   HubChargesResponse,
   ParcelReportsResponse,
+  ParcelHistoryResponse,
 } from "./parcelTypes";
 // GET /hubs/dashboard/parcels/:id
 
@@ -241,6 +242,24 @@ const parcelsApi = baseApi.injectEndpoints({
       invalidatesTags: [TAG_TYPES.Parcels],
     }),
 
+    // get parcel history
+    getParcelHistory: builder.query<
+      ParcelHistoryResponse,
+      { page?: number; limit?: number; search?: string; status?: string }
+    >({
+      query: ({ page = 1, limit = 20, search, status }) => ({
+        url: `/hubs/parcels/history`,
+        method: "GET",
+        params: {
+          page,
+          limit,
+          ...(search ? { search } : {}),
+          ...(status ? { status } : {}),
+        },
+      }),
+      providesTags: [TAG_TYPES.Parcels],
+    }),
+
 
 
   }),
@@ -262,4 +281,5 @@ export const {
   useInHubParcelsQuery,
   useGetParcelReportsQuery,
   useGetParcelByIdQuery,
+  useGetParcelHistoryQuery,
 } = parcelsApi;

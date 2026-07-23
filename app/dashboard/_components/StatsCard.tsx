@@ -1,49 +1,53 @@
+import type { TopCards } from "@/redux/features/dashboard/dashboardTypes";
 import { Bike, CircleCheck, TriangleAlert, Truck } from "lucide-react";
 import React from "react";
 
-// Define color mapping
-const statusColors: any = {
-  orange: "bg-[#FFE9DA] text-[#FF6B35]",
-  blue: "bg-[#E8F4FD] text-[#1890FF]",
-  green: "bg-[#E6F4EE] text-[#52C41A]",
-  red: "bg-[#FFEBEE] text-[#FF4D4F]",
-  gray: "bg-[#F5F5F5] text-[#8C8C8C]",
+const statusColors: Record<string, { background: string; foreground: string }> = {
+  orange: { background: "bg-[#FFE9DA]", foreground: "text-[#FE5000]" },
+  blue: { background: "bg-[#E8F4FD]", foreground: "text-[#1890FF]" },
+  green: { background: "bg-[#E6F4EE]", foreground: "text-[#3A9D23]" },
+  red: { background: "bg-[#FFEBEE]", foreground: "text-[#FF4D4F]" },
+  gray: { background: "bg-[#F5F5F5]", foreground: "text-[#8C8C8C]" },
 };
 
-export default function StatsCard() {
+export default function StatsCard({ topCards }: { topCards: TopCards }) {
+  const cards = [
+    {
+      number: topCards.parcels_to_process.value,
+      subText: `+${topCards.parcels_to_process.received_last_hour} received last hour`,
+      title: "Parcels to Process",
+      icon: <TriangleAlert />,
+      colorScheme: "orange",
+    },
+    {
+      number: topCards.riders_active.value,
+      subText: `${topCards.riders_active.value} of ${topCards.riders_active.total} riders`,
+      title: "Riders Active",
+      icon: <Bike />,
+      colorScheme: "green",
+    },
+    {
+      number: topCards.deliveries_in_progress.value,
+      subText: `${topCards.deliveries_in_progress.average_per_active_rider.toFixed(1)} avg. per active rider`,
+      title: "Deliveries in Progress",
+      icon: <Truck />,
+      colorScheme: "blue",
+    },
+    {
+      number: `${topCards.live_success_rate.value}${topCards.live_success_rate.unit}`,
+      subText: `${topCards.live_success_rate.today_change >= 0 ? "+" : ""}${topCards.live_success_rate.today_change}${topCards.live_success_rate.unit} ${topCards.live_success_rate.comparison}`,
+      title: "Live Success Rate",
+      icon: <CircleCheck />,
+      colorScheme: "red",
+    },
+  ];
+
   return (
-    <div>
-      <section className=" grid grid-cols-4 gap-6">
-        <ParcelCard
-          number={30}
-          subText="+7 in last 3 hours"
-          title="Parcels to Process"
-          icon={<TriangleAlert />}
-          colorScheme="orange"
-        />
-        <ParcelCard
-          number={14}
-          subText="+7 in last 30 hours"
-          title="Riders Active"
-          icon={<Bike />}
-          colorScheme="green"
-        />
-        <ParcelCard
-          number={30}
-          subText="+7 in last 3 hours"
-          title="Parcels to Process"
-          icon={<Truck />}
-          colorScheme="blue"
-        />
-        <ParcelCard
-          number={30}
-          subText="+7 in last 3 hours"
-          title="Parcels to Process"
-          icon={<CircleCheck />}
-          colorScheme="red"
-        />
-      </section>
-    </div>
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {cards.map((card) => (
+        <ParcelCard key={card.title} {...card} />
+      ))}
+    </section>
   );
 }
 
@@ -60,37 +64,20 @@ const ParcelCard = ({
   icon: React.ReactNode;
   colorScheme: string;
 }) => {
-  const colorClass = statusColors[colorScheme] || statusColors.gray;
+  const colors = statusColors[colorScheme] || statusColors.gray;
 
   return (
-    <div className=" bg-white border border-gray-300 rounded-[19px] p-4 flex flex-col justify-between">
-      {/* Top Section */}
-      <div className="flex items-start justify-between">
-        {/* Left group */}
-        <div className="flex justify-between items-center gap-4 w-full">
-          {/* Number box */}
-          <div
-            className={`w-[59px] h-[50px]  rounded-[10px] flex items-center justify-center ${
-              colorClass.split(" ")[0]
-            }`}
-          >
-            <span className={`font-poppins font-bold text-[26px] leading-[39px] ${colorClass.split(" ")[1]}`}>
-              {icon}
-            </span>
-          </div>
-
-          {/* Subtext */}
-          <div className="flex flex-col">
-            <p className="text-2xl font-bold text-right"> {number}</p>
-            <span className="font-normal text-[14px] leading-[21px] text-gray-400">
-              {subText}
-            </span>
-          </div>
+    <div className="flex min-h-36 flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${colors.background} ${colors.foreground}`}>
+          {icon}
+        </div>
+        <div className="min-w-0 text-right">
+          <p className="text-2xl font-bold text-gray-900">{number}</p>
+          <p className="mt-1 text-xs leading-4 text-gray-500">{subText}</p>
         </div>
       </div>
-
-      {/* Title */}
-      <h2 className="font-semibold text-[18px] leading-[27px] text-black mt-4">
+      <h2 className="mt-5 text-base font-semibold text-gray-800">
         {title}
       </h2>
     </div>

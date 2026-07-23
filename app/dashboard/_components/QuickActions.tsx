@@ -1,43 +1,63 @@
-import { ParkingCircle } from "lucide-react";
+import {
+  Bike,
+  ClipboardCheck,
+  History,
+  PackagePlus,
+  Replace,
+  WalletCards,
+} from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 export default function QuickActions() {
+  const actions = [
+    {
+      icon: <Bike />,
+      title: "Assign Riders",
+      href: "/dashboard/parcel-management/assign-rider",
+      color: "text-blue-600 bg-blue-50",
+    },
+    {
+      icon: <PackagePlus />,
+      title: "Receive Parcels",
+      href: "/dashboard/parcel-management/receive",
+      color: "text-green-600 bg-green-50",
+    },
+    {
+      icon: <ClipboardCheck />,
+      title: "Verify OTP",
+      href: "/dashboard/rider-management/verify-otp",
+      color: "text-violet-600 bg-violet-50",
+    },
+    {
+      icon: <Replace />,
+      title: "Hub Transfer",
+      href: "/dashboard/parcel-management/hub-transfer",
+      color: "text-orange-600 bg-orange-50",
+    },
+    {
+      icon: <WalletCards />,
+      title: "COD Collection",
+      href: "/dashboard/financial-report/cod-manangement",
+      color: "text-emerald-600 bg-emerald-50",
+    },
+    {
+      icon: <History />,
+      title: "Parcel History",
+      href: "/dashboard/parcel-management/parcel-history",
+      color: "text-red-600 bg-red-50",
+    },
+  ];
+
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-      <div className="grid grid-cols-3 gap-5 h-full ">
-        <ActionCard
-          icon={<ParkingCircle />}
-          title="Assign Riders"
-          color="text-blue-500 bg-blue-50"
-        />
-        <ActionCard
-          icon={<ParkingCircle />}
-          title="Assign Riders"
-          color="text-green-500 bg-green-50"
-        />
-        <ActionCard
-          icon={<ParkingCircle />}
-          title="Assign Riders"
-          color="text-red-500 bg-red-50"
-        />
-        <ActionCard
-          icon={<ParkingCircle />}
-          title="Assign Riders"
-          color="text-yellow-500 bg-yellow-50"
-        />
-        <ActionCard
-          icon={<ParkingCircle />}
-          title="Assign Riders"
-          color="text-purple-500 bg-purple-50"
-        />
-        <ActionCard
-          icon={<ParkingCircle />}
-          title="Assign Riders"
-          color="text-orange-500 bg-orange-50"
-        />
+    <section className="h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 className="mb-5 text-xl font-bold text-gray-900">Quick Actions</h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {actions.map((action) => (
+          <ActionCard key={action.href} {...action} />
+        ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -45,20 +65,20 @@ function ActionCard({
   icon,
   title,
   color,
+  href,
 }: {
-  icon: any;
+  icon: React.ReactNode;
   title: string;
   color: string;
+  href: string;
 }) {
-  //   const colorClass = getColor(color);
-
-  console.log("colorClass", color);
   return (
-    <div
-      className={` border-gray-100 rounded-lg p-5 h-full border flex flex-col gap-3 items-center justify-center ${color}`}
+    <Link
+      href={href}
+      className={`flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border border-transparent p-4 transition hover:-translate-y-0.5 hover:border-current hover:shadow-sm ${color}`}
     >
-      <span className="w-7 h-7">{icon}</span>
-      <p className="text-sm font-semibold text-center text-nowrap">{title}</p>
-    </div>
+      <span className="[&_svg]:h-6 [&_svg]:w-6">{icon}</span>
+      <p className="text-center text-sm font-semibold">{title}</p>
+    </Link>
   );
 }

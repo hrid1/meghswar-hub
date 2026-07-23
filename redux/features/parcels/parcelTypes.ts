@@ -410,3 +410,111 @@ export interface EnumMappings {
   parcel_type: EnumOption[];
   delivery_type: EnumOption[];
 }
+
+
+
+export interface ParcelHistoryResponse {
+  success: boolean;
+  data: {
+    parcels: {
+      id: string;
+      parcel_tx_id: string;
+      tracking_number: string;
+      merchant_order_id: string;
+      customer_name: string;
+      customer_phone: string;
+      customer_secondary_phone: string;
+      customer_address: string;
+      product_description: string;
+      product_price: string;
+      product_weight: string;
+      delivery_charge: string;
+      weight_charge: string;
+      cod_charge: string;
+      return_charge: string;
+      discount: number;
+      total_charge: string;
+      is_cod: boolean;
+      cod_amount: string;
+      cod_collected_amount: string;
+      receivable_amount: string;
+      status: string;
+      payment_status: string;
+      financial_status: string;
+      delivery_provider: string;
+      special_instructions: string;
+      delivered_at: string;
+      created_at: string;
+      updated_at: string;
+      merchant: {
+        id: string;
+        status: string;
+        user: {
+          id: string;
+          full_name: string;
+          phone: string;
+          email: string;
+          role: string;
+          is_active: boolean;
+        };
+      };
+      store: {
+        name: string;
+        phone: string;
+      };
+      customer: {
+        id: string;
+        customer_name: string;
+        phone_number: string;
+        secondary_number: string;
+        customer_address: string;
+      };
+      delivery_area: {
+        division: string;
+        city: string;
+        city_id: number;
+        zone: string;
+        zone_id: number;
+        area: string;
+        area_id: number;
+        inside_dhaka_flag: boolean;
+      };
+      assigned_rider: {
+        id: string;
+        full_name: string;
+        phone: string;
+        bike_type: string;
+        approval_status: string;
+        rider_status: string;
+      };
+      current_hub: {
+        id: string;
+        hub_code: string;
+        branch_name: string;
+        area: string;
+        status: string;
+      };
+      destination: string;
+      zone: string;
+      cod_breakdown: {
+        cod_amount: number;
+        cod_collected_amount: number;
+        delivery_charge: number;
+        cod_charge: number;
+        weight_charge: number;
+        return_charge: number;
+        total_charge: number;
+      };
+    }[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+  message: string;
+}
+
+export type ParcelHistoryItem =
+  ParcelHistoryResponse["data"]["parcels"][number];

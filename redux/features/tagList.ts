@@ -11,6 +11,7 @@ export const  TAG_TYPES = {
     Parcels: "Parcels" ,
     FinancialReport: "FinancialReport" ,
     DeliveryVerifications: "DeliveryVerifications" ,
+    Dashboard: "Dashboard" ,
 } as const;
 
 export type TagType = typeof TAG_TYPES[keyof typeof TAG_TYPES];

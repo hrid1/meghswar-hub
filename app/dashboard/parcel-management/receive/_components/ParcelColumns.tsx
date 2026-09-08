@@ -2,8 +2,9 @@
 "use client";
 
 import React from "react";
-import { Printer, Copy } from "lucide-react";
+import { Printer } from "lucide-react";
 import { EditableCell } from "./EditableCell";
+import { CopyValueButton, AddressHover, TextHover } from "@/lib/table.utils";
 
 
 export interface UpdateChargesHandler {
@@ -11,7 +12,8 @@ export interface UpdateChargesHandler {
 }
 
 export const getParcelColumns = (
-  onUpdateCharges?: UpdateChargesHandler
+    onUpdateCharges?: UpdateChargesHandler,
+    onPrintParcels?: (originalId: string) => void
 ): any => [
   {
     key: "id",
@@ -21,81 +23,43 @@ export const getParcelColumns = (
       <div className="">
         <p className="text-nowrap flex items-center">
           PID:{row.id}{" "}
-          <span>
-            <Copy className="w-3 ml-1 cursor-pointer hover:text-orange-500" />
-          </span>
+          <CopyValueButton value={row.id} label="Parcel ID" />
         </p>
         <p className="text-nowrap flex items-center">
           MID:{row.merchantInvoice}
-          <span>
-            <Copy className="w-3 ml-1 cursor-pointer hover:text-orange-500" />
-          </span>
+          <CopyValueButton value={row.merchantInvoice} label="Merchant ID" />
         </p>
-        {/* <p className="text-xs text-gray-700">{row.tracking_number}</p> */}
       </div>
     ),
   },
   {
-    key: "merchant",
-    header: "Merchant",
+    key: "store",
+    header: "Store",
     width: "12%",
-    render: (row: any) => <p className="text-nowrap font-medium">{row.merchant}</p>,
+    render: (row: any) => <p className="text-nowrap font-medium">{row.store} <br /> <span className="text-xs text-gray-500">{row.storePhone}</span></p>,
   },
   {
     key: "additionalNote",
     header: "Additional Note",
     width: "12%",
     wrap: true,
-    render: (row: any) => {
-      const note = row.additionalNote || "";
-      const shortNote = note.length > 40 ? note.slice(0, 40) + "..." : note;
-
-      return (
-        <div className="relative group">
-          <p className="text-sm text-gray-600 break-words cursor-help">
-            {shortNote}
-          </p>
-          {note.length > 40 && (
-            <div className="absolute z-20 hidden max-w-xs rounded bg-orange-400 text-white px-2 py-1 text-xs group-hover:block -top-1 left-0 ml-2 whitespace-normal">
-              {note}
-            </div>
-          )}
-        </div>
-      );
-    },
+    render: (row: any) => (
+      <TextHover text={row.additionalNote || "No instructions"} />
+    ),
   },
   {
     key: "customer",
     header: "Customer Info",
     width: "18%",
     wrap: true,
-    render: (row: any) => {
-      const address: string = row.address || "";
-      const shortAddress = address.length > 35 ? address.slice(0, 35) + "..." : address;
-
-      return (
-        <div className="text-sm break-words">
-          <div className="font-semibold">{row.customer}</div>
-        
-          <div className="relative group mt-1">
-            <div className="text-gray-700 text-xs cursor-help">
-              {shortAddress}
-            </div>
-            {address.length > 35 && (
-              <div className="absolute left-0 bottom-full mb-1 z-20 hidden group-hover:block">
-                <div className="rounded-md bg-orange-400 px-2 py-1 text-[11px] leading-snug text-white shadow-lg max-w-xs whitespace-normal">
-                  {address}
-                </div>
-              </div>
-            )}
-          </div>
-
-
-          <div className="text-gray-600 text-xs">{row.phone}</div>
-          <div className="text-gray-600 text-xs">{row.secondary_phone}</div>
-        </div>
-      );
-    },
+    render: (row: any) => (
+      <div className="text-sm break-words">
+        <div className="font-semibold">{row.customer}</div>
+        <AddressHover address={row.address} maxLength={35} />
+        <div className="text-gray-600 text-xs">{row.phone}</div>
+        <div className="text-gray-600 text-xs">{row.secondary_phone}</div>
+      </div>
+    ),
   },
   {
     key: "deliveryArea",
@@ -170,9 +134,10 @@ export const getParcelColumns = (
     key: "action",
     header: "Action",
     width: "7%",
+
     render: (row: any) => (
       <button 
-        onClick={() => window.open(`/parcels/${row.originalId}/print`, '_blank')}
+        onClick={() => onPrintParcels?.(row.originalId)}
         className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-3 py-1.5 rounded-md transition-colors"
       >
         <Printer className="w-3 h-3 inline-block mr-1" />

@@ -1,158 +1,293 @@
 "use client";
 
-import { DataTable } from "@/components/reusable/DataTable";
-import CustomPagination from "@/components/reusable/CustomPagination";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { DataTable, type Column } from "@/components/reusable/DataTable";
+import { Button } from "@/components/ui/button";
+import CustomSearchInput from "@/components/reusable/CustomSearchInput";
 import { useGetConfirmedPickupsQuery } from "@/redux/features/pickup-request/pickupRequestApi";
-import { ConfirmedPickup } from "@/redux/features/pickup-request/pickupRequestType";
-import { Search } from "lucide-react";
+import type { ConfirmedPickup } from "@/redux/features/pickup-request/pickupRequestType";
 
-const confirmedColumns = () => [
+type RowId = string | number;
+
+interface ConfirmedPickupRow {
+  id: string;
+  requestId: string;
+  pickupLocation: string;
+  storeName: string;
+  storePhone: string;
+  riderName: string;
+  riderPhone: string;
+  pickupCount: number;
+  status: "CONFIRMED" | "PICKED_UP" | "DELIVERED" | "CANCELLED";
+  comment: string | null;
+  date: string;
+}
+
+const getConfirmedPickupStatusConfig = (status: ConfirmedPickupRow["status"]) => {
+  const statusConfig = {
+    CONFIRMED: { label: "Confirmed", bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500" },
+    PICKED_UP: { label: "Picked Up", bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500" },
+    DELIVERED: { label: "Delivered", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500" },
+    CANCELLED: { label: "Cancelled", bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500" },
+  };
+
+  return statusConfig[status] ?? statusConfig.CONFIRMED;
+};
+
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
+const mapConfirmedPickupsToTableFormat = (apiResponse: any): ConfirmedPickupRow[] => {
+  if (!apiResponse?.data?.pickupRequests || !Array.isArray(apiResponse.data.pickupRequests)) {
+    return [];
+  }
+
+  return apiResponse.data.pickupRequests.map((request: ConfirmedPickup) => ({
+    id: request.id,
+    requestId: request.request_code,
+    pickupLocation: request.pickup_location,
+    storeName: request.store_name,
+    storePhone: request.store_phone,
+    riderName: request.rider?.name || "Not Assigned",
+    riderPhone: request.rider?.phone || "N/A",
+    pickupCount: request.pickup_count,
+    status: request.status as ConfirmedPickupRow["status"],
+    comment: request.comment,
+    date: formatDate(request.date),
+  }));
+};
+
+const confirmedPickupColumns = (onViewDetails: (row: ConfirmedPickupRow) => void): Column<ConfirmedPickupRow>[] => [
   {
-    key: "request_code",
+    key: "requestId",
     header: "Request ID",
-    width: "13%",
-    render: (row: ConfirmedPickup) => (
-      <span className="font-semibold text-[#FE5000]">{row.request_code}</span>
-    ),
+    width: "10%",
+    render: (row) => <span className="font-semibold text-sm text-blue-600">{row.requestId}</span>,
   },
   {
-    key: "store_name",
-    header: "Store",
+    key: "store",
+    header: "Store Info",
     width: "20%",
-    render: (row: ConfirmedPickup) => (
-      <div>
-        <p className="font-semibold leading-tight">{row.store_name}</p>
-        <p className="text-xs text-gray-500">{row.store_phone}</p>
+    render: (row) => (
+      <div className="flex flex-col">
+        <span className="font-semibold text-sm text-gray-800">{row.storeName}</span>
+        <span className="text-xs text-gray-500">{row.storePhone}</span>
+        <span className="max-w-[200px] truncate text-xs text-gray-400">{row.pickupLocation}</span>
       </div>
     ),
   },
   {
-    key: "pickup_location",
-    header: "Pickup Location",
-    width: "20%",
-    render: (row: ConfirmedPickup) => (
-      <p className="text-sm text-gray-700 truncate max-w-[180px]">
-        {row.pickup_location || "—"}
-      </p>
+    key: "pickupCount",
+    header: "Parcels",
+    width: "8%",
+    render: (row) => (
+      <div className="text-center">
+        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+          {row.pickupCount}
+        </span>
+      </div>
     ),
   },
   {
     key: "rider",
     header: "Rider",
-    width: "18%",
-    render: (row: ConfirmedPickup) =>
-      row.rider ? (
-        <div>
-          <p className="font-semibold leading-tight">{row.rider.name}</p>
-          <p className="text-xs text-gray-500">{row.rider.phone}</p>
-        </div>
-      ) : (
-        <span className="text-gray-400 text-sm">—</span>
-      ),
-  },
-  {
-    key: "pickup_count",
-    header: "Parcels",
-    width: "9%",
-    render: (row: ConfirmedPickup) => (
-      <span className="font-semibold">{row.pickup_count}</span>
+    width: "15%",
+    render: (row) => (
+      <div className="flex flex-col">
+        <span className="text-sm font-medium text-gray-800">{row.riderName}</span>
+        <span className="text-xs text-gray-500">{row.riderPhone}</span>
+      </div>
     ),
   },
   {
     key: "status",
     header: "Status",
-    width: "11%",
-    render: (row: ConfirmedPickup) => {
-      const colors: Record<string, string> = {
-        CONFIRMED: "bg-blue-100 text-blue-700",
-        PICKED_UP: "bg-green-100 text-green-700",
-        DELIVERED: "bg-emerald-100 text-emerald-700",
-        CANCELLED: "bg-red-100 text-red-600",
-      };
+    width: "10%",
+    render: (row) => {
+      const config = getConfirmedPickupStatusConfig(row.status);
       return (
-        <span
-          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-            colors[row.status] ?? "bg-gray-100 text-gray-600"
-          }`}
-        >
-          {row.status}
-        </span>
+        <div className={`flex w-fit items-center gap-1.5 rounded-full border px-2 py-1 text-xs font-medium ${config.bg} ${config.text} ${config.border}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+          {config.label}
+        </div>
       );
     },
   },
   {
+    key: "date",
+    header: "Date",
+    width: "10%",
+    render: (row) => <span className="text-sm text-gray-700">{row.date}</span>,
+  },
+  {
     key: "comment",
     header: "Comment",
-    width: "9%",
-    render: (row: ConfirmedPickup) => (
-      <span className="text-sm text-gray-500">{row.comment || "—"}</span>
+    width: "15%",
+    wrap: true,
+    render: (row) => <span className="text-sm text-gray-500 italic">{row.comment || "—"}</span>,
+  },
+  {
+    key: "actions",
+    header: "Actions",
+    width: "12%",
+    render: (row) => (
+      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => onViewDetails(row)}>
+        View Details
+      </Button>
     ),
   },
 ];
 
 export default function PickupRequestTableRider() {
-  const [page, setPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState<RowId[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
-  const { data, isLoading } = useGetConfirmedPickupsQuery({
-    page,
-    limit: 20,
+  const { data, isLoading, isError, error, refetch } = useGetConfirmedPickupsQuery({
+    page: currentPage,
+    limit: itemsPerPage,
     search: searchQuery || undefined,
   });
 
-  const pickupRequests = data?.data.pickupRequests ?? [];
-  const pagination = data?.data.pagination ?? {
-    total: 0,
-    page: 1,
-    limit: 20,
-    totalPages: 0,
-    hasNext: false,
-    hasPrev: false,
+  const mappedRequests = useMemo(() => mapConfirmedPickupsToTableFormat(data), [data]);
+  const paginationInfo = data?.data?.pagination;
+
+  const filteredRequests = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return mappedRequests;
+
+    return mappedRequests.filter((request) =>
+      request.requestId.toLowerCase().includes(q) ||
+      request.storeName.toLowerCase().includes(q) ||
+      request.storePhone.toLowerCase().includes(q) ||
+      request.riderName.toLowerCase().includes(q) ||
+      request.pickupLocation.toLowerCase().includes(q),
+    );
+  }, [searchQuery, mappedRequests]);
+
+  const visibleIds = useMemo(() => filteredRequests.map((item) => item.id), [filteredRequests]);
+  const cleanedSelectedIds = useMemo(
+    () => selectedIds.filter((id) => visibleIds.includes(String(id))),
+    [selectedIds, visibleIds],
+  );
+
+  const handleViewDetails = (row: ConfirmedPickupRow) => {
+    console.log("View details for", row.requestId);
   };
 
-  return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Assigned Pickup Requests</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Pickup requests confirmed and assigned to riders.
+  const columns = useMemo(() => confirmedPickupColumns(handleViewDetails), []);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="m-4 rounded-lg border border-red-200 bg-red-50 p-4">
+        <p className="font-medium text-red-600">Error loading confirmed pickups</p>
+        <p className="mt-1 text-sm text-red-400">
+          {(error as any)?.data?.message || (error as any)?.message || "Failed to fetch confirmed pickups"}
         </p>
+        <Button variant="outline" className="mt-3" onClick={() => refetch()}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <CustomSearchInput
+          placeholder="Search by Request ID, Store, Rider or Location..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          className="max-w-2xl flex-1"
+        />
       </div>
 
-      <div className="flex items-center gap-4 mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search requests..."
-            className="border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#FE5000]/30"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(1);
-            }}
-          />
+      <div className="flex flex-col gap-3 rounded-xl bg-[#FDEFE6] px-4 py-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="rounded-md border border-[#F7C9AE] bg-white px-3 py-1 text-sm">
+            <span className="font-semibold">{cleanedSelectedIds.length}</span> Selected
+          </div>
+          <div className="text-sm text-gray-600">
+            Total: <span className="font-semibold">{mappedRequests.length}</span> confirmed pickups
+          </div>
+          {paginationInfo && (
+            <div className="text-sm text-gray-500">
+              Page {paginationInfo.page} of {paginationInfo.totalPages}
+            </div>
+          )}
         </div>
       </div>
 
-      <DataTable
-        columns={confirmedColumns()}
-        data={pickupRequests}
-        isLoading={isLoading}
-        selectable={false}
+      <DataTable<ConfirmedPickupRow>
+        columns={columns}
+        data={filteredRequests}
+        selectable
+        minWidth={1000}
         getRowId={(row) => row.id}
-        emptyMessage="No confirmed pickup requests found."
+        selectedRowIds={cleanedSelectedIds}
+        onToggleRow={(rowId) => {
+          setSelectedIds((prev) =>
+            prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId],
+          );
+        }}
+        onToggleAll={(nextSelected) => setSelectedIds(nextSelected)}
       />
 
-      <CustomPagination
-        page={pagination.page}
-        totalPages={pagination.totalPages}
-        onPageChange={setPage}
-        totalItems={pagination.total}
-        itemsPerPage={pagination.limit}
-        show={pagination.totalPages > 0}
-      />
+      {paginationInfo && paginationInfo.totalPages > 1 && (
+        <div className="flex flex-col items-center justify-between gap-3 border-t px-4 py-3 md:flex-row">
+          <div className="text-sm text-gray-500">
+            Showing {((paginationInfo.page - 1) * paginationInfo.limit) + 1} to{" "}
+            {Math.min(paginationInfo.page * paginationInfo.limit, paginationInfo.total)} of {paginationInfo.total} requests
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={paginationInfo.page === 1}
+              className="rounded border px-3 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="px-3 py-1 text-sm">
+              Page {paginationInfo.page} of {paginationInfo.totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((page) => page + 1)}
+              disabled={paginationInfo.page === paginationInfo.totalPages}
+              className="rounded border px-3 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Per page:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(event) => {
+                setItemsPerPage(Number(event.target.value));
+                setCurrentPage(1);
+              }}
+              className="rounded border px-2 py-1 text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

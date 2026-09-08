@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { SearchableSelect } from "@/components/reusable/SearchableSelect";
 import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
 import { useAssignRiderToParcelsMutation } from "@/redux/features/parcels/parcelsApi";
+import { getAssignRiderErrorMessage } from "@/redux/features/parcels/parcelTypes";
 import { toast } from "sonner";
 
 export default function DeliveryRescheduleTable() {
@@ -89,7 +90,7 @@ export default function DeliveryRescheduleTable() {
       refetch();
     } catch (error) {
       console.error("Assign rider failed:", error);
-      toast.error("Failed to assign rider. Please try again.");
+      toast.error(getAssignRiderErrorMessage(error));
     }
   };
 

@@ -8,36 +8,25 @@ const myTabs = [
   {
     name: "Request List",
     value: "request-list",
-    content: (
-      <>
-        <PickupRequestTable />
-      </>
-    ),
+    content: <PickupRequestTable />,
   },
   {
     name: "Assigned Rider",
     value: "assigned-rider",
-    content: (
-      <>
-        <PickupRequestTableRider />
-      </>
-    ),
+    content: <PickupRequestTableRider />,
   },
   {
-    name: "Confirmed Pickup ",
-    value: "confirmed-pickup",
-    content: (
-      <>
-        <ConfirmPickupRequest />
-      </>
-    ),
+    name: "Pickup Done",
+    value: "pickup-done",
+    content: <ConfirmPickupRequest />,
   },
 ];
 
-export default function page() {
+export default function Page() {
   return (
     <div>
-      <CustomTabs tabs={myTabs} defaultValue=""></CustomTabs>
+      <h1 className="mb-6 text-2xl font-bold">Pickup Request</h1>
+      <CustomTabs tabs={myTabs} defaultValue="request-list" />
     </div>
   );
 }

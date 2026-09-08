@@ -1,5 +1,6 @@
 // rescheduledCol.tsx
 import { RescheduledParcel } from "@/redux/features/process-unprocess/processUnprocessType";
+import { CopyValueButton, TextHover } from "@/lib/table.utils";
 
 export const columns = [
   {
@@ -8,8 +9,17 @@ export const columns = [
     width: "12%",
     render: (row: RescheduledParcel) => (
       <div className="font-medium">
-        <p>{row.parcel_tx_id}</p>
-        <p className="text-xs text-gray-500">{row.tracking_number}</p>
+        <p className="flex items-center gap-1 whitespace-nowrap">
+          PID: {row.parcel_tx_id}
+          <CopyValueButton value={row.parcel_tx_id} label="Parcel ID" />
+        </p>
+        <p className="text-xs text-gray-500 flex items-center gap-1 whitespace-nowrap">
+          MID: {row.merchant_order_id || "—"}
+          <CopyValueButton
+            value={row.merchant_order_id ?? undefined}
+            label="Merchant ID"
+          />
+        </p>
       </div>
     ),
   },
@@ -18,7 +28,7 @@ export const columns = [
     header: "Reason",
     width: "15%",
     render: (row: RescheduledParcel) => (
-      <span className="text-sm text-gray-800">{row.reason || "N/A"}</span>
+      <TextHover text={row.reason || "N/A"} maxLength={40} />
     ),
   },
   {
@@ -26,16 +36,36 @@ export const columns = [
     header: "Destination",
     width: "15%",
     render: (row: RescheduledParcel) => (
-      <span className="text-sm text-gray-600">{row.destination}</span>
+      <div>
+        <p>{row.customer_name}</p>
+        <p>{row.customer_phone}</p>
+        <p>{row.customer_secondary_phone}</p>
+        
+        <TextHover
+          text={row.customer_address ?? undefined}
+          maxLength={40}
+          className="text-gray-600"
+        />
+      </div>
     ),
   },
   {
     key: "zone",
     header: "Zone",
     width: "12%",
-    render: (row: RescheduledParcel) => (
-      <span className="font-semibold">{row.zone}</span>
-    ),
+    render: (row: RescheduledParcel) => {
+      const area = row.delivery_coverage_area;
+      if (!area) return <span className="text-xs text-gray-400">N/A</span>;
+
+      return (
+        <>
+          <span className="font-semibold">{area.city || "N/A"}</span>
+          <br />
+          <span>{area.zone || "N/A"}</span> {">"}{" "}
+          <span className="text-xs text-gray-500">{area.area || "N/A"}</span>
+        </>
+      );
+    },
   },
   {
     key: "merchant",
@@ -54,18 +84,21 @@ export const columns = [
     width: "12%",
     render: (row: RescheduledParcel) => {
       const getStatusColor = (status: string) => {
-        const statusLower = status?.toLowerCase() || '';
-        if (statusLower.includes('rescheduled')) return 'bg-blue-100 text-blue-600';
-        if (statusLower.includes('partial')) return 'bg-yellow-100 text-yellow-600';
-        if (statusLower.includes('delivered')) return 'bg-green-100 text-green-600';
-        return 'bg-gray-100 text-gray-600';
+        const statusLower = status?.toLowerCase() || "";
+        if (statusLower.includes("rescheduled"))
+          return "bg-blue-100 text-blue-600";
+        if (statusLower.includes("partial"))
+          return "bg-yellow-100 text-yellow-600";
+        if (statusLower.includes("delivered"))
+          return "bg-green-100 text-green-600";
+        return "bg-gray-100 text-gray-600";
       };
 
       return (
         <span
           className={`px-3 py-1 text-xs rounded-full ${getStatusColor(row.status)}`}
         >
-          {row.status?.replace(/_/g, ' ') || 'N/A'}
+          {row.status?.replace(/_/g, " ") || "N/A"}
         </span>
       );
     },
@@ -77,7 +110,7 @@ export const columns = [
     render: (row: RescheduledParcel) => (
       <div>
         <div className="text-green-600 font-bold text-lg">
-          ৳{(row.cod_breakdown?.cod_collected_amount || 0).toLocaleString()}
+          ৳{(row.cod_amount || 0).toLocaleString()}
         </div>
         <div className="text-xs text-gray-600 mt-1">
           <div>Delivery Charge: ৳{row.cod_breakdown?.delivery_charge || 0}</div>
@@ -101,13 +134,25 @@ export const columns = [
     key: "age",
     header: "Age",
     width: "12%",
-    render: (row: RescheduledParcel) => (
-      <div>
-        <div>{row.age?.total_age || "N/A"}</div>
-        <div className="text-xs text-gray-500">
-          {row.age?.created_at ? new Date(row.age.created_at).toLocaleDateString() : ''}
+    render: (row: RescheduledParcel) => {
+      const createdAt = row.age?.created_at || row.created_at;
+      const updatedAt = row.age?.updated_at || row.updated_at;
+      const receivedAt = row.age?.received_at || row.received_at;
+
+      const fmt = (value?: string | null) => {
+        if (!value) return "N/A";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString();
+      };
+
+      return (
+        <div>
+          <div>{row.age?.total_age || "N/A"}</div>
+          <div className="text-xs text-gray-500">Created: {fmt(createdAt)}</div>
+          <div className="text-xs text-gray-500">Updated: {fmt(updatedAt)}</div>
+          <div className="text-xs text-gray-500">Received: {fmt(receivedAt)}</div>
         </div>
-      </div>
-    ),
+      );
+    },
   },
 ];

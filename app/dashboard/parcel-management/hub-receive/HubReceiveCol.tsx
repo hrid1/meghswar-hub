@@ -1,6 +1,7 @@
 // HubReceiveCol.tsx
 import React from "react";
 import { Copy } from "lucide-react";
+import { ParcelAgeCell } from "@/lib/table.utils";
 
 export const receiveParcelColumns = (onClickUpdate: any) => [
   {
@@ -106,22 +107,13 @@ export const receiveParcelColumns = (onClickUpdate: any) => [
     key: "age",
     header: "Age",
     width: "9%",
-    render: (row: any) => {
-      const createdDate = new Date(row.created_at);
-      const now = new Date();
-      const diffDays = Math.floor(
-        (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      return (
-        <div>
-          <span className="text-sm text-gray-600">{diffDays} days</span>
-          <span className="text-xs text-gray-400 block">
-            {createdDate.toLocaleDateString()}
-          </span>
-        </div>
-      );
-    },
+    render: (row: any) => (
+      <ParcelAgeCell
+        createdAt={row.created_at}
+        updatedAt={row.updated_at}
+        receivedAt={row.received_at}
+      />
+    ),
   },
   {
     key: "hub",

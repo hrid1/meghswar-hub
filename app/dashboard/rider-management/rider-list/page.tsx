@@ -8,15 +8,18 @@ import { Ridercolumns } from "./_components/riderCols";
 import EditRiderModal from "./_components/EditRiderModal";
 import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
 import CustomPagination from "@/components/reusable/CustomPagination";
+import CustomSearchInput from "@/components/reusable/CustomSearchInput";
 import { getReadUrl } from "@/lib/upload";
 
 export default function ParcelReportTable() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
+  const [search, setSearch] = useState("");
   const { data, isLoading } = useGetRidersQuery({
     isActive: true,
     page,
     limit,
+    ...(search.trim() ? { search: search.trim() } : {}),
   });
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
 
@@ -113,8 +116,17 @@ export default function ParcelReportTable() {
   return (
     <div className="p-6">
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4">All Rider List</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <h2 className="text-2xl font-bold">All Rider List</h2>
+        <CustomSearchInput
+          className="w-full max-w-md sm:w-80"
+          value={search}
+          onChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          placeholder="Search rider by name, phone or ID..."
+        />
       </div>
       {/* LOADING STATE */}
       {isLoading && <div className="text-center py-8">Loading riders...</div>}

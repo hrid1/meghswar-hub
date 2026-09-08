@@ -518,3 +518,51 @@ export interface ParcelHistoryResponse {
 
 export type ParcelHistoryItem =
   ParcelHistoryResponse["data"]["parcels"][number];
+
+export interface AssignRiderResult {
+  parcel_id: string;
+  parcel_tx_id: string;
+  tracking_number: string;
+  success: boolean;
+  error?: string | null;
+}
+
+export interface AssignRiderResponse {
+  success: boolean;
+  data: {
+    summary: {
+      total: number;
+      success: number;
+      failed: number;
+    };
+    results: AssignRiderResult[];
+  };
+  message: string;
+}
+
+export function getAssignRiderErrorMessage(
+  error: unknown,
+  fallback = "Failed to assign rider. Please try again.",
+): string {
+  const payload =
+    (error as { data?: AssignRiderResponse | string })?.data ?? error;
+
+  if (typeof payload === "string" && payload.trim()) return payload;
+  if (!payload || typeof payload !== "object") return fallback;
+
+  const body = payload as AssignRiderResponse;
+  const resultErrors =
+    body.data?.results
+      ?.filter((item) => !item.success && item.error)
+      .map((item) =>
+        item.parcel_tx_id
+          ? `${item.parcel_tx_id}: ${item.error}`
+          : String(item.error),
+      ) ?? [];
+
+  if (resultErrors.length) {
+    return [body.message, ...resultErrors].filter(Boolean).join("\n");
+  }
+
+  return body.message || fallback;
+}

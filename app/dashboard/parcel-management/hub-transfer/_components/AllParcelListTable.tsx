@@ -174,7 +174,7 @@ export default function PickupRequestTable() {
         {/* 🔥 BULK UPDATE BUTTON */}
         
         <div className="flex flex-wrap items-center gap-4">
-          <Button
+          {/* <Button
             disabled={selectedRowIds.length === 0}
             className="bg-orange-600 hover:bg-orange-700 text-white"
             onClick={() => {
@@ -183,7 +183,7 @@ export default function PickupRequestTable() {
             }}
           >
             Assign Third Party ({selectedRowIds.length})
-          </Button>
+          </Button> */}
 
           <Button
             disabled={selectedRowIds.length === 0}

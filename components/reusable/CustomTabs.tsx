@@ -31,8 +31,8 @@ const CustomTabs: React.FC<ReusableTabsProps> = ({ tabs, defaultValue, className
         </TabsList>
 
         {tabs.map(tab => (
-          <TabsContent key={tab.value} value={tab.value}>
-            <p className='text-muted-foreground text-sm'>{tab.content}</p>
+          <TabsContent key={tab.value} value={tab.value} className="mt-4">
+            <div>{tab.content}</div>
           </TabsContent>
         ))}
       </Tabs>

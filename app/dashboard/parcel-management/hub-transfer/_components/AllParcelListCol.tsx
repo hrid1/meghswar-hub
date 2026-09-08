@@ -1,6 +1,7 @@
 // ParcelCol.tsx
 "use client";
 
+import { ParcelAgeCell } from "@/lib/table.utils";
 import { txt } from "@/lib/utils";
 import { EyeIcon, TruckIcon } from "lucide-react";
 
@@ -212,49 +213,13 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
     key: "age",
     header: "Age",
     width: "12%",
-    render: (row: any) => {
-      const createdAt = row.created_at ? new Date(row.created_at) : null;
-      const updatedAt = row.updated_at ? new Date(row.updated_at) : null;
-
-      const ageDays = createdAt
-        ? Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
-        : null;
-
-      const fmt = (d: Date) =>
-        d.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }) +
-        ", " +
-        d.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
-
-      return (
-        <div className="text-sm space-y-1.5">
-          {ageDays !== null && (
-            <span className="inline-block bg-orange-100 text-orange-600 text-xs font-semibold px-2.5 py-1 rounded-full">
-              {ageDays} {ageDays === 1 ? "Day" : "Days"}
-            </span>
-          )}
-          {createdAt && (
-            <div>
-              <div className="text-xs text-gray-500 font-medium">Created:</div>
-              <div className="text-xs text-gray-700">{fmt(createdAt)}</div>
-            </div>
-          )}
-          {updatedAt && (
-            <div>
-              <div className="text-xs text-gray-500 font-medium">Updated:</div>
-              <div className="text-xs text-gray-700">{fmt(updatedAt)}</div>
-            </div>
-          )}
-        </div>
-      );
-    },
+    render: (row: any) => (
+      <ParcelAgeCell
+        // createdAt={row.created_at}
+        updatedAt={row.updated_at}
+        receivedAt={row.received_at}
+      />
+    ),
   },
 
   // 9. Action

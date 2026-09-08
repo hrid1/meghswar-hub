@@ -1,20 +1,24 @@
 // _components/parcelCol.tsx
 import React from "react";
-import { Copy } from "lucide-react";
+import { CopyValueButton, AddressHover, TextHover } from "@/lib/table.utils";
 
 export const parcelColumns = (onClickUpdate: any) => [
   {
     key: "parcelid",
-    header: "Parcel Id",
+    header: "Id",
     width: "10%",
     render: (row: any) => (
       <div className="">
         <span className="font-medium text-xs flex items-center">
           {row.parcel_tx_id || row.tracking_number}{" "}
-          <Copy className="w-3 h-3 ml-1 cursor-pointer text-gray-400" />
+          <CopyValueButton
+            value={row.parcel_tx_id || row.tracking_number}
+            label="Parcel ID"
+          />
         </span>
-        <span className="text-xs text-gray-500 block">
+        <span className="text-xs text-gray-500 flex items-center gap-1">
           MID: {row.merchant_order_id}
+          <CopyValueButton value={row.merchant_order_id} label="Merchant ID" />
         </span>
       </div>
     ),
@@ -26,9 +30,7 @@ export const parcelColumns = (onClickUpdate: any) => [
     render: (row: any) => (
       <div className="flex flex-col">
         <span className="font-semibold">{row.customer_name}</span>
-        <span className="text-xs text-gray-400 mt-1 line-clamp-2">
-          {row.customer_address}
-        </span>
+        <AddressHover address={row.customer_address} />
         <span className="text-xs text-gray-500">{row.customer_phone}</span>
         {row.customer_secondary_phone && (
           <span className="text-xs text-gray-400">
@@ -43,11 +45,7 @@ export const parcelColumns = (onClickUpdate: any) => [
     header: "Additional Note",
     width: "18%",
     render: (row: any) => (
-      <div>
-        <p className="text-sm font-medium">
-          {row.special_instructions || "No description"}
-        </p>
-      </div>
+      <TextHover text={row.special_instructions} />
     ),
   },
   {
@@ -110,17 +108,32 @@ export const parcelColumns = (onClickUpdate: any) => [
     header: "Age",
     width: "9%",
     render: (row: any) => {
-      const createdDate = new Date(row.created_at);
+      const createdDate = row.created_at ? new Date(row.created_at) : null;
+      const updatedDate = row.updated_at ? new Date(row.updated_at) : null;
+      const receivedDate = row.received_at ? new Date(row.received_at) : null;
       const now = new Date();
-      const diffDays = Math.floor(
-        (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      const diffDays = createdDate
+        ? Math.floor(
+            (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
+          )
+        : null;
+
+      const fmt = (d: Date | null) =>
+        d && !Number.isNaN(d.getTime()) ? d.toLocaleDateString() : "N/A";
 
       return (
         <div>
-          <span className="text-sm text-gray-600">{diffDays} days</span>
+          <span className="text-sm text-gray-600">
+            {diffDays !== null ? `${diffDays} days` : "N/A"}
+          </span>
           <span className="text-xs text-gray-400 block">
-            {createdDate.toLocaleDateString()}
+            Created: {fmt(createdDate)}
+          </span>
+          <span className="text-xs text-gray-400 block">
+            Updated: {fmt(updatedDate)}
+          </span>
+          <span className="text-xs text-gray-400 block">
+            Received: {fmt(receivedDate)}
           </span>
         </div>
       );

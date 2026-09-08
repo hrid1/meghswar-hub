@@ -2,6 +2,7 @@
 "use client";
 
 import { txt } from "@/lib/utils";
+import { CopyValueButton, AddressHover, TextHover } from "@/lib/table.utils";
 import { EyeIcon, TruckIcon } from "lucide-react";
 
 export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
@@ -13,13 +14,14 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
     wrap: true,
     render: (row: any) => (
       <div className="flex flex-col items-start min-w-0">
-        <span className="text-xs font-medium truncate w-full">
+        <span className="text-xs font-medium truncate w-full flex items-center gap-1">
           PID: {txt(row.parcel_tx_id) || txt(row.id) || "—"}
+          <CopyValueButton value={row.parcel_tx_id || row.id} label="Parcel ID" />
         </span>
-        <span className="text-xs text-gray-500 truncate w-full">
+        <span className="text-xs text-gray-500 truncate w-full flex items-center gap-1">
           MID: {txt(row.merchant_order_id) || "—"}
+          <CopyValueButton value={row.merchant_order_id} label="Merchant ID" />
         </span>
-      
       </div>
     ),
   },
@@ -62,10 +64,6 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
         txt(row.customer_secondary_phone) || txt(c?.secondary_number) || "";
       const address =
         txt(row.customer_address) || txt(c?.customer_address) || "";
-      const shortAddress =
-        address.length > 40 ? address.slice(0, 40) + "..." : address;
-      const tooltipAddress =
-        address.length > 80 ? address.slice(0, 80) + "..." : address;
 
       return (
         <div className="text-sm min-w-0">
@@ -74,20 +72,7 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
           {secondary && (
             <div className="text-gray-400 text-xs">{secondary}</div>
           )}
-          <div className="relative group mt-1">
-            <div className="text-gray-500 text-xs cursor-default break-words">
-              {shortAddress || "No address provided"}
-            </div>
-            {address.length > 40 && (
-              <div className="absolute left-0 bottom-full mb-1 z-30 hidden group-hover:block">
-                <div className="bg-gray-800 text-white text-xs rounded-md px-3 py-2 shadow-lg whitespace-nowrap max-w-xs">
-                  {tooltipAddress}
-                  {address.length > 80 && "..."}
-                </div>
-                <div className="w-3 h-3 bg-gray-800 rotate-45 absolute left-4 -bottom-1.5" />
-              </div>
-            )}
-          </div>
+          <AddressHover address={address} maxLength={40} />
         </div>
       );
     },
@@ -99,25 +84,9 @@ export const parcelColumns = (onClickUpdate?: (row: any) => void) => [
     header: "Instructions",
     width: "13%",
     wrap: true,
-    render: (row: any) => {
-      const note = txt(row.special_instructions) || "";
-      const short = note.length > 50 ? note.slice(0, 50) + "..." : note;
-      return (
-        <div className="relative group">
-          <p className="text-xs text-gray-600 break-words cursor-default">
-            {short || "No instructions"}
-          </p>
-          {note.length > 50 && (
-            <div className="absolute left-0 bottom-full mb-1 z-30 hidden group-hover:block">
-              <div className="bg-gray-800 text-white text-xs rounded-md px-3 py-2 shadow-lg max-w-xs whitespace-normal">
-                {note}
-              </div>
-              <div className="w-3 h-3 bg-gray-800 rotate-45 absolute left-4 -bottom-1.5" />
-            </div>
-          )}
-        </div>
-      );
-    },
+    render: (row: any) => (
+      <TextHover text={row.special_instructions} maxLength={50} />
+    ),
   },
 
   // 5. Delivery Area

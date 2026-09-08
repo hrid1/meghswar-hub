@@ -22,14 +22,18 @@ import {
 export const ridersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Existing endpoints
-    getRiders: builder.query<RiderResponse, { isActive?: boolean; page?: number; limit?: number } | void>({
-      query: ({ isActive, page = 1, limit = 20 } = {}) => ({
+    getRiders: builder.query<
+      RiderResponse,
+      { isActive?: boolean; page?: number; limit?: number; search?: string } | void
+    >({
+      query: ({ isActive, page = 1, limit = 20, search } = {}) => ({
         url: "/riders",
         method: "GET",
         params: {
           isActive,
           page,
           limit,
+          ...(search?.trim() ? { search: search.trim() } : {}),
         },
       }),
       providesTags: [TAG_TYPES.Riders],

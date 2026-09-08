@@ -265,7 +265,10 @@ export const assignParcelColumns = (
     header: "Assign Hub",
     width: "10%",
     render: (row: any) => {
-      const assignedHub = row.destination_hub.branch_name || null;
+      const assignedHub =
+        txt(row.destination_hub?.branch_name) ||
+        txt(row.destination_hub?.hub_code) ||
+        "";
 
       return (
         <div className="flex flex-col items-center gap-1">

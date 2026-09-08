@@ -26,6 +26,10 @@ interface DeliveryArea {
 }
 
 interface Parcel {
+  store: {
+    business_name: string;
+    phone_number: string;
+  };
   id: string;
   parcel_tx_id: string;
   tracking_number: string;
@@ -74,6 +78,7 @@ interface TransformedParcel {
   is_cod: boolean;
   status: string;
   tracking_number: string;
+  store: string;
 }
 
 export default function ParcelTable() {
@@ -122,6 +127,8 @@ export default function ParcelTable() {
       is_cod: parcel.is_cod,
       status: parcel.status,
       tracking_number: parcel.tracking_number,
+      store: parcel.store?.business_name,
+      storePhone: parcel.store?.phone_number,
     }));
   }, [parcelsData]);
 
@@ -198,6 +205,18 @@ export default function ParcelTable() {
     }
   };
 
+  const handlePrintParcels = async (originalId: string) => {
+    try {
+      const response = await receiveParcels([originalId]).unwrap();
+      console.log("Receive response:", response);
+      toast.success("Parcel received successfully");
+      await refetch();
+    } catch (error) {
+      console.error("Failed to receive parcel:", error);
+      toast.error("Failed to receive parcel. Please try again.");
+    }
+  };
+
   // Loading and error states
   if (isLoading) {
     return (
@@ -218,12 +237,12 @@ export default function ParcelTable() {
   }
 
   // Get columns with update handler
-  const columns = getParcelColumns(handleUpdateCharges);
+  const columns = getParcelColumns(handleUpdateCharges, handlePrintParcels);
 
-  const merchants = [
-    { id: 1, name: "Merchant 1" },
-    { id: 2, name: "Merchant 2" },
-    { id: 3, name: "Merchant 3" },
+  const stores = [
+    { id: 1, business_name: "Store 1", phone_number: "1234567890" },
+    { id: 2, business_name: "Store 2", phone_number: "1234567890" },
+    { id: 3, business_name: "Store 3", phone_number: "1234567890" },
   ];
 
   return (
@@ -270,9 +289,9 @@ export default function ParcelTable() {
           <div className="relative">
             <select className="border p-2 rounded-md  ">
               <option value="">All Merchants</option>
-              {merchants.map((merchant: any) => (
-                <option key={merchant.id} value={merchant.id}>
-                  {merchant.name}
+              {stores.map((store: any) => (
+                <option key={store.id} value={store.id}>
+                  {store.business_name}
                 </option>
               ))}
             </select>
@@ -298,7 +317,10 @@ export default function ParcelTable() {
               : `Receive (${selectedRowIds.length})`}
           </button>
 
-          <button className="button-primary flex items-center gap-2">
+          <button
+            onClick={() => alert(`Bulk printing ${selectedRowIds.length} parcels`)}
+            className="button-primary flex items-center gap-2"
+          >
             <Printer className="w-5 h-5" />
             Print / Bulk Print
           </button>
@@ -314,6 +336,7 @@ export default function ParcelTable() {
         selectedRowIds={selectedRowIds}
         onToggleRow={handleToggleRow}
         onToggleAll={handleToggleAll}
+        
       />
 
       {/* Results count */}

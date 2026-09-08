@@ -186,7 +186,7 @@ export default function PickupRequestTable() {
             Assign Third Party ({selectedRowIds.length})
           </Button>
 
-          <Button
+          {/* <Button
             disabled={selectedRowIds.length === 0}
             className="bg-orange-600 hover:bg-orange-700 text-white"
             onClick={() => {
@@ -194,7 +194,7 @@ export default function PickupRequestTable() {
             }}
           >
             Assign To Hub ({selectedRowIds.length})
-          </Button>
+          </Button> */}
         </div>
       </div>
 

@@ -7,18 +7,36 @@ export interface RescheduledDeliveriesResponse {
     message: string;
   }
   
+  export interface DeliveryCoverageArea {
+    id?: string;
+    city?: string;
+    zone?: string;
+    area?: string;
+    division?: string;
+  }
+
   export interface RescheduledParcel {
     parcel_id: string;
     parcel_tx_id: string;
     tracking_number: string;
+    merchant_order_id?: string | null;
     status: string; // "DELIVERY_RESCHEDULED"
-    reason: string;
-    destination: string;
-    zone: string;
-    store: Store;
-    cod_breakdown: CodBreakdown;
-    age: Age;
-    reschedule_count: number;
+    reason?: string | null;
+    destination?: string;
+    zone?: string;
+    customer_name?: string | null;
+    customer_phone?: string | null;
+    customer_secondary_phone?: string | null;
+    customer_address?: string | null;
+    delivery_coverage_area?: DeliveryCoverageArea | null;
+    store?: Store | null;
+    cod_breakdown?: CodBreakdown | null;
+    age?: Age | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    received_at?: string | null;
+    reschedule_count?: number;
+    cod_amount?: number;
   }
   
   // Reusable interfaces
@@ -39,8 +57,9 @@ export interface RescheduledDeliveriesResponse {
   
   export interface Age {
     total_age: string;
-    created_at: string;
-    updated_at: string;
+    created_at?: string | null;
+    updated_at?: string | null;
+    received_at?: string | null;
   }
   
   export interface Pagination {
@@ -106,8 +125,9 @@ export interface RescheduledDeliveriesResponse {
   
   export interface Age {
     total_age: string;
-    created_at: string;
-    updated_at: string;
+    created_at?: string | null;
+    updated_at?: string | null;
+    received_at?: string | null;
   }
   
   export interface Pagination {
@@ -164,8 +184,9 @@ export interface CodBreakdown {
 // Age/timing information
 export interface Age {
   total_age: string;
-  created_at: string; // ISO date string
-  updated_at: string; // ISO date string
+  created_at?: string | null;
+  updated_at?: string | null;
+  received_at?: string | null;
 }
 
 // Return parcel information

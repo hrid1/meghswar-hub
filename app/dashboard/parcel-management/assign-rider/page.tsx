@@ -13,6 +13,7 @@ import {
 import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
 import { SearchableSelect } from "@/components/reusable/SearchableSelect";
 import { toast } from "sonner";
+import { getAssignRiderErrorMessage } from "@/redux/features/parcels/parcelTypes";
 
 
 
@@ -121,7 +122,7 @@ export default function ThirdPartyTable() {
       setSelectedRowIds([]); // Clear selection after successful assignment
     } catch (err) {
       console.error("API error:", err);
-      toast.error("Failed to assign rider. Please try again.");
+      toast.error(getAssignRiderErrorMessage(err));
     }
   };
 

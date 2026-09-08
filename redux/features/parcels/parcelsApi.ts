@@ -7,6 +7,7 @@ import {
   HubChargesResponse,
   ParcelReportsResponse,
   ParcelHistoryResponse,
+  AssignRiderResponse,
 } from "./parcelTypes";
 // GET /hubs/dashboard/parcels/:id
 
@@ -60,11 +61,18 @@ const parcelsApi = baseApi.injectEndpoints({
     }),
 
     // assign rider to parcels
-    assignRiderToParcels: builder.mutation({
-      query: (data: { rider_id: string; parcel_ids: string[] }) => ({
+    assignRiderToParcels: builder.mutation<
+      AssignRiderResponse,
+      { rider_id: string; parcel_ids: string[] }
+    >({
+      query: (data) => ({
         url: "/hubs/parcels/assign-rider",
         method: "POST",
         body: { rider_id: data.rider_id, parcel_ids: data.parcel_ids },
+        validateStatus: (response, body: AssignRiderResponse) =>
+          response.status >= 200 &&
+          response.status < 300 &&
+          !(body?.data?.summary?.failed > 0),
       }),
       invalidatesTags: [TAG_TYPES.Parcels],
     }),

@@ -4,9 +4,9 @@ import { DataTable } from "@/components/reusable/DataTable";
 import { ChevronDown, Printer } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
-import { columns, mockData } from "./processedCol";
+import { columns } from "./processedCol";
 import UpdateStatusModal from "../../hub-transfer/_components/UpdateStatusModal";
-import { useGetRescheduledDeliveriesQuery,  } from "@/redux/features/process-unprocess/processUnprocessApi";
+import { useGetRescheduledDeliveriesQuery } from "@/redux/features/process-unprocess/processUnprocessApi";
 
 export default function ReturnToMerchantTable() {
 
@@ -23,10 +23,10 @@ export default function ReturnToMerchantTable() {
 
   /* ------------------------------- Filtering -------------------------------- */
   const filteredData = useMemo(() => {
-    return mockData.filter((p) =>
+    return returnToMerchantParcels.filter((p) =>
       Object.values(p).join(" ").toLowerCase().includes(search.toLowerCase())
     );
-  }, [mockData, search]);
+  }, [returnToMerchantParcels, search]);
 
   /* ------------------------------ Select Rows ------------------------------- */
   const handleToggleRow = (rowId: string | number, row: any) => {
@@ -95,7 +95,7 @@ export default function ReturnToMerchantTable() {
         columns={columns}
         data={filteredData}
         selectable={true}
-        getRowId={(row, index) => row.pid || index}
+        getRowId={(row) => row.parcel_id}
         selectedRowIds={selectedRowIds}
         onToggleRow={handleToggleRow}
         onToggleAll={handleToggleAll}

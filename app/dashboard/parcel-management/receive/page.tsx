@@ -51,6 +51,7 @@ interface Parcel {
   total_charge: string;
   is_cod: boolean;
   cod_amount: string;
+  product_weight?: string | number | null;
   status: string;
   special_instructions: string;
   created_at: string;
@@ -72,6 +73,7 @@ interface TransformedParcel {
   codCharge: number;
   weightCharge: number;
   weight: number;
+  originalWeight: number;
   delivery: number;
   totalWeight: string;
   deliveryArea: string;
@@ -97,40 +99,51 @@ export default function ParcelTable() {
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
   const [search, setSearch] = useState("");
   const [updatingCellId, setUpdatingCellId] = useState<string | null>(null);
+  const [weightOverrides, setWeightOverrides] = useState<Record<string, number>>(
+    {},
+  );
 
   // Extract parcels data from API response
   const parcelsData = receivedParcels?.data?.parcels || [];
 
   // Transform API data to match the expected format for the table
   const transformedParcels = useMemo((): TransformedParcel[] => {
-    return parcelsData.map((parcel: Parcel) => ({
-      id: parcel.parcel_tx_id,
-      originalId: parcel.id,
-      merchant: parcel.merchant.user.full_name,
-      merchantInvoice: parcel.merchant_order_id,
-      additionalNote: parcel.special_instructions || "No instructions",
-      customer: parcel.customer_name,
-      phone: parcel.customer_phone,
-      secondary_phone: parcel.customer_secondary_phone,
-      address: parcel.customer_address,
-      zone: parcel.delivery_area.zone,
-      area: parcel.delivery_area.area,
-      city: parcel.delivery_area.city,
-      collectableAmount: parseFloat(parcel.cod_amount) || 0,
-      deliveryCharge: parseFloat(parcel.delivery_charge) || 0,
-      codCharge: parseFloat(parcel.cod_charge) || 0,
-      weightCharge: parseFloat(parcel.weight_charge) || 0,
-      weight: parseFloat(parcel.weight_charge) / 40 || 0.5, // Calculate weight from charge
-      delivery: parseFloat(parcel.total_charge) || 0,
-      totalWeight: "1K",
-      deliveryArea: `${parcel.delivery_area.area}, ${parcel.delivery_area.zone}`,
-      is_cod: parcel.is_cod,
-      status: parcel.status,
-      tracking_number: parcel.tracking_number,
-      store: parcel.store?.business_name,
-      storePhone: parcel.store?.phone_number,
-    }));
-  }, [parcelsData]);
+    return parcelsData.map((parcel: Parcel) => {
+      const parsedWeight = Number(parcel.product_weight);
+      const originalWeight = Number.isFinite(parsedWeight)
+        ? parsedWeight
+        : parseFloat(parcel.weight_charge) / 40 || 0;
+
+      return {
+        id: parcel.parcel_tx_id,
+        originalId: parcel.id,
+        merchant: parcel.merchant.user.full_name,
+        merchantInvoice: parcel.merchant_order_id,
+        additionalNote: parcel.special_instructions || "No instructions",
+        customer: parcel.customer_name,
+        phone: parcel.customer_phone,
+        secondary_phone: parcel.customer_secondary_phone,
+        address: parcel.customer_address,
+        zone: parcel.delivery_area.zone,
+        area: parcel.delivery_area.area,
+        city: parcel.delivery_area.city,
+        collectableAmount: parseFloat(parcel.cod_amount) || 0,
+        deliveryCharge: parseFloat(parcel.delivery_charge) || 0,
+        codCharge: parseFloat(parcel.cod_charge) || 0,
+        weightCharge: parseFloat(parcel.weight_charge) || 0,
+        originalWeight,
+        weight: weightOverrides[parcel.id] ?? originalWeight,
+        delivery: parseFloat(parcel.total_charge) || 0,
+        totalWeight: "1K",
+        deliveryArea: `${parcel.delivery_area.area}, ${parcel.delivery_area.zone}`,
+        is_cod: parcel.is_cod,
+        status: parcel.status,
+        tracking_number: parcel.tracking_number,
+        store: parcel.store?.business_name,
+        storePhone: parcel.store?.phone_number,
+      };
+    });
+  }, [parcelsData, weightOverrides]);
 
   // Handle updating charges
   const handleUpdateCharges = async (
@@ -178,42 +191,81 @@ export default function ParcelTable() {
     };
   }, [selectedRowIds, filteredData]);
 
+  const handleUpdateWeight = (id: string, productWeight: number) => {
+    setWeightOverrides((prev) => ({ ...prev, [id]: productWeight }));
+  };
+
+  const buildReceivePayload = (parcelIds: string[]) => {
+    const selectedRows = filteredData.filter((row) =>
+      parcelIds.includes(row.originalId),
+    );
+    const weight_updates = selectedRows
+      .filter((row) => {
+        const currentWeight = weightOverrides[row.originalId] ?? row.originalWeight;
+        return currentWeight !== row.originalWeight;
+      })
+      .map((row) => ({
+        parcel_id: row.originalId,
+        product_weight: weightOverrides[row.originalId] ?? row.originalWeight,
+      }));
+
+    return {
+      parcel_ids: parcelIds,
+      ...(weight_updates.length ? { weight_updates } : {}),
+    };
+  };
+
+  const clearWeightOverrides = (parcelIds: string[]) => {
+    setWeightOverrides((prev) => {
+      const next = { ...prev };
+      parcelIds.forEach((id) => {
+        delete next[id];
+      });
+      return next;
+    });
+  };
+
   /* ------------------------------- API Calls -------------------------------- */
   const handleReceiveParcels = async () => {
     if (selectedRowIds.length === 0) return;
 
     try {
-      // Get the original UUIDs of selected parcels
       const selectedOriginalIds = filteredData
         .filter((row) => selectedRowIds.includes(row.id))
         .map((row) => row.originalId);
 
-      console.log("Receiving parcels with IDs:", selectedOriginalIds);
+      const payload = buildReceivePayload(selectedOriginalIds);
+      const response = await receiveParcels(payload).unwrap();
 
-      // Call the mutation with the array of IDs
-      const response = await receiveParcels(selectedOriginalIds).unwrap();
-
-      console.log("Receive response:", response);
-      toast.success(`Successfully received ${selectedRowIds.length} parcels`);
-      setSelectedRowIds([]); // Clear selection after successful receive
-
-      // Refetch to update the data
+      toast.success(
+        response.message ||
+          `Successfully received ${selectedRowIds.length} parcels`,
+      );
+      setSelectedRowIds([]);
+      clearWeightOverrides(selectedOriginalIds);
       await refetch();
     } catch (error) {
       console.error("Failed to receive parcels:", error);
-      toast.error("Failed to receive parcels. Please try again.");
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          "Failed to receive parcels. Please try again.",
+      );
     }
   };
 
   const handlePrintParcels = async (originalId: string) => {
     try {
-      const response = await receiveParcels([originalId]).unwrap();
-      console.log("Receive response:", response);
-      toast.success("Parcel received successfully");
+      const payload = buildReceivePayload([originalId]);
+      const response = await receiveParcels(payload).unwrap();
+      toast.success(response.message || "Parcel received successfully");
+      clearWeightOverrides([originalId]);
       await refetch();
     } catch (error) {
       console.error("Failed to receive parcel:", error);
-      toast.error("Failed to receive parcel. Please try again.");
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          "Failed to receive parcel. Please try again.",
+      );
     }
   };
 
@@ -237,7 +289,11 @@ export default function ParcelTable() {
   }
 
   // Get columns with update handler
-  const columns = getParcelColumns(handleUpdateCharges, handlePrintParcels);
+  const columns = getParcelColumns(
+    handleUpdateCharges,
+    handlePrintParcels,
+    handleUpdateWeight,
+  );
 
   const stores = [
     { id: 1, business_name: "Store 1", phone_number: "1234567890" },

@@ -1,46 +1,80 @@
 "use client";
 
 import CustomSearchInput from "@/components/reusable/CustomSearchInput";
+import CustomPagination from "@/components/reusable/CustomPagination";
 import { DataTable } from "@/components/reusable/DataTable";
 import React, { useState } from "react";
 
+import { useGetHubMerchantsQuery, useGetHubRidersQuery } from "@/redux/features/hubs/hubsApi";
 import { useGetAllParcelsQuery } from "@/redux/features/parcels/parcelsApi";
+import { PARCEL_STATUS_OPTIONS } from "@/redux/features/parcels/parcelTypes";
 import { columns } from "./_components/AllParcelCol";
+import EditParcelModal from "./_components/EditParcelModal";
+import type { HubMerchant } from "@/redux/features/hubs/hubsTypes";
+
+const filterSelectClassName =
+  "h-12 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-orange-500 focus:ring-1 focus:ring-orange-500 disabled:bg-gray-50";
+
+function getMerchantList(data: unknown): HubMerchant[] {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === "object" && Array.isArray((data as { merchants?: HubMerchant[] }).merchants)) {
+    return (data as { merchants: HubMerchant[] }).merchants;
+  }
+  return [];
+}
+
+function getMerchantId(merchant: HubMerchant) {
+  return merchant.merchant_id || merchant.id || "";
+}
+
+function getMerchantLabel(merchant: HubMerchant) {
+  const name =
+    merchant.merchant_name ||
+    merchant.full_name ||
+    merchant.business_name ||
+    merchant.user?.full_name ||
+    "";
+  const store = merchant.store_name || merchant.store?.business_name || "";
+  if (name && store && store !== name) return `${name} - ${store}`;
+  return name || store || "Unnamed merchant";
+}
+
 export default function TestTablePage() {
-  const { data: parcels, isLoading, isError, error } = useGetAllParcelsQuery();
-  const parcelsData = parcels?.data?.parcels || [];
-  console.log("parcelsData", parcelsData);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [search, setSearch] = useState("");
+  const [merchantId, setMerchantId] = useState("");
+  const [riderId, setRiderId] = useState("");
+  const [status, setStatus] = useState("");
+
+  const { data: parcels, isLoading, isError, error } = useGetAllParcelsQuery({
+    page,
+    limit,
+    merchantId: merchantId || undefined,
+    riderId: riderId || undefined,
+    status: status || undefined,
+    search: search.trim() || undefined,
+  });
+  const { data: merchantsData, isLoading: areMerchantsLoading } =
+    useGetHubMerchantsQuery();
+  const { data: ridersData, isLoading: areRidersLoading } = useGetHubRidersQuery();
+  const parcelsData = parcels?.data?.parcels || [];
+  const pagination = parcels?.data?.pagination;
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [selectedParcel, setSelectedParcel] = useState<any | null>(null);
 
   // =============================
   // 3️⃣ Row Selection State
   // =============================
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
 
-  // Filter data based on search
-  const filteredData = parcelsData.filter((item: any) => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      item.parcel_tx_id?.toLowerCase().includes(searchLower) ||
-      item.tracking_number?.toLowerCase().includes(searchLower) ||
-      item.customer_name?.toLowerCase().includes(searchLower) ||
-      item.customer_phone?.toLowerCase().includes(searchLower) ||
-      item.store_name?.toLowerCase().includes(searchLower)
-    );
-  });
+  const merchants = getMerchantList(merchantsData?.data);
+  const riders = ridersData?.data?.riders || [];
 
-  const merchants = [
-    { id: 1, name: "Merchant 1" },
-    { id: 2, name: "Merchant 2" },
-    { id: 3, name: "Merchant 3" },
-  ];
-
-  const riders = [
-    { id: 1, name: "Rider 1" },
-    { id: 2, name: "Rider 2" },
-    { id: 3, name: "Rider 3" },
-  ];
+  const resetPageAnd = (update: () => void) => {
+    setPage(1);
+    update();
+  };
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -72,34 +106,58 @@ export default function TestTablePage() {
         <CustomSearchInput
           className="col-span-2 w-[90%]"
           value={search}
-          onChange={(e: any) => setSearch(e.target.value)}
+          onChange={(value) => resetPageAnd(() => setSearch(value))}
           placeholder="Search parcels..."
         />
 
-        <select className="border p-2 rounded-md -ml-5">
-          <option value="">All Merchants </option>
-          {merchants.map((merchant: any) => (
-            <option key={merchant.id} value={merchant.id}>
-              {merchant.name}
-            </option>
-          ))}
+        <select
+          value={merchantId}
+          onChange={(event) =>
+            resetPageAnd(() => setMerchantId(event.target.value))
+          }
+          disabled={areMerchantsLoading}
+          className={filterSelectClassName}
+        >
+          <option value="">All Merchants</option>
+          {merchants.map((merchant) => {
+            const id = getMerchantId(merchant);
+            if (!id) return null;
+            return (
+              <option key={id} value={id}>
+                {getMerchantLabel(merchant)}
+              </option>
+            );
+          })}
+          {!areMerchantsLoading && merchants.length === 0 && (
+            <option disabled>No merchants found</option>
+          )}
         </select>
 
-        <select className="border p-2 rounded-md ml-5">
+        <select
+          value={riderId}
+          onChange={(event) => resetPageAnd(() => setRiderId(event.target.value))}
+          disabled={areRidersLoading}
+          className={filterSelectClassName}
+        >
           <option value="">All Riders</option>
-          {riders.map((rider: any) => (
+          {riders.map((rider) => (
             <option key={rider.id} value={rider.id}>
-              {rider.name}
+              {rider.full_name}
             </option>
           ))}
         </select>
 
-        <select className="border p-2 rounded-md ml-5 ">
+        <select
+          value={status}
+          onChange={(event) => resetPageAnd(() => setStatus(event.target.value))}
+          className={filterSelectClassName}
+        >
           <option value="">All Status</option>
-          <option value="Delivered">Delivered</option>
-          <option value="Pending">Pending</option>
-          <option value="Delivery Rescheduled">Delivery Rescheduled</option>
-          <option value="Customer Not Available">Customer Not Available</option>
+          {PARCEL_STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
 
         
@@ -109,8 +167,11 @@ export default function TestTablePage() {
       </div>
 
       <DataTable
-        columns={columns}
-        data={filteredData}
+        columns={columns((row) => {
+          setSelectedParcel(row);
+          setOpenEditModal(true);
+        })}
+        data={parcelsData}
         selectable={true}
         getRowId={(row) => row.id}
         selectedRowIds={selectedRowIds}
@@ -124,6 +185,30 @@ export default function TestTablePage() {
         onToggleAll={(nextSelected) => {
           setSelectedRowIds(nextSelected);
         }}
+      />
+
+      {pagination && (
+        <CustomPagination
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+          totalItems={pagination.total}
+          itemsPerPage={pagination.limit}
+          onItemsPerPageChange={(nextLimit) => {
+            setLimit(nextLimit);
+            setPage(1);
+          }}
+          itemsPerPageOptions={[10, 20, 50, 100]}
+          show
+          showItemsPerPage
+          resultsLabel="parcels"
+        />
+      )}
+
+      <EditParcelModal
+        open={openEditModal}
+        setOpen={setOpenEditModal}
+        parcel={selectedParcel}
       />
     </div>
   );

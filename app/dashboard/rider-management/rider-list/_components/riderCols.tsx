@@ -90,7 +90,7 @@
 
 
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, Trash2 } from "lucide-react";
+import { Edit, Eye, UserX } from "lucide-react";
 import Link from "next/link";
 
 export const Ridercolumns = (onAction?: (type: string, row: any) => void) => [
@@ -174,13 +174,12 @@ export const Ridercolumns = (onAction?: (type: string, row: any) => void) => [
 
         <Button
           size="icon"
-
           variant="outline"
-
           className="text-red-500"
-          onClick={() => onAction?.("delete", row.riderId)}
+          title="Deactivate rider"
+          onClick={() => onAction?.("deactivate", row.riderId)}
         >
-          <Trash2 className="w-4 h-4 " />
+          <UserX className="w-4 h-4 " />
         </Button>
       </div>
     ),

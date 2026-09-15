@@ -4,6 +4,7 @@ import { TAG_TYPES } from "../tagList";
 import {
   RiderResponse,
   RiderByIdResponse,
+  UpdateRiderRequest,
   RiderPerformanceResponse,
   RiderPerformanceParams,
   PendingHubApprovalsResponse,
@@ -45,6 +46,26 @@ export const ridersApi = baseApi.injectEndpoints({
         method: "GET",
       }),
       providesTags: [TAG_TYPES.Riders],
+    }),
+
+    updateRider: builder.mutation<
+      RiderByIdResponse,
+      { riderId: string; body: UpdateRiderRequest }
+    >({
+      query: ({ riderId, body }) => ({
+        url: `/riders/${riderId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: [TAG_TYPES.Riders],
+    }),
+
+    deactivateRider: builder.mutation<RiderByIdResponse, string>({
+      query: (riderId) => ({
+        url: `/riders/${riderId}/deactivate`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [TAG_TYPES.Riders],
     }),
 
     getRidersPerformance: builder.query<
@@ -147,6 +168,8 @@ export const ridersApi = baseApi.injectEndpoints({
 export const {
   useGetRidersQuery,
   useGetRiderByIdQuery,
+  useUpdateRiderMutation,
+  useDeactivateRiderMutation,
   useGetRidersPerformanceQuery,
   useGetPendingHubApprovalsQuery,
   useHubApproveOrDeclineMutation,

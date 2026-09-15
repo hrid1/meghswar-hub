@@ -58,6 +58,38 @@ export interface Parcel {
     };
   }
 
+  export interface GetAllParcelsParams {
+    page?: number;
+    limit?: number;
+    merchantId?: string;
+    riderId?: string;
+    status?: string;
+    search?: string;
+    history?: boolean;
+    startDate?: string;
+    endDate?: string;
+  }
+
+  export const PARCEL_STATUS_OPTIONS = [
+    { value: "PENDING", label: "Pending" },
+    { value: "IN_HUB", label: "In Hub" },
+    { value: "IN_TRANSIT", label: "In Transit" },
+    { value: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
+    { value: "DELIVERED", label: "Delivered" },
+    { value: "DELIVERY_RESCHEDULED", label: "Delivery Rescheduled" },
+    { value: "RETURN_TO_MERCHANT", label: "Return to Merchant" },
+    { value: "CANCELLED", label: "Cancelled" },
+  ] as const;
+
+  export const PARCEL_HISTORY_STATUS_OPTIONS = [
+    { value: "DELIVERED", label: "Delivered" },
+    { value: "PARTIAL_DELIVERY", label: "Partial Delivery" },
+    { value: "EXCHANGE", label: "Exchange" },
+    { value: "PAID_RETURN", label: "Paid Return" },
+    { value: "RETURNED", label: "Returned" },
+    { value: "RETURN_TO_MERCHANT", label: "Return to Merchant" },
+  ] as const;
+
 
 
 
@@ -267,6 +299,40 @@ export interface HubChargesResponse {
   };
   message: string;
   timestamp: string;
+}
+
+export interface ReceiveParcelWeightUpdate {
+  parcel_id: string;
+  product_weight: number;
+}
+
+export interface ReceiveParcelsRequest {
+  parcel_ids: string[];
+  weight_updates?: ReceiveParcelWeightUpdate[];
+}
+
+export interface ReceiveParcelResult {
+  parcel_id: string;
+  success: boolean;
+  weight_changed?: boolean;
+  product_weight?: number;
+  weight_charge?: number;
+  total_charge?: number;
+  receivable_amount?: number;
+  error?: string;
+}
+
+export interface ReceiveParcelsResponse {
+  success: boolean;
+  data: {
+    summary?: {
+      total: number;
+      success: number;
+      failed: number;
+    };
+    results: ReceiveParcelResult[];
+  };
+  message: string;
 }
 
 
@@ -512,6 +578,7 @@ export interface ParcelHistoryResponse {
       limit: number;
       totalPages: number;
     };
+    summary?: Record<string, unknown>;
   };
   message: string;
 }
@@ -565,4 +632,153 @@ export function getAssignRiderErrorMessage(
   }
 
   return body.message || fallback;
+}
+
+export interface HubParcelMerchantInfo {
+  merchant_id?: string | null;
+  merchant_name?: string | null;
+  store_name?: string | null;
+  phone?: string | null;
+  address?: string | null;
+}
+
+export interface HubParcelAssignedRiderUser {
+  id: string;
+  full_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  role?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface HubParcelAssignedRiderHub {
+  id: string;
+  hub_code?: string | null;
+  branch_name?: string | null;
+  area?: string | null;
+  address?: string | null;
+  manager_name?: string | null;
+  manager_phone?: string | null;
+  manager_user_id?: string | null;
+  status?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface HubParcelAssignedRider {
+  id?: string | null;
+  rider_id?: string | null;
+  rider_code?: string | null;
+  rider_name?: string | null;
+  full_name?: string | null;
+  phone?: string | null;
+  photo?: string | null;
+  bike_type?: string | null;
+  license_no?: string | null;
+  rider_status?: string | null;
+  assigned_parcels_count?: number | null;
+  present_address?: string | null;
+  user?: HubParcelAssignedRiderUser | null;
+  hub?: HubParcelAssignedRiderHub | null;
+}
+
+export interface HubParcelCustomerInfo {
+  customer_id?: string | null;
+  customer_name?: string | null;
+  phone_number?: string | null;
+  secondary_number?: string | null;
+  customer_address?: string | null;
+  phone?: string | null;
+  secondary_phone?: string | null;
+  address?: string | null;
+  delivery_coverage_area_id?: string | null;
+}
+
+export interface HubParcelLiveStatusControls {
+  current_status?: string | null;
+}
+
+export interface HubParcelPackageInformation {
+  product_description?: string | null;
+  special_instructions?: string | null;
+  admin_notes?: string | null;
+}
+
+export interface HubParcelFinancialSummary {
+  cod_amount?: number | null;
+  delivery_charge?: number | null;
+  weight_charge?: number | null;
+  cod_charge?: number | null;
+  discount?: number | null;
+  total_charge?: number | null;
+  total_payable?: number | null;
+}
+
+export interface HubParcelDetails {
+  parcel_weight?: string | number | null;
+  parcel_type?: number | null;
+  parcel_type_key?: string | null;
+  parcel_type_label?: string | null;
+  delivery_type?: number | null;
+  delivery_type_key?: string | null;
+  delivery_type_label?: string | null;
+  is_cod?: boolean | null;
+  is_exchange?: boolean | null;
+}
+
+export interface HubParcelEnumItem {
+  value: number;
+  key: string;
+  label: string;
+}
+
+export interface HubParcelDetailData {
+  parcel_id: string;
+  tracking_number?: string | null;
+  product_price?: number | string | null;
+  product_weight?: number | string | null;
+  delivery_coverage_area_id?: string | null;
+  delivery_coverage_area?: string | DeliveryArea | null;
+  delivery_area?: string | DeliveryArea | null;
+  merchant_info?: HubParcelMerchantInfo | null;
+  assigned_rider?: HubParcelAssignedRider | null;
+  customer_info?: HubParcelCustomerInfo | null;
+  live_status_controls?: HubParcelLiveStatusControls | null;
+  package_information?: HubParcelPackageInformation | null;
+  financial_summary?: HubParcelFinancialSummary | null;
+  parcel_details?: HubParcelDetails | null;
+  enum_mappings?: {
+    parcel_type?: HubParcelEnumItem[];
+    delivery_type?: HubParcelEnumItem[];
+  } | null;
+}
+
+export interface HubParcelDetailResponse {
+  success: boolean;
+  data: HubParcelDetailData;
+  message: string;
+}
+
+export interface UpdateParcelRequest {
+  customer_name: string;
+  customer_phone: string;
+  customer_secondary_phone?: string | null;
+  customer_address: string;
+  delivery_coverage_area_id?: string;
+  product_description: string;
+  product_price: number;
+  product_weight: number;
+  special_instructions?: string | null;
+}
+
+export interface UpdateParcelResponse {
+  success?: boolean;
+  message: string;
+  data?: {
+    parcel?: Record<string, unknown>;
+  };
+  parcel?: Record<string, unknown>;
 }

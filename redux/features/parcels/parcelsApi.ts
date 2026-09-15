@@ -5,9 +5,15 @@ import {
   GetThirdPartyProvidersResponse,
   HubChargesRequest,
   HubChargesResponse,
+  ReceiveParcelsRequest,
+  ReceiveParcelsResponse,
   ParcelReportsResponse,
   ParcelHistoryResponse,
   AssignRiderResponse,
+  HubParcelDetailResponse,
+  UpdateParcelRequest,
+  UpdateParcelResponse,
+  GetAllParcelsParams,
 } from "./parcelTypes";
 // GET /hubs/dashboard/parcels/:id
 
@@ -15,15 +21,36 @@ import {
 const parcelsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // get all parcels
-    getAllParcels: builder.query<any, void | undefined>({
-      query: () => ({
+    getAllParcels: builder.query<any, GetAllParcelsParams | void>({
+      query: ({
+        page = 1,
+        limit = 20,
+        merchantId,
+        riderId,
+        status,
+        search,
+        history,
+        startDate,
+        endDate,
+      } = {}) => ({
         url: "/hubs/parcels",
         method: "GET",
+        params: {
+          page,
+          limit,
+          ...(merchantId ? { merchantId } : {}),
+          ...(riderId ? { riderId } : {}),
+          ...(status ? { status } : {}),
+          ...(search?.trim() ? { search: search.trim() } : {}),
+          ...(history ? { history: true } : {}),
+          ...(startDate ? { startDate } : {}),
+          ...(endDate ? { endDate } : {}),
+        },
       }),
       providesTags: [TAG_TYPES.Parcels],
     }),
 
-    getParcelById: builder.query<any, string>({
+    getParcelById: builder.query<HubParcelDetailResponse, string>({
       query: (id) => ({
         url: `/hubs/dashboard/parcels/${id}`,
         method: "GET",
@@ -38,11 +65,17 @@ const parcelsApi = baseApi.injectEndpoints({
     }),
 
     // receive parcels
-    receiveParcels: builder.mutation({
-      query: (parcelIds: string[]) => ({
+    receiveParcels: builder.mutation<
+      ReceiveParcelsResponse,
+      ReceiveParcelsRequest
+    >({
+      query: ({ parcel_ids, weight_updates }) => ({
         url: "/hubs/parcels/receive",
         method: "POST",
-        body: { parcel_ids: parcelIds },
+        body: {
+          parcel_ids,
+          ...(weight_updates?.length ? { weight_updates } : {}),
+        },
       }),
       invalidatesTags: [TAG_TYPES.Parcels],
     }),
@@ -250,19 +283,42 @@ const parcelsApi = baseApi.injectEndpoints({
       invalidatesTags: [TAG_TYPES.Parcels],
     }),
 
-    // get parcel history
+    // PATCH /parcels/:id
+    updateParcel: builder.mutation<
+      UpdateParcelResponse,
+      { id: string; body: UpdateParcelRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/parcels/${id}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: [TAG_TYPES.Parcels, TAG_TYPES.Dashboard],
+    }),
+
+    // get parcel history via unified GET /hubs/parcels?history=true
     getParcelHistory: builder.query<
       ParcelHistoryResponse,
-      { page?: number; limit?: number; search?: string; status?: string }
+      {
+        page?: number;
+        limit?: number;
+        search?: string;
+        status?: string;
+        startDate?: string;
+        endDate?: string;
+      }
     >({
-      query: ({ page = 1, limit = 20, search, status }) => ({
-        url: `/hubs/parcels/history`,
+      query: ({ page = 1, limit = 20, search, status, startDate, endDate }) => ({
+        url: `/hubs/parcels`,
         method: "GET",
         params: {
+          history: true,
           page,
           limit,
-          ...(search ? { search } : {}),
+          ...(search?.trim() ? { search: search.trim() } : {}),
           ...(status ? { status } : {}),
+          ...(startDate ? { startDate } : {}),
+          ...(endDate ? { endDate } : {}),
         },
       }),
       providesTags: [TAG_TYPES.Parcels],
@@ -290,4 +346,5 @@ export const {
   useGetParcelReportsQuery,
   useGetParcelByIdQuery,
   useGetParcelHistoryQuery,
+  useUpdateParcelMutation,
 } = parcelsApi;

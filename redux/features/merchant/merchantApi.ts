@@ -3,6 +3,7 @@ import { TAG_TYPES } from "../tagList";
 import {
   MerchantListResponse,
   MerchantOverviewResponse,
+  MerchantPerformanceResponse,
 } from "./merchantTypes";
 
 const merchantApi = baseApi.injectEndpoints({
@@ -15,17 +16,33 @@ const merchantApi = baseApi.injectEndpoints({
       }),
     }),
 
+    getMerchantsPerformance: builder.query<MerchantPerformanceResponse, void>({
+      query: () => ({
+        url: "/hubs/merchants/performance",
+        method: "GET",
+      }),
+      providesTags: [TAG_TYPES.Merchants],
+    }),
+
     // get merchant overview by id
     getMerchantOverview: builder.query<
       MerchantOverviewResponse,
       {
         id: string;
-        range?: string; // e.g., "last7d", "last30d", "last90d"
+        range?: string;
+        month?: string;
+        start_date?: string;
+        end_date?: string;
       }
     >({
-      query: ({ id, range = "last7d" }) => ({
+      query: ({ id, range, month, start_date, end_date }) => ({
         url: `/merchants/${id}/overview`,
-        params: { range },
+        params: {
+          ...(range ? { range } : {}),
+          ...(month ? { month } : {}),
+          ...(start_date ? { start_date } : {}),
+          ...(end_date ? { end_date } : {}),
+        },
       }),
       providesTags: (result, error, { id }) => [
         { type: TAG_TYPES.Merchants, id },
@@ -35,5 +52,8 @@ const merchantApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetAssignedMerchantsListQuery, useGetMerchantOverviewQuery } =
-  merchantApi;
+export const {
+  useGetAssignedMerchantsListQuery,
+  useGetMerchantOverviewQuery,
+  useGetMerchantsPerformanceQuery,
+} = merchantApi;

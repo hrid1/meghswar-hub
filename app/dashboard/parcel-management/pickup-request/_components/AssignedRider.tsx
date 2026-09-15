@@ -4,89 +4,110 @@ import React, { useMemo, useState } from "react";
 import { DataTable, type Column } from "@/components/reusable/DataTable";
 import { Button } from "@/components/ui/button";
 import CustomSearchInput from "@/components/reusable/CustomSearchInput";
-import { useGetConfirmedPickupsQuery } from "@/redux/features/pickup-request/pickupRequestApi";
-import type { ConfirmedPickup } from "@/redux/features/pickup-request/pickupRequestType";
+import { useGetAcceptedPickupsQuery } from "@/redux/features/pickup-request/pickupRequestApi";
+import type { AcceptedPickup } from "@/redux/features/pickup-request/pickupRequestType";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type RowId = string | number;
 
-interface ConfirmedPickupRow {
+interface AcceptedPickupRow {
   id: string;
   requestId: string;
-  pickupLocation: string;
   storeName: string;
   storePhone: string;
+  storeAddress: string;
   riderName: string;
   riderPhone: string;
-  pickupCount: number;
-  status: "CONFIRMED" | "PICKED_UP" | "DELIVERED" | "CANCELLED";
+  estimatedParcels: number;
+  actualParcels: number;
+  pickedUpCount: number;
+  status: string;
   comment: string | null;
-  date: string;
+  requestedAt: string;
+  confirmedAt: string | null;
+  assignedAt: string | null;
 }
 
-const getConfirmedPickupStatusConfig = (status: ConfirmedPickupRow["status"]) => {
-  const statusConfig = {
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const getAcceptedPickupStatusConfig = (status: string) => {
+  const statusConfig: Record<string, { label: string; bg: string; text: string; border: string; dot: string }> = {
     CONFIRMED: { label: "Confirmed", bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500" },
+    PENDING: { label: "Pending", bg: "bg-yellow-50", text: "text-yellow-700", border: "border-yellow-200", dot: "bg-yellow-500" },
     PICKED_UP: { label: "Picked Up", bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500" },
-    DELIVERED: { label: "Delivered", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500" },
     CANCELLED: { label: "Cancelled", bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500" },
   };
 
   return statusConfig[status] ?? statusConfig.CONFIRMED;
 };
 
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-};
-
-const mapConfirmedPickupsToTableFormat = (apiResponse: any): ConfirmedPickupRow[] => {
+const mapAcceptedPickupsToTableFormat = (
+  apiResponse: { data?: { pickupRequests?: AcceptedPickup[] } } | undefined,
+): AcceptedPickupRow[] => {
   if (!apiResponse?.data?.pickupRequests || !Array.isArray(apiResponse.data.pickupRequests)) {
     return [];
   }
 
-  return apiResponse.data.pickupRequests.map((request: ConfirmedPickup) => ({
+  return apiResponse.data.pickupRequests.map((request) => ({
     id: request.id,
     requestId: request.request_code,
-    pickupLocation: request.pickup_location,
-    storeName: request.store_name,
-    storePhone: request.store_phone,
-    riderName: request.rider?.name || "Not Assigned",
-    riderPhone: request.rider?.phone || "N/A",
-    pickupCount: request.pickup_count,
-    status: request.status as ConfirmedPickupRow["status"],
+    storeName: request.store?.business_name || "N/A",
+    storePhone: request.store?.phone_number || "N/A",
+    storeAddress: request.store?.business_address || "N/A",
+    riderName: request.assignedRider?.user?.full_name || "Not Assigned",
+    riderPhone: request.assignedRider?.user?.phone || "N/A",
+    estimatedParcels: request.estimated_parcels,
+    actualParcels: request.actual_parcels,
+    pickedUpCount: request.picked_up_count,
+    status: request.status,
     comment: request.comment,
-    date: formatDate(request.date),
+    requestedAt: formatDate(request.requested_at),
+    confirmedAt: formatDate(request.confirmed_at),
+    assignedAt: formatDate(request.rider_assigned_at),
   }));
 };
 
-const confirmedPickupColumns = (onViewDetails: (row: ConfirmedPickupRow) => void): Column<ConfirmedPickupRow>[] => [
+const acceptedPickupColumns = (): Column<AcceptedPickupRow>[] => [
   {
     key: "requestId",
     header: "Request ID",
-    width: "10%",
+    width: "14%",
     render: (row) => <span className="font-semibold text-sm text-blue-600">{row.requestId}</span>,
   },
   {
     key: "store",
     header: "Store Info",
-    width: "20%",
+    width: "18%",
     render: (row) => (
       <div className="flex flex-col">
         <span className="font-semibold text-sm text-gray-800">{row.storeName}</span>
         <span className="text-xs text-gray-500">{row.storePhone}</span>
-        <span className="max-w-[200px] truncate text-xs text-gray-400">{row.pickupLocation}</span>
+        <span className="max-w-[200px] truncate text-xs text-gray-400">{row.storeAddress}</span>
       </div>
     ),
   },
   {
-    key: "pickupCount",
+    key: "parcels",
     header: "Parcels",
-    width: "8%",
+    width: "14%",
     render: (row) => (
-      <div className="text-center">
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
-          {row.pickupCount}
+      <div className="flex items-center gap-1">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+          {row.estimatedParcels}
+        </span>
+        <span className="text-gray-400">→</span>
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
+          {row.actualParcels}
         </span>
       </div>
     ),
@@ -94,7 +115,7 @@ const confirmedPickupColumns = (onViewDetails: (row: ConfirmedPickupRow) => void
   {
     key: "rider",
     header: "Rider",
-    width: "15%",
+    width: "14%",
     render: (row) => (
       <div className="flex flex-col">
         <span className="text-sm font-medium text-gray-800">{row.riderName}</span>
@@ -107,7 +128,7 @@ const confirmedPickupColumns = (onViewDetails: (row: ConfirmedPickupRow) => void
     header: "Status",
     width: "10%",
     render: (row) => {
-      const config = getConfirmedPickupStatusConfig(row.status);
+      const config = getAcceptedPickupStatusConfig(row.status);
       return (
         <div className={`flex w-fit items-center gap-1.5 rounded-full border px-2 py-1 text-xs font-medium ${config.bg} ${config.text} ${config.border}`}>
           <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
@@ -117,27 +138,23 @@ const confirmedPickupColumns = (onViewDetails: (row: ConfirmedPickupRow) => void
     },
   },
   {
-    key: "date",
-    header: "Date",
-    width: "10%",
-    render: (row) => <span className="text-sm text-gray-700">{row.date}</span>,
+    key: "dates",
+    header: "Timeline",
+    width: "14%",
+    render: (row) => (
+      <div className="flex flex-col text-[10px] text-gray-500">
+        <div>Requested: {row.requestedAt}</div>
+        {row.confirmedAt && row.confirmedAt !== "-" && <div>Confirmed: {row.confirmedAt}</div>}
+        {row.assignedAt && row.assignedAt !== "-" && <div>Assigned: {row.assignedAt}</div>}
+      </div>
+    ),
   },
   {
     key: "comment",
     header: "Comment",
-    width: "15%",
+    width: "16%",
     wrap: true,
     render: (row) => <span className="text-sm text-gray-500 italic">{row.comment || "—"}</span>,
-  },
-  {
-    key: "actions",
-    header: "Actions",
-    width: "12%",
-    render: (row) => (
-      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => onViewDetails(row)}>
-        View Details
-      </Button>
-    ),
   },
 ];
 
@@ -146,40 +163,23 @@ export default function PickupRequestTableRider() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const debouncedSearch = useDebounce(searchQuery, 400);
 
-  const { data, isLoading, isError, error, refetch } = useGetConfirmedPickupsQuery({
+  const { data, isLoading, isError, error, refetch } = useGetAcceptedPickupsQuery({
     page: currentPage,
     limit: itemsPerPage,
-    search: searchQuery || undefined,
+    search: debouncedSearch.trim() || undefined,
   });
 
-  const mappedRequests = useMemo(() => mapConfirmedPickupsToTableFormat(data), [data]);
+  const mappedRequests = useMemo(() => mapAcceptedPickupsToTableFormat(data), [data]);
   const paginationInfo = data?.data?.pagination;
+  const columns = useMemo(() => acceptedPickupColumns(), []);
 
-  const filteredRequests = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return mappedRequests;
-
-    return mappedRequests.filter((request) =>
-      request.requestId.toLowerCase().includes(q) ||
-      request.storeName.toLowerCase().includes(q) ||
-      request.storePhone.toLowerCase().includes(q) ||
-      request.riderName.toLowerCase().includes(q) ||
-      request.pickupLocation.toLowerCase().includes(q),
-    );
-  }, [searchQuery, mappedRequests]);
-
-  const visibleIds = useMemo(() => filteredRequests.map((item) => item.id), [filteredRequests]);
+  const visibleIds = useMemo(() => mappedRequests.map((item) => item.id), [mappedRequests]);
   const cleanedSelectedIds = useMemo(
     () => selectedIds.filter((id) => visibleIds.includes(String(id))),
     [selectedIds, visibleIds],
   );
-
-  const handleViewDetails = (row: ConfirmedPickupRow) => {
-    console.log("View details for", row.requestId);
-  };
-
-  const columns = useMemo(() => confirmedPickupColumns(handleViewDetails), []);
 
   if (isLoading) {
     return (
@@ -192,9 +192,11 @@ export default function PickupRequestTableRider() {
   if (isError) {
     return (
       <div className="m-4 rounded-lg border border-red-200 bg-red-50 p-4">
-        <p className="font-medium text-red-600">Error loading confirmed pickups</p>
+        <p className="font-medium text-red-600">Error loading assigned pickups</p>
         <p className="mt-1 text-sm text-red-400">
-          {(error as any)?.data?.message || (error as any)?.message || "Failed to fetch confirmed pickups"}
+          {(error as { data?: { message?: string }; message?: string })?.data?.message ||
+            (error as { message?: string })?.message ||
+            "Failed to fetch assigned pickups"}
         </p>
         <Button variant="outline" className="mt-3" onClick={() => refetch()}>
           Try Again
@@ -207,9 +209,12 @@ export default function PickupRequestTableRider() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <CustomSearchInput
-          placeholder="Search by Request ID, Store, Rider or Location..."
+          placeholder="Search by Request ID, Store, Rider or Address..."
           value={searchQuery}
-          onChange={setSearchQuery}
+          onChange={(value) => {
+            setSearchQuery(value);
+            setCurrentPage(1);
+          }}
           className="max-w-2xl flex-1"
         />
       </div>
@@ -220,7 +225,7 @@ export default function PickupRequestTableRider() {
             <span className="font-semibold">{cleanedSelectedIds.length}</span> Selected
           </div>
           <div className="text-sm text-gray-600">
-            Total: <span className="font-semibold">{mappedRequests.length}</span> confirmed pickups
+            Total: <span className="font-semibold">{paginationInfo?.total ?? mappedRequests.length}</span> assigned pickups
           </div>
           {paginationInfo && (
             <div className="text-sm text-gray-500">
@@ -230,11 +235,11 @@ export default function PickupRequestTableRider() {
         </div>
       </div>
 
-      <DataTable<ConfirmedPickupRow>
+      <DataTable<AcceptedPickupRow>
         columns={columns}
-        data={filteredRequests}
+        data={mappedRequests}
         selectable
-        minWidth={1000}
+        minWidth={1100}
         getRowId={(row) => row.id}
         selectedRowIds={cleanedSelectedIds}
         onToggleRow={(rowId) => {

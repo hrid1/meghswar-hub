@@ -1,5 +1,11 @@
 import { baseApi } from "../api/baseApi";
-import { HubsListResponse, MyHubResponse } from "./hubsTypes";
+import { TAG_TYPES } from "../tagList";
+import {
+  HubsListResponse,
+  HubMerchantsResponse,
+  HubRidersResponse,
+  MyHubResponse,
+} from "./hubsTypes";
 
 
 const hubsApi = baseApi.injectEndpoints({
@@ -21,6 +27,22 @@ const hubsApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    getHubMerchants: builder.query<HubMerchantsResponse, void>({
+      query: () => ({
+        url: "/hubs/merchants",
+        method: "GET",
+      }),
+      providesTags: [TAG_TYPES.Merchants],
+    }),
+
+    getHubRiders: builder.query<HubRidersResponse, void>({
+      query: () => ({
+        url: "/hubs/riders",
+        method: "GET",
+      }),
+      providesTags: [TAG_TYPES.Riders],
+    }),
     
 
     // initiate hub
@@ -28,4 +50,9 @@ const hubsApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetHubsListQuery, useGetMyHubQuery } = hubsApi;
+export const {
+  useGetHubsListQuery,
+  useGetMyHubQuery,
+  useGetHubMerchantsQuery,
+  useGetHubRidersQuery,
+} = hubsApi;

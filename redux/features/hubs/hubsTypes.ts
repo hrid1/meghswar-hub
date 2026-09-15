@@ -41,3 +41,35 @@ export interface MyHubResponse {
   message: string;
   timestamp: string;
 }
+
+export interface HubMerchant {
+  merchant_id?: string;
+  id?: string;
+  merchant_name?: string;
+  full_name?: string;
+  business_name?: string;
+  store_id?: string;
+  store_name?: string;
+  user?: { full_name?: string | null } | null;
+  store?: { business_name?: string | null } | null;
+}
+
+export interface HubMerchantsResponse {
+  success: boolean;
+  data: HubMerchant[] | { merchants: HubMerchant[] };
+  message: string;
+}
+
+export interface HubRider {
+  id: string;
+  full_name: string;
+  phone: string;
+}
+
+export interface HubRidersResponse {
+  success: boolean;
+  data: {
+    riders: HubRider[];
+  };
+  message: string;
+}

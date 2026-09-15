@@ -23,7 +23,7 @@ export interface PickupRequest {
   store_phone: string;
   comment: string | null;
   pickup_count: number;
-  status: "PENDING" | "ASSIGNED" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+  status: "PENDING" | "CONFIRMED" | "PICKED_UP" | "CANCELLED";
   assigned_rider_id: string | null;
 }
 
@@ -33,6 +33,14 @@ export interface PickupRequestListData {
 }
 
 export type PickupRequestListResponse = ApiResponse<PickupRequestListData>;
+
+export interface AssignPickupRiderRequest {
+  rider_id: string;
+  pickup_ids: string[];
+  notes?: string;
+}
+
+export type AssignPickupRiderResponse = ApiResponse<unknown>;
 
 // ─── Accepted Pickups (/pickup-requests/hub/accepted-pickups) ─────────────────
 

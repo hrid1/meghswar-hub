@@ -11,9 +11,14 @@ export interface UpdateChargesHandler {
   (id: string, charges: { delivery_charge?: number; weight_charge?: number }): Promise<void>;
 }
 
+export interface UpdateWeightHandler {
+  (id: string, productWeight: number): void | Promise<void>;
+}
+
 export const getParcelColumns = (
     onUpdateCharges?: UpdateChargesHandler,
-    onPrintParcels?: (originalId: string) => void
+    onPrintParcels?: (originalId: string) => void,
+    onUpdateWeight?: UpdateWeightHandler,
 ): any => [
   {
     key: "id",
@@ -98,13 +103,7 @@ export const getParcelColumns = (
       <EditableCell
         value={row.weight || 0}
         onSave={async (newValue) => {
-          if (onUpdateCharges) {
-            // Calculate weight charge based on weight (e.g., 40 TK per kg)
-            const weightCharge = newValue * 40;
-            await onUpdateCharges(row.originalId, {
-              weight_charge: weightCharge,
-            });
-          }
+          await onUpdateWeight?.(row.originalId, newValue);
         }}
         suffix=" kg"
       />

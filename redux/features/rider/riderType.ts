@@ -100,6 +100,15 @@ export interface RiderByIdResponse {
   message: string;
 }
 
+export interface UpdateRiderRequest {
+  full_name?: string;
+  phone?: string;
+  fixed_salary?: number;
+  commission_per_delivery?: number;
+  nid_number?: string | null;
+  license_no?: string | null;
+}
+
 export interface RiderData {
   id: string;
   rider_code: string | null;

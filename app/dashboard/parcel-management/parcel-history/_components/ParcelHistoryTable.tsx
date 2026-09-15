@@ -20,7 +20,7 @@ export default function ParcelHistoryTable({
       isLoading={isLoading}
       getRowId={(row) => row.id}
       minWidth={1200}
-      emptyMessage="No parcel history found"
+      emptyMessage="No completed parcel history found"
     />
   );
 }

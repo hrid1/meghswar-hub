@@ -1,4 +1,5 @@
 import type { Column } from "@/components/reusable/DataTable";
+import { txt } from "@/lib/utils";
 import type { ParcelHistoryItem } from "@/redux/features/parcels/parcelTypes";
 
 const formatMoney = (value: number | string | null | undefined) =>
@@ -17,12 +18,35 @@ const formatDate = (value?: string | null) => {
 
 const getStatusClass = (status: string) => {
   const normalized = status.toUpperCase();
-  if (normalized.includes("DELIVERED")) return "bg-green-100 text-green-700";
+  if (normalized === "DELIVERED") return "bg-green-100 text-green-700";
+  if (normalized === "PARTIAL_DELIVERY") return "bg-emerald-100 text-emerald-700";
+  if (normalized === "EXCHANGE") return "bg-purple-100 text-purple-700";
+  if (normalized === "PAID_RETURN") return "bg-amber-100 text-amber-700";
   if (normalized.includes("RETURN")) return "bg-red-100 text-red-700";
-  if (normalized.includes("TRANSIT") || normalized.includes("OUT_FOR"))
-    return "bg-blue-100 text-blue-700";
-  if (normalized.includes("CANCEL")) return "bg-gray-200 text-gray-700";
   return "bg-orange-100 text-orange-700";
+};
+
+const riderName = (row: ParcelHistoryItem) => {
+  const rider = row.assigned_rider as
+    | string
+    | {
+        full_name?: string | null;
+        rider_name?: string | null;
+        phone?: string | null;
+        user?: { full_name?: string | null; phone?: string | null } | null;
+      }
+    | null
+    | undefined;
+  if (!rider) return { name: "Not assigned", phone: "" };
+  if (typeof rider === "string") return { name: rider, phone: "" };
+  return {
+    name:
+      txt(rider.full_name) ||
+      txt(rider.rider_name) ||
+      txt(rider.user?.full_name) ||
+      "Not assigned",
+    phone: txt(rider.phone) || txt(rider.user?.phone),
+  };
 };
 
 export const parcelHistoryColumns: Column<ParcelHistoryItem>[] = [
@@ -32,12 +56,10 @@ export const parcelHistoryColumns: Column<ParcelHistoryItem>[] = [
     width: "12%",
     render: (row) => (
       <div>
-        <p className="font-semibold">{row.parcel_tx_id || "—"}</p>
-        <p className="text-xs text-gray-500">{row.tracking_number || "—"}</p>
-        {row.merchant_order_id && (
-          <p className="text-xs text-gray-400">
-            Order: {row.merchant_order_id}
-          </p>
+        <p className="font-semibold">{txt(row.parcel_tx_id, "—")}</p>
+        <p className="text-xs text-gray-500">{txt(row.tracking_number, "—")}</p>
+        {txt(row.merchant_order_id) && (
+          <p className="text-xs text-gray-400">Order: {txt(row.merchant_order_id)}</p>
         )}
       </div>
     ),
@@ -50,13 +72,13 @@ export const parcelHistoryColumns: Column<ParcelHistoryItem>[] = [
     render: (row) => (
       <div className="flex flex-col">
         <span className="font-semibold">
-          {row.customer?.customer_name || row.customer_name || "—"}
+          {txt(row.customer?.customer_name) || txt(row.customer_name, "—")}
         </span>
         <span className="text-sm text-gray-500">
-          {row.customer?.phone_number || row.customer_phone || "—"}
+          {txt(row.customer?.phone_number) || txt(row.customer_phone, "—")}
         </span>
         <span className="text-xs text-gray-400 line-clamp-2">
-          {row.customer?.customer_address || row.customer_address || "—"}
+          {txt(row.customer?.customer_address) || txt(row.customer_address, "—")}
         </span>
       </div>
     ),
@@ -65,31 +87,42 @@ export const parcelHistoryColumns: Column<ParcelHistoryItem>[] = [
     key: "merchant",
     header: "Merchant",
     width: "14%",
-    render: (row) => (
-      <div className="flex flex-col">
-        <span className="font-semibold">
-          {row.store?.name || row.merchant?.user?.full_name || "—"}
-        </span>
-        <span className="text-xs text-gray-500">
-          {row.store?.phone || row.merchant?.user?.phone || "—"}
-        </span>
-      </div>
-    ),
+    render: (row) => {
+      const store = row.store as {
+        name?: string;
+        phone?: string;
+        business_name?: string;
+        phone_number?: string;
+      } | undefined;
+      return (
+        <div className="flex flex-col">
+          <span className="font-semibold">
+            {txt(store?.name) ||
+              txt(store?.business_name) ||
+              txt(row.merchant?.user?.full_name, "—")}
+          </span>
+          <span className="text-xs text-gray-500">
+            {txt(store?.phone) ||
+              txt(store?.phone_number) ||
+              txt(row.merchant?.user?.phone, "—")}
+          </span>
+        </div>
+      );
+    },
   },
   {
     key: "rider",
     header: "Rider",
     width: "13%",
-    render: (row) => (
-      <div className="flex flex-col">
-        <span className="font-semibold">
-          {row.assigned_rider?.full_name || "Not assigned"}
-        </span>
-        <span className="text-xs text-gray-500">
-          {row.assigned_rider?.phone || "—"}
-        </span>
-      </div>
-    ),
+    render: (row) => {
+      const rider = riderName(row);
+      return (
+        <div className="flex flex-col">
+          <span className="font-semibold">{rider.name}</span>
+          <span className="text-xs text-gray-500">{rider.phone || "—"}</span>
+        </div>
+      );
+    },
   },
   {
     key: "status",
@@ -98,10 +131,10 @@ export const parcelHistoryColumns: Column<ParcelHistoryItem>[] = [
     render: (row) => (
       <span
         className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getStatusClass(
-          row.status,
+          txt(row.status),
         )}`}
       >
-        {row.status.replaceAll("_", " ")}
+        {txt(row.status, "—").replaceAll("_", " ")}
       </span>
     ),
   },

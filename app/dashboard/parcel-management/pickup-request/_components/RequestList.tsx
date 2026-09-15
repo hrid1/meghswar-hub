@@ -1,21 +1,17 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { DataTable, type Column } from "@/components/reusable/DataTable";
 import { Button } from "@/components/ui/button";
 import CustomSearchInput from "@/components/reusable/CustomSearchInput";
 import { useGetPickupRequestsQuery } from "@/redux/features/pickup-request/pickupRequestApi";
 import type { PickupRequest } from "@/redux/features/pickup-request/pickupRequestType";
+import { useDebounce } from "@/hooks/useDebounce";
+import AssignRiderModalForm from "./AssignRiderModalForm";
 
 type RowId = string | number;
 
-type PickupRequestStatus =
-  | "PENDING"
-  | "ASSIGNED"
-  | "CONFIRMED"
-  | "PICKED_UP"
-  | "COMPLETED"
-  | "CANCELLED";
+type PickupRequestStatus = "PENDING" | "CONFIRMED" | "PICKED_UP" | "CANCELLED";
 
 interface PickupRequestRow {
   id: string;
@@ -29,25 +25,32 @@ interface PickupRequestRow {
   assignedRiderId: string | null;
 }
 
+const PICKUP_STATUS_OPTIONS: { value: PickupRequestStatus | ""; label: string }[] = [
+  { value: "PENDING", label: "Pending" },
+  { value: "CONFIRMED", label: "Confirmed" },
+  { value: "PICKED_UP", label: "Picked Up" },
+  { value: "CANCELLED", label: "Cancelled" },
+];
+
 const getPickupRequestStatusConfig = (status: PickupRequestStatus) => {
   const statusConfig = {
     PENDING: { label: "Pending", bg: "bg-yellow-50", text: "text-yellow-700", border: "border-yellow-200", dot: "bg-yellow-500" },
-    ASSIGNED: { label: "Assigned", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500" },
     CONFIRMED: { label: "Confirmed", bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500" },
     PICKED_UP: { label: "Picked Up", bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500" },
-    COMPLETED: { label: "Completed", bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200", dot: "bg-gray-500" },
     CANCELLED: { label: "Cancelled", bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500" },
   };
 
   return statusConfig[status] ?? statusConfig.PENDING;
 };
 
-const mapPickupRequestsToTableFormat = (apiResponse: any): PickupRequestRow[] => {
+const mapPickupRequestsToTableFormat = (
+  apiResponse: { data?: { pickupRequests?: PickupRequest[] } } | undefined,
+): PickupRequestRow[] => {
   if (!apiResponse?.data?.pickupRequests || !Array.isArray(apiResponse.data.pickupRequests)) {
     return [];
   }
 
-  return apiResponse.data.pickupRequests.map((request: PickupRequest) => ({
+  return apiResponse.data.pickupRequests.map((request) => ({
     id: request.id,
     requestId: request.request_code,
     pickupLocation: request.pickup_location,
@@ -55,12 +58,14 @@ const mapPickupRequestsToTableFormat = (apiResponse: any): PickupRequestRow[] =>
     storePhone: request.store_phone,
     comment: request.comment,
     parcelQuantity: request.pickup_count,
-    status: request.status as PickupRequestStatus,
+    status: request.status,
     assignedRiderId: request.assigned_rider_id,
   }));
 };
 
-const pickupRequestColumns = (onAssignRider: (row: PickupRequestRow) => void): Column<PickupRequestRow>[] => [
+const pickupRequestColumns = (
+  onAssignRider: (row: PickupRequestRow) => void,
+): Column<PickupRequestRow>[] => [
   {
     key: "requestId",
     header: "Request ID",
@@ -139,40 +144,46 @@ export default function PickupRequestTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<PickupRequestStatus | "">("PENDING");
+  const [openAssignModal, setOpenAssignModal] = useState(false);
+  const [pickupIdsToAssign, setPickupIdsToAssign] = useState<string[]>([]);
+  const debouncedSearch = useDebounce(searchQuery, 400);
 
   const { data, isLoading, isError, error, refetch } = useGetPickupRequestsQuery({
     page: currentPage,
     limit: itemsPerPage,
     status: statusFilter || undefined,
+    search: debouncedSearch.trim() || undefined,
   });
 
   const mappedRequests = useMemo(() => mapPickupRequestsToTableFormat(data), [data]);
   const paginationInfo = data?.data?.pagination;
 
-  const filteredRequests = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return mappedRequests;
-
-    return mappedRequests.filter((request) =>
-      request.requestId.toLowerCase().includes(q) ||
-      request.storeName.toLowerCase().includes(q) ||
-      request.storePhone.toLowerCase().includes(q) ||
-      request.pickupLocation.toLowerCase().includes(q),
-    );
-  }, [searchQuery, mappedRequests]);
-
-  const visibleIds = useMemo(() => filteredRequests.map((item) => item.id), [filteredRequests]);
+  const visibleIds = useMemo(() => mappedRequests.map((item) => item.id), [mappedRequests]);
   const cleanedSelectedIds = useMemo(
     () => selectedIds.filter((id) => visibleIds.includes(String(id))),
     [selectedIds, visibleIds],
   );
+  const pendingSelectedIds = useMemo(
+    () =>
+      mappedRequests
+        .filter((request) => cleanedSelectedIds.includes(request.id) && request.status === "PENDING")
+        .map((request) => request.id),
+    [mappedRequests, cleanedSelectedIds],
+  );
 
-  const handleAssignRider = (row: PickupRequestRow) => {
-    console.log("Assign rider for", row.requestId);
+  const handleAssignRider = useCallback((row: PickupRequestRow) => {
+    setPickupIdsToAssign([row.id]);
+    setOpenAssignModal(true);
+  }, []);
+
+  const handleBulkAssign = () => {
+    if (pendingSelectedIds.length === 0) return;
+    setPickupIdsToAssign(pendingSelectedIds);
+    setOpenAssignModal(true);
   };
 
-  const columns = useMemo(() => pickupRequestColumns(handleAssignRider), []);
+  const columns = useMemo(() => pickupRequestColumns(handleAssignRider), [handleAssignRider]);
 
   if (isLoading) {
     return (
@@ -187,7 +198,9 @@ export default function PickupRequestTable() {
       <div className="m-4 rounded-lg border border-red-200 bg-red-50 p-4">
         <p className="font-medium text-red-600">Error loading pickup requests</p>
         <p className="mt-1 text-sm text-red-400">
-          {(error as any)?.data?.message || (error as any)?.message || "Failed to fetch pickup requests"}
+          {(error as { data?: { message?: string }; message?: string })?.data?.message ||
+            (error as { message?: string })?.message ||
+            "Failed to fetch pickup requests"}
         </p>
         <Button variant="outline" className="mt-3" onClick={() => refetch()}>
           Try Again
@@ -202,27 +215,27 @@ export default function PickupRequestTable() {
         <CustomSearchInput
           placeholder="Search by Request ID, Store, Phone or Location..."
           value={searchQuery}
-          onChange={setSearchQuery}
+          onChange={(value) => {
+            setSearchQuery(value);
+            setCurrentPage(1);
+          }}
           className="max-w-2xl flex-1"
         />
-        <div className="flex gap-2">
-          <select
-            className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none"
-            value={statusFilter}
-            onChange={(event) => {
-              setStatusFilter(event.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="ASSIGNED">Assigned</option>
-            <option value="CONFIRMED">Confirmed</option>
-            <option value="PICKED_UP">Picked Up</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-        </div>
+        <select
+          className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none [color-scheme:light]"
+          value={statusFilter}
+          onChange={(event) => {
+            setStatusFilter(event.target.value as PickupRequestStatus | "");
+            setCurrentPage(1);
+          }}
+        >
+          <option value="">All Status</option>
+          {PICKUP_STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex flex-col gap-3 rounded-xl bg-[#FDEFE6] px-4 py-3 md:flex-row md:items-center md:justify-between">
@@ -231,7 +244,7 @@ export default function PickupRequestTable() {
             <span className="font-semibold">{cleanedSelectedIds.length}</span> Selected
           </div>
           <div className="text-sm text-gray-600">
-            Total: <span className="font-semibold">{mappedRequests.length}</span> requests
+            Total: <span className="font-semibold">{paginationInfo?.total ?? mappedRequests.length}</span> requests
           </div>
           {paginationInfo && (
             <div className="text-sm text-gray-500">
@@ -239,11 +252,18 @@ export default function PickupRequestTable() {
             </div>
           )}
         </div>
+        <Button
+          className="bg-orange-600 text-white hover:bg-orange-700"
+          disabled={pendingSelectedIds.length === 0}
+          onClick={handleBulkAssign}
+        >
+          Assign Rider {pendingSelectedIds.length > 0 ? `(${pendingSelectedIds.length})` : ""}
+        </Button>
       </div>
 
       <DataTable<PickupRequestRow>
         columns={columns}
-        data={filteredRequests}
+        data={mappedRequests}
         selectable
         minWidth={900}
         getRowId={(row) => row.id}
@@ -299,6 +319,16 @@ export default function PickupRequestTable() {
           </div>
         </div>
       )}
+
+      <AssignRiderModalForm
+        open={openAssignModal}
+        setOpen={setOpenAssignModal}
+        pickupIds={pickupIdsToAssign}
+        onSuccess={() => {
+          setSelectedIds([]);
+          setPickupIdsToAssign([]);
+        }}
+      />
     </div>
   );
 }

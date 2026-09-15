@@ -4,6 +4,7 @@ import CustomPagination from "@/components/reusable/CustomPagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGetParcelHistoryQuery } from "@/redux/features/parcels/parcelsApi";
+import { PARCEL_HISTORY_STATUS_OPTIONS } from "@/redux/features/parcels/parcelTypes";
 import { Search } from "lucide-react";
 import React, { useState } from "react";
 import ParcelHistoryTable from "./_components/ParcelHistoryTable";
@@ -14,26 +15,29 @@ export default function ParcelHistoryPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const { data, isLoading, isError } = useGetParcelHistoryQuery({
     page,
     limit,
     search,
     status,
+    startDate,
+    endDate,
   });
 
   const parcels = data?.data?.parcels ?? [];
   const pagination = data?.data?.pagination;
 
-  const handleSearch = (event: React.FormEvent) => {
-    event.preventDefault();
+  const resetPageAnd = (update: () => void) => {
     setPage(1);
-    setSearch(searchInput.trim());
+    update();
   };
 
-  const handleStatusChange = (value: string) => {
-    setPage(1);
-    setStatus(value);
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    resetPageAnd(() => setSearch(searchInput.trim()));
   };
 
   return (
@@ -41,12 +45,11 @@ export default function ParcelHistoryPage() {
       <div>
         <h1 className="text-2xl font-bold">Parcel History</h1>
         <p className="mt-1 text-sm text-gray-500">
-          View parcel, customer, merchant, rider, financial and timeline
-          information.
+          Hub-confirmed completed parcels only.
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-xl border bg-white p-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 rounded-xl border bg-white p-4 lg:flex-row lg:items-center">
         <form
           onSubmit={handleSearch}
           className="flex w-full max-w-lg items-center gap-2"
@@ -70,19 +73,36 @@ export default function ParcelHistoryPage() {
 
         <select
           value={status}
-          onChange={(event) => handleStatusChange(event.target.value)}
-          className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#FE5000]"
+          onChange={(event) =>
+            resetPageAnd(() => setStatus(event.target.value))
+          }
+          className="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none [color-scheme:light] focus:border-[#FE5000]"
         >
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="IN_HUB">In Hub</option>
-          <option value="IN_TRANSIT">In Transit</option>
-          <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
-          <option value="DELIVERED">Delivered</option>
-          <option value="DELIVERY_RESCHEDULED">Delivery Rescheduled</option>
-          <option value="RETURN_TO_MERCHANT">Return to Merchant</option>
-          <option value="CANCELLED">Cancelled</option>
+          <option value="">All history statuses</option>
+          {PARCEL_HISTORY_STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
+
+        <Input
+          type="date"
+          value={startDate}
+          onChange={(event) =>
+            resetPageAnd(() => setStartDate(event.target.value))
+          }
+          className="h-10 w-full max-w-[160px] [color-scheme:light] focus-visible:border-[#FE5000] focus-visible:ring-0"
+        />
+        <Input
+          type="date"
+          value={endDate}
+          min={startDate || undefined}
+          onChange={(event) =>
+            resetPageAnd(() => setEndDate(event.target.value))
+          }
+          className="h-10 w-full max-w-[160px] [color-scheme:light] focus-visible:border-[#FE5000] focus-visible:ring-0"
+        />
 
         <span className="ml-auto whitespace-nowrap text-sm text-gray-500">
           Total: {pagination?.total ?? 0}

@@ -45,30 +45,30 @@ function buildStatsFromOverview(overview: MerchantOverviewData): StatItem[] {
   return [
     {
       label: "No. Of Stores",
-      value: store_count,
+      value: store_count ?? "—",
       icon: <ShoppingBag size={20} />,
       colorKey: "white",
     },
     {
       label: "Total Parcels",
-      value: parcel_totals.total,
+      value: parcel_totals?.total ?? "—",
       icon: <Truck size={20} />,
       colorKey: "white",
     },
     {
       label: "Parcel Delivered",
-      value: parcel_totals.delivered,
+      value: parcel_totals?.delivered ?? "—",
       icon: <Truck size={20} />,
       colorKey: "delivered",
     },
     {
       label: "Parcel Returned",
-      value: parcel_totals.returned,
+      value: parcel_totals?.returned ?? "—",
       colorKey: "returned",
     },
     {
       label: "Parcel Reported",
-      value: parcel_totals.reported,
+      value: parcel_totals?.reported ?? "—",
       colorKey: "reported",
     },
   ];

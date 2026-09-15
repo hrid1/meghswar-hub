@@ -6,10 +6,14 @@ import CustomDialog from "@/components/reusable/CustomDialog";
 import { Button } from "@/components/ui/button";
 import { Ridercolumns } from "./_components/riderCols";
 import EditRiderModal from "./_components/EditRiderModal";
-import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
+import {
+  useDeactivateRiderMutation,
+  useGetRidersQuery,
+} from "@/redux/features/rider/riderApi";
 import CustomPagination from "@/components/reusable/CustomPagination";
 import CustomSearchInput from "@/components/reusable/CustomSearchInput";
 import { getReadUrl } from "@/lib/upload";
+import { toast } from "sonner";
 
 export default function ParcelReportTable() {
   const [page, setPage] = useState(1);
@@ -21,10 +25,12 @@ export default function ParcelReportTable() {
     limit,
     ...(search.trim() ? { search: search.trim() } : {}),
   });
+  const [deactivateRider, { isLoading: isDeactivating }] =
+    useDeactivateRiderMutation();
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
 
   const [openEditModal, setOpenEditModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
@@ -107,11 +113,25 @@ export default function ParcelReportTable() {
     setSelectedId(riderId);
 
     if (type === "edit") setOpenEditModal(true);
-    if (type === "delete") setOpenDeleteModal(true);
+    if (type === "deactivate") setOpenDeactivateModal(true);
   };
 
+  const selectedRider = riders.find((rider: { riderId: string }) => rider.riderId === selectedId);
 
-  console.log(riders);
+  const handleDeactivate = async () => {
+    if (!selectedId) return;
+    try {
+      const response = await deactivateRider(selectedId).unwrap();
+      toast.success(response.message || "Rider deactivated successfully");
+      setOpenDeactivateModal(false);
+      setSelectedId(null);
+    } catch (error) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          "Failed to deactivate rider",
+      );
+    }
+  };
 
   return (
     <div className="p-6">
@@ -169,29 +189,39 @@ export default function ParcelReportTable() {
         riderId={selectedId}
       />
 
-      {/* DELETE MODAL */}
-      <CustomDialog open={openDeleteModal} setOpen={setOpenDeleteModal}>
+      {/* DEACTIVATE MODAL */}
+      <CustomDialog open={openDeactivateModal} setOpen={setOpenDeactivateModal}>
         <div className="flex flex-col gap-4 p-2">
           <h2 className="text-lg font-semibold text-center text-red-600">
-            Are you sure you want to delete?
+            Deactivate rider?
           </h2>
+          <p className="text-center text-sm text-gray-600">
+            {selectedRider?.rider ? (
+              <>
+                <span className="font-medium">{selectedRider.rider}</span> will
+                be deactivated and removed from the active list. Rider history
+                will be kept.
+              </>
+            ) : (
+              "This rider will be deactivated. History will be kept."
+            )}
+          </p>
 
           <div className="flex justify-between mt-4">
             <Button
               className="bg-gray-300 text-black"
-              onClick={() => setOpenDeleteModal(false)}
+              disabled={isDeactivating}
+              onClick={() => setOpenDeactivateModal(false)}
             >
               Cancel
             </Button>
 
             <Button
               className="bg-red-600 text-white"
-              onClick={() => {
-                console.log("Deleted Rider:", selectedId);
-                setOpenDeleteModal(false);
-              }}
+              disabled={isDeactivating}
+              onClick={handleDeactivate}
             >
-              Confirm Delete
+              {isDeactivating ? "Deactivating..." : "Confirm Deactivate"}
             </Button>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { txt } from "@/lib/utils";
 import { EditIcon, EyeIcon } from "lucide-react";
 import Link from "next/link";
 
-export const columns = [
+export const columns = (onEdit?: (row: any) => void) => [
   {
     key: "parcelId",
     header: "ID",
@@ -267,7 +267,11 @@ export const columns = [
         >
           <EyeIcon className="w-4 h-4" />
         </Link>
-        <button className="px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600">
+        <button
+          type="button"
+          onClick={() => onEdit?.(row)}
+          className="px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        >
           <EditIcon className="w-4 h-4" />
         </button>
       </div>

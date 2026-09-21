@@ -4,6 +4,8 @@ import {
   RescheduledDeliveriesResponse,
   DeliveryOutcomesResponse,
   ReturnToMerchantResponse,
+  AssignParcelToCarrybeeParams,
+  AssignParcelToCarrybeeResponse,
 } from "./processUnprocessType";
 
 interface PaginationParams {
@@ -78,6 +80,23 @@ const processUnprocessApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [TAG_TYPES.Hubs],
     }),
+
+    // Assign One Parcel to Carrybee
+    // POST /carrybee/parcels/:parcelId/assign
+    assignParcelToCarrybee: builder.mutation<
+      AssignParcelToCarrybeeResponse,
+      AssignParcelToCarrybeeParams
+    >({
+      query: ({ parcelId, provider_id, notes }) => ({
+        url: `/carrybee/parcels/${parcelId}/assign`,
+        method: "POST",
+        body: {
+          ...(provider_id ? { provider_id } : {}),
+          ...(notes ? { notes } : {}),
+        },
+      }),
+      invalidatesTags: [TAG_TYPES.Hubs, TAG_TYPES.Parcels],
+    }),
   }),
 });
 
@@ -87,4 +106,6 @@ export const {
   useGetDeliveryOutcomesQuery,
   useBulkReturnToMerchantMutation,
   useBulkRescheduleDeliveryMutation,
+  useAssignParcelToCarrybeeMutation,
 } = processUnprocessApi;
+

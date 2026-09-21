@@ -232,3 +232,23 @@ export type ReturnParcelStatus =
 export interface ReturnParcelInfoWithSpecificStatus extends Omit<ReturnParcelInfo, 'status'> {
   status: ReturnParcelStatus;
 }
+
+// =============== Carrybee Assignment ===============
+
+export interface AssignParcelToCarrybeeParams {
+  parcelId: string;
+  provider_id?: string;
+  notes?: string;
+}
+
+export interface AssignParcelToCarrybeeResponse {
+  success: boolean;
+  data: {
+    parcel_id: string;
+    carrybee_consignment_id: string;
+    delivery_fee: number;
+    cod_fee: number;
+  };
+  message: string;
+  timestamp: string;
+}

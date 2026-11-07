@@ -1,7 +1,6 @@
 "use client";
 
 import { DataTable } from "@/components/reusable/DataTable";
-import { ChevronDown } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { columns } from "./unProcessedCol";
 import UpdateStatusModal from "../../hub-transfer/_components/UpdateStatusModal";
@@ -10,21 +9,63 @@ import {
   useBulkReturnToMerchantMutation,
   useBulkRescheduleDeliveryMutation,
 } from "@/redux/features/process-unprocess/processUnprocessApi";
+import { useGetHubMerchantsQuery } from "@/redux/features/hubs/hubsApi";
+import type { HubMerchant } from "@/redux/features/hubs/hubsTypes";
+import CustomPagination from "@/components/reusable/CustomPagination";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+
+function getMerchantList(data: unknown): HubMerchant[] {
+  if (Array.isArray(data)) return data;
+  if (
+    data &&
+    typeof data === "object" &&
+    Array.isArray((data as { merchants?: HubMerchant[] }).merchants)
+  ) {
+    return (data as { merchants: HubMerchant[] }).merchants;
+  }
+  return [];
+}
+
+const STATUS_OPTIONS = [
+  { value: "", label: "All Statuses" },
+  { value: "RETURNED", label: "Returned" },
+  { value: "PAID_RETURN", label: "Paid Return" },
+  { value: "EXCHANGE", label: "Exchange" },
+  { value: "PARTIAL_DELIVERY", label: "Partial Delivery" },
+];
 
 export default function UnProcessedTable() {
-  const { data: unprocessedData, isLoading: isUnprocessedLoading } =
-    useGetDeliveryOutcomesQuery({ page: 1, limit: 10 });
-  const unprocessedParcels = unprocessedData?.data?.parcels || [];
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [merchantId, setMerchantId] = useState("");
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+  const [openStatusModal, setOpenStatusModal] = useState(false);
 
+  // Queries
+  const { data: unprocessedData, isLoading: isUnprocessedLoading } =
+    useGetDeliveryOutcomesQuery({
+      page,
+      limit,
+      search: search || undefined,
+      status: (status as any) || undefined,
+      merchantId: merchantId || undefined,
+    });
+
+  const { data: merchantsData, isLoading: isMerchantsLoading } =
+    useGetHubMerchantsQuery();
+  const merchants = getMerchantList(merchantsData?.data);
+
+  const unprocessedParcels = unprocessedData?.data?.parcels || [];
+  const pagination = unprocessedData?.data?.pagination;
+
+  // Mutations
   const [bulkReturnToMerchant, { isLoading: isReturning }] =
     useBulkReturnToMerchantMutation();
   const [bulkRescheduleDelivery, { isLoading: isRescheduling }] =
     useBulkRescheduleDeliveryMutation();
-
-  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
-  const [search, setSearch] = useState("");
-  const [openStatusModal, setOpenStatusModal] = useState(false);
 
   const parcelIds = useMemo(
     () => selectedRowIds.map(String),
@@ -32,21 +73,14 @@ export default function UnProcessedTable() {
   );
   const isMutating = isReturning || isRescheduling;
 
-  /* ------------------------------- Filtering -------------------------------- */
-  const filteredData = useMemo(() => {
-    return unprocessedParcels.filter((p: any) =>
-      Object.values(p).join(" ").toLowerCase().includes(search.toLowerCase())
-    );
-  }, [unprocessedParcels, search]);
-
-  /* ------------------------------ Select Rows ------------------------------- */
-  const handleToggleRow = (rowId: string | number, row: any) => {
+  /* ------------------------------ Row Selection ------------------------------- */
+  const handleToggleRow = (rowId: string | number) => {
     setSelectedRowIds((prev) =>
       prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
     );
   };
 
-  const handleToggleAll = (nextSelected: (string | number)[], rows: any[]) => {
+  const handleToggleAll = (nextSelected: (string | number)[]) => {
     setSelectedRowIds(nextSelected);
   };
 
@@ -63,41 +97,94 @@ export default function UnProcessedTable() {
         toast.success(`Returned ${parcelIds.length} parcel(s) to merchant`);
       }
       setSelectedRowIds([]);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       toast.error(
-        type === "reschedule"
-          ? "Failed to reschedule delivery"
-          : "Failed to return to merchant"
+        err?.data?.message ||
+          (type === "reschedule"
+            ? "Failed to reschedule delivery"
+            : "Failed to return to merchant")
       );
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Action Buttons */}
-      <div className="flex justify-between items-center">
-        <div>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <button className="px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50">
-                Select Merchant <ChevronDown className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="font-semibold">
-              {selectedRowIds.length} Parcel Selected
-            </div>
+      {/* Top Filter and Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search Input */}
+          <div className="relative min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search parcel, phone, name..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+
+          {/* Merchant Filter */}
+          <select
+            value={merchantId}
+            onChange={(e) => {
+              setMerchantId(e.target.value);
+              setPage(1);
+            }}
+            disabled={isMerchantsLoading}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option value="">All Merchants</option>
+            {merchants.map((m) => {
+              const id = m.merchant_id || m.id;
+              const name =
+                m.merchant_name ||
+                m.full_name ||
+                m.business_name ||
+                m.user?.full_name ||
+                "Unknown";
+              return (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              );
+            })}
+          </select>
+
+          {/* Status Filter */}
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            {STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          <div className="text-sm font-medium text-gray-600">
+            {selectedRowIds.length} Parcel{selectedRowIds.length === 1 ? "" : "s"} Selected
           </div>
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
+        {/* Action Button */}
+        <div className="flex items-center gap-3">
           <button
             disabled={selectedRowIds.length === 0 || isMutating}
             onClick={() => setOpenStatusModal(true)}
-            className={`px-6 py-2 rounded-lg font-medium ${
+            className={`px-6 py-2 rounded-lg font-medium text-sm transition-colors ${
               selectedRowIds.length === 0 || isMutating
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-orange-500 text-white hover:bg-orange-600"
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-orange-600 text-white hover:bg-orange-700 shadow-sm"
             }`}
           >
             {isMutating ? "Updating..." : "Update Status"}
@@ -109,14 +196,31 @@ export default function UnProcessedTable() {
       <DataTable
         isLoading={isUnprocessedLoading}
         columns={columns}
-        data={filteredData}
+        data={unprocessedParcels}
         selectable={true}
-        getRowId={(row) => row.parcel_id} // Use parcel_id from API or fallback to id
+        getRowId={(row) => String(row.id || row.parcel_id || "")}
         selectedRowIds={selectedRowIds}
         onToggleRow={handleToggleRow}
         onToggleAll={handleToggleAll}
       />
 
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <CustomPagination
+          page={page}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+          totalItems={pagination.total}
+          itemsPerPage={limit}
+          onItemsPerPageChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          showItemsPerPage={true}
+        />
+      )}
+
+      {/* Status Update Modal */}
       <UpdateStatusModal
         open={openStatusModal}
         setOpen={setOpenStatusModal}

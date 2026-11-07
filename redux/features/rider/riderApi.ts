@@ -18,6 +18,9 @@ import {
   GetRidersForTransferParams,
   GetAvailableRidersForTransferParams,
   TransferParcelsRequest,
+  RiderReturnTasksResponse,
+  RiderReturnTaskDetailResponse,
+  CompleteRiderReturnResponse,
 } from "./riderType";
 
 export const ridersApi = baseApi.injectEndpoints({
@@ -162,6 +165,45 @@ export const ridersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [TAG_TYPES.Parcels, TAG_TYPES.Riders],
     }),
+
+    // ─── Rider Return Task Endpoints ──────────────────────────────────────────
+
+    getRiderReturnTasks: builder.query<
+      RiderReturnTasksResponse,
+      { tab?: "pending" | "completed" } | void
+    >({
+      query: (params) => ({
+        url: "/riders/return-tasks",
+        method: "GET",
+        params: {
+          tab: params?.tab ?? "pending",
+        },
+      }),
+      providesTags: [TAG_TYPES.Riders, TAG_TYPES.Parcels],
+    }),
+
+    getRiderReturnTaskDetails: builder.query<
+      RiderReturnTaskDetailResponse,
+      { merchantId: string; tab?: "pending" | "completed" | "all" }
+    >({
+      query: ({ merchantId, tab = "pending" }) => ({
+        url: `/riders/return-tasks/${merchantId}`,
+        method: "GET",
+        params: { tab },
+      }),
+      providesTags: [TAG_TYPES.Riders, TAG_TYPES.Parcels],
+    }),
+
+    completeRiderReturnTask: builder.mutation<
+      CompleteRiderReturnResponse,
+      { merchantId: string }
+    >({
+      query: ({ merchantId }) => ({
+        url: `/riders/return-tasks/${merchantId}/complete`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [TAG_TYPES.Riders, TAG_TYPES.Parcels, TAG_TYPES.Hubs],
+    }),
   }),
 });
 
@@ -177,4 +219,7 @@ export const {
   useGetAvailableRidersForTransferQuery,
   useGetRiderParcelsForTransferQuery,
   useTransferParcelsMutation,
+  useGetRiderReturnTasksQuery,
+  useGetRiderReturnTaskDetailsQuery,
+  useCompleteRiderReturnTaskMutation,
 } = ridersApi;

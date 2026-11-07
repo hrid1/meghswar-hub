@@ -12,10 +12,12 @@ import {
   MessageCircle,
   Mail,
   Pencil,
+  Printer,
 } from "lucide-react";
 import { useGetParcelByIdQuery } from "@/redux/features/parcels/parcelsApi";
 import { txt } from "@/lib/utils";
 import EditParcelModal from "../_components/EditParcelModal";
+import PrintShippingLabelDialog from "@/components/parcels/PrintShippingLabelDialog";
 
 const money = (value?: number | null) =>
   `৳ ${(Number(value) || 0).toLocaleString()}`;
@@ -35,6 +37,7 @@ export default function ParcelDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [openPrintModal, setOpenPrintModal] = useState(false);
   const { data, isLoading, isError, error } = useGetParcelByIdQuery(id, {
     skip: !id,
   });
@@ -115,6 +118,12 @@ export default function ParcelDetailsPage() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setOpenPrintModal(true)}
+            className="flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-white transition hover:bg-orange-700 shadow-sm font-medium text-sm cursor-pointer"
+          >
+            <Printer size={16} /> Print Label
+          </button>
           <button
             onClick={() => setOpenEditModal(true)}
             className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600"
@@ -396,6 +405,13 @@ export default function ParcelDetailsPage() {
         open={openEditModal}
         setOpen={setOpenEditModal}
         parcel={{ ...parcel, id: parcel.parcel_id }}
+      />
+
+      <PrintShippingLabelDialog
+        open={openPrintModal}
+        setOpen={setOpenPrintModal}
+        parcelIds={id ? [id] : []}
+        singleParcelTxId={display(parcel.tracking_number, display(parcel.parcel_id))}
       />
     </div>
   );

@@ -404,3 +404,59 @@ export interface TransferParcelsRequest {
   parcel_ids: string[];
   notes?: string;
 }
+
+// =============== Rider Return Tasks ===============
+
+export type RiderReturnTab = "pending" | "completed" | "all";
+
+export interface RiderReturnParcelItem {
+  id: string; // return parcel UUID
+  return_parcel_id: string;
+  original_parcel_uuid: string;
+  parcel_id: string;
+  customer_name: string;
+  customer_phone: string;
+  status: string; // "ASSIGNED_TO_RIDER" | "RETURN_TO_MERCHANT"
+}
+
+export interface RiderReturnMerchantGroup {
+  id: string;
+  merchant_id: string;
+  name: string;
+  address: string;
+  phone: string;
+  image?: string | null;
+  number_of_parcels: number;
+  parcels: RiderReturnParcelItem[];
+}
+
+export interface RiderReturnTasksResponse {
+  success: boolean;
+  data: RiderReturnMerchantGroup[];
+  count: number;
+  tab: RiderReturnTab;
+  message: string;
+}
+
+export interface RiderReturnTaskDetailResponse {
+  success: boolean;
+  data: RiderReturnMerchantGroup;
+  message: string;
+}
+
+export interface CompletedReturnParcelItem {
+  id: string;
+  parcel_id: string;
+  status: string;
+}
+
+export interface CompleteRiderReturnResponse {
+  success: boolean;
+  data: {
+    merchant_id: string;
+    completed_at: string;
+    parcel_count: number;
+    parcels: CompletedReturnParcelItem[];
+  };
+  message: string;
+}

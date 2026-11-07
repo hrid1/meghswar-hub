@@ -95,7 +95,7 @@ export default function ReturnToMerchantTable() {
         columns={columns}
         data={filteredData}
         selectable={true}
-        getRowId={(row) => row.parcel_id}
+        getRowId={(row) => String(row.id || row.parcel_id || "")}
         selectedRowIds={selectedRowIds}
         onToggleRow={handleToggleRow}
         onToggleAll={handleToggleAll}

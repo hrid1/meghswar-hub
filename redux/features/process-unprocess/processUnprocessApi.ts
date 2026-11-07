@@ -2,62 +2,90 @@ import { baseApi } from "../api/baseApi";
 import { TAG_TYPES } from "../tagList";
 import {
   RescheduledDeliveriesResponse,
+  RescheduledDeliveriesQueryParams,
   DeliveryOutcomesResponse,
+  DeliveryOutcomesQueryParams,
   ReturnToMerchantResponse,
+  ReturnToMerchantQueryParams,
   AssignParcelToCarrybeeParams,
   AssignParcelToCarrybeeResponse,
 } from "./processUnprocessType";
-
-interface PaginationParams {
-  page?: number;
-  limit?: number;
-}
 
 const processUnprocessApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getReturnToMerchant: builder.query<
       ReturnToMerchantResponse,
-      PaginationParams
+      ReturnToMerchantQueryParams | void
     >({
       query: (params = {}) => ({
         url: "/hubs/parcels/return-to-merchant",
         params: {
-          page: params.page ?? 1,
-          limit: params.limit ?? 10,
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 10,
+          ...(params?.search ? { search: params.search } : {}),
+          ...(params?.zone ? { zone: params.zone } : {}),
+          ...(params?.merchantId ? { merchantId: params.merchantId } : {}),
+          ...(params?.customerName ? { customerName: params.customerName } : {}),
+          ...(params?.customerPhone ? { customerPhone: params.customerPhone } : {}),
+          ...(params?.merchantName ? { merchantName: params.merchantName } : {}),
+          ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
+          ...(params?.order ? { order: params.order } : {}),
         },
       }),
-      providesTags: [TAG_TYPES.Hubs],
+      providesTags: [TAG_TYPES.Hubs, TAG_TYPES.Parcels],
     }),
 
     getRescheduledDeliveries: builder.query<
       RescheduledDeliveriesResponse,
-      PaginationParams
+      RescheduledDeliveriesQueryParams | void
     >({
       query: (params = {}) => ({
         url: "/hubs/parcels/rescheduled",
         params: {
-          page: params.page ?? 1,
-          limit: params.limit ?? 10,
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 10,
+          ...(params?.search ? { search: params.search } : {}),
+          ...(params?.zone ? { zone: params.zone } : {}),
+          ...(params?.merchantId ? { merchantId: params.merchantId } : {}),
+          ...(params?.storeId ? { storeId: params.storeId } : {}),
+          ...(params?.customerName ? { customerName: params.customerName } : {}),
+          ...(params?.customerPhone ? { customerPhone: params.customerPhone } : {}),
+          ...(params?.merchantName ? { merchantName: params.merchantName } : {}),
+          ...(params?.area ? { area: params.area } : {}),
+          ...(params?.minAmount !== undefined ? { minAmount: params.minAmount } : {}),
+          ...(params?.maxAmount !== undefined ? { maxAmount: params.maxAmount } : {}),
+          ...(params?.deliveryType ? { deliveryType: params.deliveryType } : {}),
+          ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
+          ...(params?.order ? { order: params.order } : {}),
         },
       }),
-      providesTags: [TAG_TYPES.Hubs],
+      providesTags: [TAG_TYPES.Hubs, TAG_TYPES.Parcels],
     }),
 
     getDeliveryOutcomes: builder.query<
       DeliveryOutcomesResponse,
-      PaginationParams
+      DeliveryOutcomesQueryParams | void
     >({
       query: (params = {}) => ({
         url: "/hubs/parcels/delivery-outcomes",
         params: {
-          page: params.page ?? 1,
-          limit: params.limit ?? 10,
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 10,
+          ...(params?.search ? { search: params.search } : {}),
+          ...(params?.status ? { status: params.status } : {}),
+          ...(params?.zone ? { zone: params.zone } : {}),
+          ...(params?.merchantId ? { merchantId: params.merchantId } : {}),
+          ...(params?.customerName ? { customerName: params.customerName } : {}),
+          ...(params?.customerPhone ? { customerPhone: params.customerPhone } : {}),
+          ...(params?.merchantName ? { merchantName: params.merchantName } : {}),
+          ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
+          ...(params?.order ? { order: params.order } : {}),
         },
       }),
-      providesTags: [TAG_TYPES.Hubs],
+      providesTags: [TAG_TYPES.Hubs, TAG_TYPES.Parcels],
     }),
 
-    // assign parcle
+    // Bulk Return To Merchant
     bulkReturnToMerchant: builder.mutation<any, { parcel_ids: string[] }>({
       query: (body: { parcel_ids: string[] }) => ({
         url: "/hubs/parcels/bulk-return-to-merchant",
@@ -66,10 +94,10 @@ const processUnprocessApi = baseApi.injectEndpoints({
           parcel_ids: body.parcel_ids,
         },
       }),
-      invalidatesTags: [TAG_TYPES.Hubs],
+      invalidatesTags: [TAG_TYPES.Hubs, TAG_TYPES.Parcels],
     }),
 
-    // /hubs/parcels/bulk-reschedule-delivery
+    // Bulk Reschedule Delivery
     bulkRescheduleDelivery: builder.mutation<any, { parcel_ids: string[] }>({
       query: (body: { parcel_ids: string[] }) => ({
         url: "/hubs/parcels/bulk-reschedule-delivery",
@@ -78,7 +106,7 @@ const processUnprocessApi = baseApi.injectEndpoints({
           parcel_ids: body.parcel_ids,
         },
       }),
-      invalidatesTags: [TAG_TYPES.Hubs],
+      invalidatesTags: [TAG_TYPES.Hubs, TAG_TYPES.Parcels],
     }),
 
     // Assign One Parcel to Carrybee
@@ -108,4 +136,3 @@ export const {
   useBulkRescheduleDeliveryMutation,
   useAssignParcelToCarrybeeMutation,
 } = processUnprocessApi;
-

@@ -47,6 +47,7 @@ const menuItems = [
     href: "/dashboard/rider-management",
     children: [
       { label: "Rider List", href: "/dashboard/rider-management/rider-list" },
+      { label: "Return Tasks", href: "/dashboard/rider-management/return-tasks" },
       // { label: "Rider Status", href: "/dashboard/rider-management/rider-status" },
       { label: "Rider Transfer", href: "/dashboard/rider-management/rider-transfer" },
       { label: "Create Rider", href: "/dashboard/rider-management/create-rider" },

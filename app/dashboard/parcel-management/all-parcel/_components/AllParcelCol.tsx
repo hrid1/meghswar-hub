@@ -2,10 +2,13 @@
 
 import { AddressHover, CopyableText } from "@/lib/table.utils";
 import { txt } from "@/lib/utils";
-import { EditIcon, EyeIcon } from "lucide-react";
+import { EditIcon, EyeIcon, Printer } from "lucide-react";
 import Link from "next/link";
 
-export const columns = (onEdit?: (row: any) => void) => [
+export const columns = (
+  onEdit?: (row: any) => void,
+  onPrint?: (row: any) => void
+) => [
   {
     key: "parcelId",
     header: "ID",
@@ -260,19 +263,29 @@ export const columns = (onEdit?: (row: any) => void) => [
     header: "Action",
     width: "10%",
     render: (row: any) => (
-      <div className="text-center font-semibold text-gray-900 flex items-center  flex-wrap gap-1 justify-center">
+      <div className="text-center font-semibold text-gray-900 flex items-center flex-wrap gap-1 justify-center">
         <Link
           href={`/dashboard/parcel-management/all-parcel/${row.id}`}
-          className="px-3 py-1 text-xs bg-green-500 text-white rounded-md hover:bg-green-600"
+          className="px-2.5 py-1 text-xs bg-green-500 text-white rounded-md hover:bg-green-600"
+          title="View Details"
         >
-          <EyeIcon className="w-4 h-4" />
+          <EyeIcon className="w-3.5 h-3.5" />
         </Link>
         <button
           type="button"
           onClick={() => onEdit?.(row)}
-          className="px-3 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          className="px-2.5 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          title="Edit Parcel"
         >
-          <EditIcon className="w-4 h-4" />
+          <EditIcon className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onPrint?.(row)}
+          className="px-2.5 py-1 text-xs bg-orange-500 text-white rounded-md hover:bg-orange-600"
+          title="Print Label"
+        >
+          <Printer className="w-3.5 h-3.5" />
         </button>
       </div>
     ),

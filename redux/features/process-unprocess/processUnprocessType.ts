@@ -1,236 +1,250 @@
-export interface RescheduledDeliveriesResponse {
-    success: boolean;
-    data: {
-      parcels: RescheduledParcel[];
-      pagination: Pagination;
-    };
-    message: string;
-  }
-  
-  export interface DeliveryCoverageArea {
-    id?: string;
-    city?: string;
-    zone?: string;
-    area?: string;
-    division?: string;
-  }
-
-  export interface RescheduledParcel {
-    parcel_id: string;
-    parcel_tx_id: string;
-    tracking_number: string;
-    merchant_order_id?: string | null;
-    status: string; // "DELIVERY_RESCHEDULED"
-    reason?: string | null;
-    destination?: string;
-    zone?: string;
-    customer_name?: string | null;
-    customer_phone?: string | null;
-    customer_secondary_phone?: string | null;
-    customer_address?: string | null;
-    delivery_coverage_area?: DeliveryCoverageArea | null;
-    store?: Store | null;
-    cod_breakdown?: CodBreakdown | null;
-    age?: Age | null;
-    created_at?: string | null;
-    updated_at?: string | null;
-    received_at?: string | null;
-    reschedule_count?: number;
-    cod_amount?: number;
-  }
-  
-  // Reusable interfaces
-  export interface Store {
-    name: string;
-    phone: string;
-  }
-  
-  export interface CodBreakdown {
-    cod_amount: number;
-    cod_collected_amount: number;
-    delivery_charge: number;
-    cod_charge: number;
-    weight_charge: number;
-    return_charge: number;
-    total_charge: number;
-  }
-  
-  export interface Age {
-    total_age: string;
-    created_at?: string | null;
-    updated_at?: string | null;
-    received_at?: string | null;
-  }
-  
-  export interface Pagination {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }
-
-
-
-
-
-  export interface DeliveryOutcomesResponse {
-    success: boolean;
-    data: {
-      parcels: DeliveryOutcomeParcel[];
-      pagination: Pagination;
-      summary: DeliveryOutcomeSummary;
-    };
-    message: string;
-  }
-  
-  export interface DeliveryOutcomeParcel {
-    parcel_id: string;
-    parcel_tx_id: string;
-    tracking_number: string;
-    status: DeliveryOutcomeStatus; // "PARTIAL_DELIVERY" | "EXCHANGE" | "DELIVERED"
-    reason: string;
-    destination: string;
-    zone: string;
-    store: Store;
-    cod_breakdown: CodBreakdown;
-    age: Age;
-  }
-  
-  export type DeliveryOutcomeStatus = 
-    | "PARTIAL_DELIVERY"
-    | "EXCHANGE" 
-    | "DELIVERED"
-    | string; // Allow for other status values
-  
-  export interface DeliveryOutcomeSummary {
-    total_collectable_amount: number;
-    // Note: total_cleared_parcels is not present in this response
-  }
-  
-  // Reusable interfaces
-  export interface Store {
-    name: string;
-    phone: string;
-  }
-  
-  export interface CodBreakdown {
-    cod_amount: number;
-    cod_collected_amount: number;
-    delivery_charge: number;
-    cod_charge: number;
-    weight_charge: number;
-    return_charge: number;
-    total_charge: number;
-  }
-  
-  export interface Age {
-    total_age: string;
-    created_at?: string | null;
-    updated_at?: string | null;
-    received_at?: string | null;
-  }
-  
-  export interface Pagination {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }
-
-  // =============== Return to Merchant ===============
-
-  // Main response type
-export interface ReturnToMerchantResponse {
-  success: boolean;
-  data: {
-    parcels: ReturnParcel[];
-    pagination: Pagination;
-  };
-  message: string;
+// Shared Reverse Entry Types
+export interface ReverseEntryZone {
+  id?: number | string;
+  name?: string;
+  area_id?: number | string;
+  area_name?: string;
+  city_id?: number | string;
+  city_name?: string;
+  pricing_zone?: string | null;
 }
 
-// Individual parcel type
-export interface ReturnParcel {
-  parcel_id: string;
-  parcel_tx_id: string;
-  tracking_number: string;
-  status: string; // You can make this more specific if you have predefined statuses
-  reason: string;
-  destination: string;
-  zone: string;
-  store: Store;
-  cod_breakdown: CodBreakdown;
-  age: Age;
-  return_parcel: ReturnParcelInfo;
+export interface ReverseEntryStore {
+  id?: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+  is_default?: boolean;
+  zone?: ReverseEntryZone;
 }
 
-// Store information
-export interface Store {
-  name: string;
-  phone: string;
+export interface ReverseEntryMerchant {
+  id?: string;
+  name?: string;
+  phone?: string;
+  image?: string | null;
+  stores?: ReverseEntryStore[];
 }
 
-// COD (Cash on Delivery) breakdown
-export interface CodBreakdown {
-  cod_amount: number;
-  cod_collected_amount: number;
-  delivery_charge: number;
-  cod_charge: number;
-  weight_charge: number;
-  return_charge: number;
-  total_charge: number;
+export interface ReverseEntryCharges {
+  cod_amount?: number;
+  delivery_charge?: number;
+  cod_charge?: number;
+  weight_charge?: number;
+  discount?: number;
+  return_charge?: number;
+  total_charge?: number;
+  cod_collected_amount?: number;
 }
 
-// Age/timing information
-export interface Age {
-  total_age: string;
+export interface ReverseEntryAge {
+  display?: string;
+  total_age?: string;
   created_at?: string | null;
   updated_at?: string | null;
   received_at?: string | null;
 }
 
-// Return parcel information
-export interface ReturnParcelInfo {
-  id: string;
-  parcel_tx_id: string;
-  tracking_number: string;
-  status: string;
-}
-
-// Pagination information
-export interface Pagination {
+export interface ReverseEntryPagination {
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }
 
-// If you want more specific status types (optional)
-export type ParcelStatus = 
-  | "RETURN_TO_MERCHANT"
+// Backwards compatibility aliases
+export type Pagination = ReverseEntryPagination;
+export type Store = ReverseEntryStore;
+export type CodBreakdown = ReverseEntryCharges;
+export type Age = ReverseEntryAge;
+export type DeliveryCoverageArea = ReverseEntryZone;
+
+// =============== Unprocessed Delivery Outcomes ===============
+
+export type DeliveryOutcomeStatus =
+  | "RETURNED"
+  | "PAID_RETURN"
+  | "EXCHANGE"
   | "PARTIAL_DELIVERY"
   | "DELIVERED"
-  | "IN_HUB"
-  | "PENDING"
-  | "CANCELLED"
-  | string; // fallback for other statuses
-
-// Updated ReturnParcel with specific status type
-export interface ReturnParcelWithSpecificStatus extends Omit<ReturnParcel, 'status'> {
-  status: ParcelStatus;
-}
-
-// For the return_parcel status
-export type ReturnParcelStatus = 
-  | "IN_HUB"
-  | "OUT_FOR_DELIVERY"
-  | "DELIVERED"
-  | "RETURNED"
   | string;
 
-// Updated ReturnParcelInfo with specific status type
-export interface ReturnParcelInfoWithSpecificStatus extends Omit<ReturnParcelInfo, 'status'> {
-  status: ReturnParcelStatus;
+export interface DeliveryOutcomeCustomer {
+  name?: string;
+  phone?: string;
+}
+
+export interface DeliveryOutcomeParcel {
+  id: string; // parcel UUID
+  merchant_order_id?: string | null;
+  parcel_tx_id?: string;
+  reason?: string | null;
+  destination?: string;
+  zone?: ReverseEntryZone | string;
+  merchant?: ReverseEntryMerchant;
+  status: DeliveryOutcomeStatus;
+  charges?: ReverseEntryCharges;
+  age?: ReverseEntryAge;
+  customer?: DeliveryOutcomeCustomer;
+  attempt?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_updated?: string | null;
+
+  // Fallbacks
+  parcel_id?: string;
+  tracking_number?: string;
+  store?: { name: string; phone: string };
+  cod_breakdown?: ReverseEntryCharges;
+}
+
+export interface DeliveryOutcomeSummary {
+  total_collectable_amount?: number;
+}
+
+export interface DeliveryOutcomesQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: DeliveryOutcomeStatus;
+  zone?: string;
+  merchantId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  merchantName?: string;
+  sortBy?: string;
+  order?: "ASC" | "DESC";
+}
+
+export interface DeliveryOutcomesResponse {
+  success: boolean;
+  data: {
+    parcels: DeliveryOutcomeParcel[];
+    pagination: ReverseEntryPagination;
+    summary?: DeliveryOutcomeSummary;
+  };
+  message: string;
+}
+
+// =============== Rescheduled Deliveries ===============
+
+export interface RescheduledParcel {
+  id: string; // parcel UUID
+  parcel_tx_id?: string;
+  reason?: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  customer_secondary_phone?: string | null;
+  customer_address?: string | null;
+  destination?: string;
+  zone?: ReverseEntryZone | string;
+  merchant_name?: string;
+  merchant_phone?: string;
+  merchant_image?: string | null;
+  merchant?: ReverseEntryMerchant;
+  status: string; // "DELIVERY_RESCHEDULED"
+  charges?: ReverseEntryCharges;
+  attempt?: number;
+  reschedule_count?: number;
+  age?: ReverseEntryAge;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_updated?: string | null;
+
+  // Fallbacks
+  parcel_id?: string;
+  merchant_order_id?: string | null;
+  delivery_coverage_area?: any;
+  store?: { name: string; phone: string };
+  cod_amount?: number;
+  cod_breakdown?: ReverseEntryCharges;
+  tracking_number?: string;
+}
+
+export interface RescheduledDeliveriesQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  zone?: string;
+  merchantId?: string;
+  storeId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  merchantName?: string;
+  area?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  deliveryType?: string;
+  sortBy?: string;
+  order?: "ASC" | "DESC";
+}
+
+export interface RescheduledDeliveriesResponse {
+  success: boolean;
+  data: {
+    parcels: RescheduledParcel[];
+    pagination: ReverseEntryPagination;
+  };
+  message: string;
+}
+
+// =============== Return to Merchant ===============
+
+export interface ReturnParcelInfo {
+  id: string;
+  parcel_tx_id?: string;
+  tracking_number?: string;
+  status?: string;
+}
+
+export interface ReturnParcel {
+  id: string; // original parcel UUID
+  merchant_order_id?: string | null;
+  original_parcel_id?: string;
+  new_parcel_id?: string;
+  destination?: string;
+  zone?: ReverseEntryZone | string;
+  merchant_name?: string;
+  merchant_phone?: string;
+  merchant_image?: string | null;
+  merchant?: ReverseEntryMerchant;
+  status: string; // "RETURN_TO_MERCHANT"
+  charges?: ReverseEntryCharges;
+  age?: ReverseEntryAge;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_updated?: string | null;
+  return_parcel?: ReturnParcelInfo;
+
+  // Fallbacks
+  parcel_id?: string;
+  parcel_tx_id?: string;
+  tracking_number?: string;
+  reason?: string;
+  store?: { name: string; phone: string };
+  cod_breakdown?: ReverseEntryCharges;
+}
+
+export interface ReturnToMerchantQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  zone?: string;
+  merchantId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  merchantName?: string;
+  sortBy?: string;
+  order?: "ASC" | "DESC";
+}
+
+export interface ReturnToMerchantResponse {
+  success: boolean;
+  data: {
+    parcels: ReturnParcel[];
+    pagination: ReverseEntryPagination;
+  };
+  message: string;
 }
 
 // =============== Carrybee Assignment ===============
@@ -251,4 +265,4 @@ export interface AssignParcelToCarrybeeResponse {
   };
   message: string;
   timestamp: string;
-}
+}

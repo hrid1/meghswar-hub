@@ -1,7 +1,6 @@
 "use client";
 
 import { DataTable } from "@/components/reusable/DataTable";
-import { ChevronDown } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { columns } from "./returnToMerchantCol";
 import { useGetReturnToMerchantQuery } from "@/redux/features/process-unprocess/processUnprocessApi";
@@ -12,59 +11,71 @@ import { SearchableSelect } from "@/components/reusable/SearchableSelect";
 import { useGetRidersQuery } from "@/redux/features/rider/riderApi";
 import { useAssignRiderToParcelsMutation } from "@/redux/features/parcels/parcelsApi";
 import { getAssignRiderErrorMessage } from "@/redux/features/parcels/parcelTypes";
+import { useGetHubMerchantsQuery } from "@/redux/features/hubs/hubsApi";
+import type { HubMerchant } from "@/redux/features/hubs/hubsTypes";
+import CustomPagination from "@/components/reusable/CustomPagination";
 import { toast } from "sonner";
+import { Search, Printer } from "lucide-react";
+import PrintShippingLabelDialog from "@/components/parcels/PrintShippingLabelDialog";
+
+function getMerchantList(data: unknown): HubMerchant[] {
+  if (Array.isArray(data)) return data;
+  if (
+    data &&
+    typeof data === "object" &&
+    Array.isArray((data as { merchants?: HubMerchant[] }).merchants)
+  ) {
+    return (data as { merchants: HubMerchant[] }).merchants;
+  }
+  return [];
+}
 
 export default function ReturnToMerchantTable() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
+  const [merchantId, setMerchantId] = useState("");
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [openPrintModal, setOpenPrintModal] = useState(false);
+  const [selectedRiderId, setSelectedRiderId] = useState("");
+
   const {
     data: returnToMerchantData,
     isLoading: isReturnToMerchantLoading,
     refetch,
-  } = useGetReturnToMerchantQuery({ page: 1, limit: 10 });
+  } = useGetReturnToMerchantQuery({
+    page,
+    limit,
+    search: search || undefined,
+    merchantId: merchantId || undefined,
+  });
+
+  const { data: merchantsData, isLoading: isMerchantsLoading } =
+    useGetHubMerchantsQuery();
+  const merchants = getMerchantList(merchantsData?.data);
+
   const { data: ridersData } = useGetRidersQuery({
     isActive: true,
     page: 1,
     limit: 100,
   });
+
   const [assignRiderToParcels, { isLoading: isAssigning }] =
     useAssignRiderToParcelsMutation();
 
   const returnToMerchantParcels: ReturnParcel[] =
     returnToMerchantData?.data?.parcels ?? [];
+  const pagination = returnToMerchantData?.data?.pagination;
   const allRiders = ridersData?.data?.riders ?? [];
 
-  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedRiderId, setSelectedRiderId] = useState("");
-  const [search, setSearch] = useState("");
-
-  const filteredData = useMemo(() => {
-    if (!returnToMerchantParcels.length) return [];
-    const q = search.toLowerCase();
-    return returnToMerchantParcels.filter((p: ReturnParcel) =>
-      [
-        p.parcel_tx_id,
-        p.tracking_number,
-        p.reason,
-        p.destination,
-        p.zone,
-        p.store?.name,
-        p.store?.phone,
-        p.return_parcel?.parcel_tx_id,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
-    );
-  }, [returnToMerchantParcels, search]);
-
-  const handleToggleRow = (rowId: string | number, _row: ReturnParcel) => {
+  const handleToggleRow = (rowId: string | number) => {
     setSelectedRowIds((prev) =>
       prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]
     );
   };
 
-  const handleToggleAll = (nextSelected: (string | number)[], _rows: ReturnParcel[]) => {
+  const handleToggleAll = (nextSelected: (string | number)[]) => {
     setSelectedRowIds(nextSelected);
   };
 
@@ -99,62 +110,121 @@ export default function ReturnToMerchantTable() {
     }
   };
 
-  if (isReturnToMerchantLoading) {
-    return (
-      <div className="flex justify-center p-8 text-gray-500">
-        Loading return-to-merchant parcels...
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button
-              type="button"
-              className="px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 hover:bg-gray-50"
-            >
-              Select Merchant <ChevronDown className="w-4 h-4" />
-            </button>
+      {/* Filters & Actions Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search */}
+          <div className="relative min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search parcels..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
           </div>
-          <div className="font-semibold">
-            {selectedRowIds.length} Parcel Selected
+
+          {/* Merchant Filter */}
+          <select
+            value={merchantId}
+            onChange={(e) => {
+              setMerchantId(e.target.value);
+              setPage(1);
+            }}
+            disabled={isMerchantsLoading}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option value="">All Merchants</option>
+            {merchants.map((m) => {
+              const id = m.merchant_id || m.id;
+              const name =
+                m.merchant_name ||
+                m.full_name ||
+                m.business_name ||
+                m.user?.full_name ||
+                "Unknown";
+              return (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              );
+            })}
+          </select>
+
+          <div className="text-sm font-medium text-gray-600">
+            {selectedRowIds.length} Parcel{selectedRowIds.length === 1 ? "" : "s"} Selected
           </div>
         </div>
 
-        <Button
-          disabled={selectedRowIds.length === 0}
-          className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
-          onClick={() => {
-            setOpenModal(true);
-          }}
-        >
-          Assign Rider{" "}
-          {selectedRowIds.length > 0 && `(${selectedRowIds.length})`}
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedRowIds.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpenPrintModal(true)}
+              className="border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-sm"
+            >
+              <Printer className="w-4 h-4" />
+              Print Labels ({selectedRowIds.length})
+            </Button>
+          )}
+
+          <Button
+            disabled={selectedRowIds.length === 0}
+            className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
+            onClick={() => {
+              setOpenModal(true);
+            }}
+          >
+            Assign Rider {selectedRowIds.length > 0 && `(${selectedRowIds.length})`}
+          </Button>
+        </div>
       </div>
 
+      {/* DataTable */}
       <DataTable
+        isLoading={isReturnToMerchantLoading}
         columns={columns}
-        data={filteredData}
+        data={returnToMerchantParcels}
         selectable
-        getRowId={(row) => row.parcel_id}
+        getRowId={(row) => String(row.id || row.return_parcel?.id || row.parcel_id || "")}
         selectedRowIds={selectedRowIds}
         onToggleRow={handleToggleRow}
         onToggleAll={handleToggleAll}
         emptyMessage="No return-to-merchant parcels found"
       />
 
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <CustomPagination
+          page={page}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+          totalItems={pagination.total}
+          itemsPerPage={limit}
+          onItemsPerPageChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          showItemsPerPage={true}
+        />
+      )}
+
+      {/* Assign Rider Dialog */}
       <CustomDialog open={openModal} setOpen={setOpenModal}>
         <form className="flex flex-col gap-4" onSubmit={handleAssignRider}>
-          <h2 className="text-xl font-semibold mb-2">Assign Rider</h2>
+          <h2 className="text-xl font-semibold mb-2">Assign Rider to Return Parcels</h2>
 
           <div className="bg-orange-50 p-3 rounded-lg mb-2">
             <p className="text-sm text-gray-700">
               Assigning {selectedRowIds.length} parcel
-              {selectedRowIds.length > 1 ? "s" : ""} to rider
+              {selectedRowIds.length > 1 ? "s" : ""} to rider for return to merchant
             </p>
           </div>
 
@@ -165,7 +235,7 @@ export default function ReturnToMerchantTable() {
             <SearchableSelect
               options={allRiders.map((rider: any) => ({
                 value: rider.id,
-                label: rider.user?.full_name,
+                label: rider.user?.full_name || rider.full_name || "Rider",
               }))}
               value={selectedRiderId}
               onChange={setSelectedRiderId}
@@ -200,6 +270,12 @@ export default function ReturnToMerchantTable() {
           </div>
         </form>
       </CustomDialog>
+
+      <PrintShippingLabelDialog
+        open={openPrintModal}
+        setOpen={setOpenPrintModal}
+        parcelIds={selectedRowIds.map(String)}
+      />
     </div>
   );
 }

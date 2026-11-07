@@ -1,4 +1,4 @@
-// rescheduledCol.tsx
+import React from "react";
 import { RescheduledParcel } from "@/redux/features/process-unprocess/processUnprocessType";
 import { CopyValueButton, TextHover } from "@/lib/table.utils";
 
@@ -6,44 +6,49 @@ export const columns = [
   {
     key: "parcelId",
     header: "Parcel ID",
-    width: "12%",
-    render: (row: RescheduledParcel) => (
-      <div className="font-medium">
-        <p className="flex items-center gap-1 whitespace-nowrap">
-          PID: {row.parcel_tx_id}
-          <CopyValueButton value={row.parcel_tx_id} label="Parcel ID" />
-        </p>
-        <p className="text-xs text-gray-500 flex items-center gap-1 whitespace-nowrap">
-          MID: {row.merchant_order_id || "—"}
-          <CopyValueButton
-            value={row.merchant_order_id ?? undefined}
-            label="Merchant ID"
-          />
-        </p>
-      </div>
-    ),
+    width: "14%",
+    render: (row: RescheduledParcel) => {
+      const pid = row.parcel_tx_id || row.parcel_id || row.id;
+      const mid = row.merchant_order_id;
+      return (
+        <div className="font-medium">
+          <p className="flex items-center gap-1 whitespace-nowrap">
+            <span>PID: {pid}</span>
+            <CopyValueButton value={pid} label="Parcel ID" />
+          </p>
+          {mid && (
+            <p className="text-xs text-gray-500 flex items-center gap-1 whitespace-nowrap">
+              <span>MID: {mid}</span>
+              <CopyValueButton value={mid} label="Merchant Order ID" />
+            </p>
+          )}
+        </div>
+      );
+    },
   },
   {
     key: "reason",
     header: "Reason",
-    width: "15%",
+    width: "14%",
     render: (row: RescheduledParcel) => (
-      <TextHover text={row.reason || "N/A"} maxLength={40} />
+      <TextHover text={row.reason || "N/A"} maxLength={35} />
     ),
   },
   {
     key: "destination",
     header: "Destination",
-    width: "15%",
+    width: "16%",
     render: (row: RescheduledParcel) => (
-      <div>
-        <p>{row.customer_name}</p>
-        <p>{row.customer_phone}</p>
-        <p>{row.customer_secondary_phone}</p>
-        
+      <div className="text-sm">
+        {row.customer_name && (
+          <p className="font-semibold text-gray-900">{row.customer_name}</p>
+        )}
+        {row.customer_phone && (
+          <p className="text-xs text-gray-500">{row.customer_phone}</p>
+        )}
         <TextHover
-          text={row.customer_address ?? undefined}
-          maxLength={40}
+          text={row.destination || row.customer_address || "N/A"}
+          maxLength={35}
           className="text-gray-600"
         />
       </div>
@@ -54,105 +59,100 @@ export const columns = [
     header: "Zone",
     width: "12%",
     render: (row: RescheduledParcel) => {
-      const area = row.delivery_coverage_area;
-      if (!area) return <span className="text-xs text-gray-400">N/A</span>;
-
-      return (
-        <>
-          <span className="font-semibold">{area.city || "N/A"}</span>
-          <br />
-          <span>{area.zone || "N/A"}</span> {">"}{" "}
-          <span className="text-xs text-gray-500">{area.area || "N/A"}</span>
-        </>
-      );
+      if (typeof row.zone === "object" && row.zone !== null) {
+        return (
+          <div className="text-sm">
+            <span className="font-semibold">{row.zone.name || "N/A"}</span>
+            {row.zone.area_name && (
+              <p className="text-xs text-gray-500">{row.zone.area_name}</p>
+            )}
+          </div>
+        );
+      }
+      if (row.delivery_coverage_area) {
+        const area = row.delivery_coverage_area;
+        return (
+          <div className="text-sm">
+            <span className="font-semibold">{area.city || area.zone || "N/A"}</span>
+            {area.area && <p className="text-xs text-gray-500">{area.area}</p>}
+          </div>
+        );
+      }
+      return <span className="font-semibold text-sm">{row.zone || "N/A"}</span>;
     },
   },
   {
     key: "merchant",
     header: "Merchant",
     width: "15%",
-    render: (row: RescheduledParcel) => (
-      <div>
-        <div className="font-semibold">{row.store?.name || "N/A"}</div>
-        <div className="text-xs text-gray-500">{row.store?.phone || "N/A"}</div>
-      </div>
-    ),
+    render: (row: RescheduledParcel) => {
+      const merchantName =
+        row.merchant_name || row.merchant?.name || row.store?.name || "N/A";
+      const merchantPhone =
+        row.merchant_phone || row.merchant?.phone || row.store?.phone || "";
+      return (
+        <div>
+          <div className="font-semibold text-gray-900 text-sm">{merchantName}</div>
+          {merchantPhone && (
+            <div className="text-xs text-gray-500">{merchantPhone}</div>
+          )}
+        </div>
+      );
+    },
   },
   {
     key: "status",
     header: "Status",
     width: "12%",
     render: (row: RescheduledParcel) => {
-      const getStatusColor = (status: string) => {
-        const statusLower = status?.toLowerCase() || "";
-        if (statusLower.includes("rescheduled"))
-          return "bg-blue-100 text-blue-600";
-        if (statusLower.includes("partial"))
-          return "bg-yellow-100 text-yellow-600";
-        if (statusLower.includes("delivered"))
-          return "bg-green-100 text-green-600";
-        return "bg-gray-100 text-gray-600";
-      };
-
       return (
-        <span
-          className={`px-3 py-1 text-xs rounded-full ${getStatusColor(row.status)}`}
-        >
-          {row.status?.replace(/_/g, " ") || "N/A"}
+        <span className="px-2.5 py-1 text-xs font-medium rounded-full inline-block bg-blue-100 text-blue-700 border border-blue-200">
+          {row.status?.replace(/_/g, " ") || "RESCHEDULED"}
         </span>
       );
     },
   },
   {
-    key: "codAmount",
-    header: "COD Amount",
-    width: "15%",
-    render: (row: RescheduledParcel) => (
-      <div>
-        <div className="text-green-600 font-bold text-lg">
-          ৳{(row.cod_amount || 0).toLocaleString()}
+    key: "charges",
+    header: "COD & Charges",
+    width: "14%",
+    render: (row: RescheduledParcel) => {
+      const charges = row.charges || row.cod_breakdown;
+      const cod = charges?.cod_amount ?? row.cod_amount ?? 0;
+      return (
+        <div>
+          <div className="text-green-600 font-bold text-base">
+            ৳{cod.toLocaleString()}
+          </div>
+          <div className="text-xs text-gray-600 mt-0.5 space-y-0.5">
+            <div>Delivery: ৳{charges?.delivery_charge || 0}</div>
+            <div>COD: ৳{charges?.cod_charge || 0}</div>
+            <div>Total: ৳{charges?.total_charge || 0}</div>
+          </div>
         </div>
-        <div className="text-xs text-gray-600 mt-1">
-          <div>Delivery Charge: ৳{row.cod_breakdown?.delivery_charge || 0}</div>
-          <div>COD Charge: ৳{row.cod_breakdown?.cod_charge || 0}</div>
-          <div>Weight Charge: ৳{row.cod_breakdown?.weight_charge || 0}</div>
-        </div>
-      </div>
-    ),
+      );
+    },
   },
   {
     key: "rescheduleCount",
-    header: "Reschedule Count",
-    headerClassName: "w-15",
+    header: "Reschedules",
+    width: "8%",
     render: (row: RescheduledParcel) => (
-      <div className="font-semibold text-center bg-orange-100 w-2/3 mx-auto rounded-md py-0.5">
-        {row.reschedule_count || 0}
+      <div className="font-semibold text-center bg-orange-100 text-orange-800 rounded-md py-0.5 px-2 text-xs w-fit mx-auto">
+        {row.reschedule_count ?? row.attempt ?? 1}
       </div>
     ),
   },
   {
     key: "age",
     header: "Age",
-    width: "12%",
-    render: (row: RescheduledParcel) => {
-      const createdAt = row.age?.created_at || row.created_at;
-      const updatedAt = row.age?.updated_at || row.updated_at;
-      const receivedAt = row.age?.received_at || row.received_at;
-
-      const fmt = (value?: string | null) => {
-        if (!value) return "N/A";
-        const date = new Date(value);
-        return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleDateString();
-      };
-
-      return (
-        <div>
-          <div>{row.age?.total_age || "N/A"}</div>
-          <div className="text-xs text-gray-500">Created: {fmt(createdAt)}</div>
-          <div className="text-xs text-gray-500">Updated: {fmt(updatedAt)}</div>
-          <div className="text-xs text-gray-500">Received: {fmt(receivedAt)}</div>
-        </div>
-      );
-    },
+    width: "10%",
+    render: (row: RescheduledParcel) => (
+      <div className="text-sm">
+        <span className="font-medium text-gray-700">
+          {row.age?.display || row.age?.total_age || "N/A"}
+        </span>
+      </div>
+    ),
   },
 ];

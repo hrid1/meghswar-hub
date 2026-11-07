@@ -10,6 +10,8 @@ import { useGetAllParcelsQuery } from "@/redux/features/parcels/parcelsApi";
 import { PARCEL_STATUS_OPTIONS } from "@/redux/features/parcels/parcelTypes";
 import { columns } from "./_components/AllParcelCol";
 import EditParcelModal from "./_components/EditParcelModal";
+import PrintShippingLabelDialog from "@/components/parcels/PrintShippingLabelDialog";
+import { Printer } from "lucide-react";
 import type { HubMerchant } from "@/redux/features/hubs/hubsTypes";
 
 const filterSelectClassName =
@@ -62,6 +64,11 @@ export default function TestTablePage() {
   const pagination = parcels?.data?.pagination;
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedParcel, setSelectedParcel] = useState<any | null>(null);
+
+  // Label Printing State
+  const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [printParcelIds, setPrintParcelIds] = useState<string[]>([]);
+  const [singlePrintTxId, setSinglePrintTxId] = useState<string | undefined>();
 
   // =============================
   // 3️⃣ Row Selection State
@@ -164,13 +171,35 @@ export default function TestTablePage() {
         <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
           Export
         </button>
+
+        {selectedRowIds.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setPrintParcelIds(selectedRowIds.map(String));
+              setSinglePrintTxId(undefined);
+              setPrintModalOpen(true);
+            }}
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-1.5 font-medium text-sm transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+          >
+            <Printer className="w-4 h-4" />
+            Print Labels ({selectedRowIds.length})
+          </button>
+        )}
       </div>
 
       <DataTable
-        columns={columns((row) => {
-          setSelectedParcel(row);
-          setOpenEditModal(true);
-        })}
+        columns={columns(
+          (row) => {
+            setSelectedParcel(row);
+            setOpenEditModal(true);
+          },
+          (row) => {
+            setPrintParcelIds([row.id]);
+            setSinglePrintTxId(row.parcel_tx_id || row.id);
+            setPrintModalOpen(true);
+          }
+        )}
         data={parcelsData}
         selectable={true}
         getRowId={(row) => row.id}
@@ -209,6 +238,13 @@ export default function TestTablePage() {
         open={openEditModal}
         setOpen={setOpenEditModal}
         parcel={selectedParcel}
+      />
+
+      <PrintShippingLabelDialog
+        open={printModalOpen}
+        setOpen={setPrintModalOpen}
+        parcelIds={printParcelIds}
+        singleParcelTxId={singlePrintTxId}
       />
     </div>
   );

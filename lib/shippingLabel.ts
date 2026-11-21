@@ -14,7 +14,7 @@ function getAuthToken(explicitToken?: string): string {
   return "";
 }
 
-function triggerBlobDownload(blob: Blob, defaultFilename: string, contentDisposition?: string | null) {
+export function triggerBlobDownload(blob: Blob, defaultFilename: string, contentDisposition?: string | null) {
   let filename = defaultFilename;
   if (contentDisposition) {
     const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);

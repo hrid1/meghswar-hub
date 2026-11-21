@@ -782,3 +782,134 @@ export interface UpdateParcelResponse {
   };
   parcel?: Record<string, unknown>;
 }
+
+// ======================= Shipping Label Types =======================
+
+/** Supported label page layouts */
+export type LabelLayout = "THERMAL" | "A4";
+
+/**
+ * Params for GET /parcels/:parcelId/label?layout=THERMAL
+ * Returns a raw PDF blob.
+ */
+export interface SingleLabelParams {
+  /** Parcel UUID */
+  parcelId: string;
+  /** Page layout – THERMAL (100×150 mm) or A4 (half-page). Default: THERMAL */
+  layout?: LabelLayout;
+}
+
+/**
+ * Params for POST /parcels/labels
+ * Returns a raw multi-page PDF blob.
+ */
+export interface BulkLabelParams {
+  /** 1–100 parcel UUIDs */
+  parcel_ids: string[];
+  /** Page layout – A4 or THERMAL. Default: A4 */
+  layout?: LabelLayout;
+}
+
+/**
+ * Both label endpoints respond with a raw PDF blob wrapped in this shape
+ * after RTK Query processes the `responseHandler: "blob"` option.
+ * The `filename` field is extracted from the Content-Disposition header
+ * by the endpoint's `transformResponse`.
+ */
+export interface ShippingLabelBlobResponse {
+  blob: Blob;
+  /** Filename from Content-Disposition header, e.g. "meghswar-label-TRK-123.pdf" */
+  filename: string;
+}
+
+// ======================= Hub Manager Store Types =======================
+
+export interface HubManagerStoreHub {
+  id: string;
+  hub_code: string;
+  branch_name: string;
+  area: string | null;
+  address: string | null;
+  manager_name: string | null;
+  manager_phone: string | null;
+  manager_user_id: string | null;
+  status: string | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface HubManagerStoreMerchantUser {
+  id: string;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  role: string;
+  is_active: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface HubManagerStoreMerchant {
+  id: string;
+  user_id: string;
+  thana: string | null;
+  district: string | null;
+  full_address: string | null;
+  secondary_number: string | null;
+  status: string;
+  is_advance_payment_disabled: boolean;
+  approved_at: string | null;
+  approved_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  user: HubManagerStoreMerchantUser;
+}
+
+export interface HubManagerStorePerformance {
+  total_parcels_handled: number;
+  successfully_delivered: number;
+  total_returns: number;
+}
+
+export interface HubManagerStore {
+  id: string;
+  store_code: string;
+  merchant_id: string;
+  business_name: string;
+  business_address: string;
+  phone_number: string;
+  email: string | null;
+  facebook_page: string | null;
+  hub_id: string;
+  is_default: boolean;
+  status: string;
+  is_active: boolean;
+  district: string | null;
+  thana: string | null;
+  area: string | null;
+  carrybee_store_id: string | null;
+  carrybee_city_id: string | null;
+  carrybee_zone_id: string | null;
+  carrybee_area_id: string | null;
+  is_carrybee_synced: boolean;
+  carrybee_synced_at: string | null;
+  auto_assign_to_carrybee: boolean;
+  created_at: string;
+  updated_at: string;
+  performance: HubManagerStorePerformance;
+  hub: HubManagerStoreHub;
+  merchant: HubManagerStoreMerchant;
+}
+
+/** Response for GET /stores/hub-manager/my-stores */
+export interface HubManagerStoresResponse {
+  stores: HubManagerStore[];
+  message: string;
+}
+
+/** Query params for GET /stores/hub-manager/my-stores */
+export interface HubManagerStoresParams {
+  /** Filter by status, e.g. "APPROVED" */
+  status?: string;
+}

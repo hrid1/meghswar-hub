@@ -279,14 +279,14 @@ export const columns = (
         >
           <EditIcon className="w-3.5 h-3.5" />
         </button>
-        <button
+        {/* <button
           type="button"
           onClick={() => onPrint?.(row)}
           className="px-2.5 py-1 text-xs bg-orange-500 text-white rounded-md hover:bg-orange-600"
           title="Print Label"
         >
           <Printer className="w-3.5 h-3.5" />
-        </button>
+        </button> */}
       </div>
     ),
   },

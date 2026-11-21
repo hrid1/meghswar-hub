@@ -3,11 +3,15 @@
 
 import React, { useState, useMemo } from "react";
 import { Search, Printer, ChevronDown, RefreshCw, Plus } from "lucide-react";
+import PrintShippingLabelDialog from "@/components/parcels/PrintShippingLabelDialog";
 import { DataTable } from "@/components/reusable/DataTable";
 import {
   useGetReceivedParcelsQuery,
   useReceiveParcelsMutation,
+  useGetHubManagerStoresQuery,
+  useDownloadShippingLabelMutation,
 } from "@/redux/features/parcels/parcelsApi";
+import { triggerBlobDownload } from "@/lib/shippingLabel";
 import ParcelSummary from "./_components/ParcelSummary";
 import { getParcelColumns } from "./_components/ParcelColumns";
 
@@ -92,6 +96,11 @@ export default function ParcelTable() {
   } = useGetReceivedParcelsQuery(null);
   const [receiveParcels, { isLoading: isReceiving }] =
     useReceiveParcelsMutation();
+  const [downloadShippingLabel] = useDownloadShippingLabelMutation();
+
+  const { data: storesData } = useGetHubManagerStoresQuery({ status: "APPROVED" });
+  const stores = storesData?.stores ?? [];
+  // console.log("Store", stores)
 
   console.log("receivedParcels", receivedParcels);
   const { updateCharges, isUpdating } = useUpdateParcelCharges();
@@ -102,6 +111,8 @@ export default function ParcelTable() {
   const [weightOverrides, setWeightOverrides] = useState<Record<string, number>>(
     {},
   );
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [processingParcelId, setProcessingParcelId] = useState<string | null>(null);
 
   // Extract parcels data from API response
   const parcelsData = receivedParcels?.data?.parcels || [];
@@ -165,6 +176,16 @@ export default function ParcelTable() {
       Object.values(p).join(" ").toLowerCase().includes(search.toLowerCase()),
     );
   }, [transformedParcels, search]);
+
+  /** UUIDs (originalId) of selected rows — used by the label print API */
+  const selectedOriginalIds = useMemo(
+    () =>
+      filteredData
+        .filter((row) => selectedRowIds.includes(row.id))
+        .map((row) => row.originalId)
+        .filter(Boolean) as string[],
+    [selectedRowIds, filteredData],
+  );
 
   /* ------------------------------ Select Rows ------------------------------- */
   const handleToggleRow = (rowId: string | number) => {
@@ -254,18 +275,38 @@ export default function ParcelTable() {
   };
 
   const handlePrintParcels = async (originalId: string) => {
+    setProcessingParcelId(originalId);
     try {
+      // 1. Receive the parcel with any modified weight
       const payload = buildReceivePayload([originalId]);
       const response = await receiveParcels(payload).unwrap();
       toast.success(response.message || "Parcel received successfully");
       clearWeightOverrides([originalId]);
       await refetch();
+
+      // 2. Automatically download the shipping label PDF for this parcel
+      try {
+        const labelResult = await downloadShippingLabel({
+          parcelId: originalId,
+          layout: "THERMAL",
+        }).unwrap();
+        triggerBlobDownload(labelResult.blob, labelResult.filename);
+        toast.success("Shipping label downloaded");
+      } catch (labelError: any) {
+        console.error("Failed to download shipping label:", labelError);
+        toast.error(
+          labelError?.message ||
+            "Parcel received, but failed to download shipping label.",
+        );
+      }
     } catch (error) {
       console.error("Failed to receive parcel:", error);
       toast.error(
         (error as { data?: { message?: string } })?.data?.message ||
           "Failed to receive parcel. Please try again.",
       );
+    } finally {
+      setProcessingParcelId(null);
     }
   };
 
@@ -293,13 +334,8 @@ export default function ParcelTable() {
     handleUpdateCharges,
     handlePrintParcels,
     handleUpdateWeight,
+    processingParcelId,
   );
-
-  const stores = [
-    { id: 1, business_name: "Store 1", phone_number: "1234567890" },
-    { id: 2, business_name: "Store 2", phone_number: "1234567890" },
-    { id: 3, business_name: "Store 3", phone_number: "1234567890" },
-  ];
 
   return (
     <div className="space-y-6 px-4 pt-4">
@@ -345,7 +381,7 @@ export default function ParcelTable() {
           <div className="relative">
             <select className="border p-2 rounded-md  ">
               <option value="">All Merchants</option>
-              {stores.map((store: any) => (
+              {stores.map((store) => (
                 <option key={store.id} value={store.id}>
                   {store.business_name}
                 </option>
@@ -374,11 +410,18 @@ export default function ParcelTable() {
           </button>
 
           <button
-            onClick={() => alert(`Bulk printing ${selectedRowIds.length} parcels`)}
-            className="button-primary flex items-center gap-2"
+            disabled={selectedOriginalIds.length === 0}
+            onClick={() => setPrintDialogOpen(true)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              selectedOriginalIds.length === 0
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "button-primary"
+            }`}
           >
             <Printer className="w-5 h-5" />
-            Print / Bulk Print
+            {selectedOriginalIds.length > 0
+              ? `Print Labels (${selectedOriginalIds.length})`
+              : "Print Labels"}
           </button>
         </div>
       </div>
@@ -399,6 +442,13 @@ export default function ParcelTable() {
       <div className="text-sm text-gray-500">
         Showing {filteredData.length} of {transformedParcels.length} parcels
       </div>
+
+      {/* Shipping Label Print Dialog */}
+      <PrintShippingLabelDialog
+        open={printDialogOpen}
+        setOpen={setPrintDialogOpen}
+        parcelIds={selectedOriginalIds}
+      />
     </div>
   );
 }

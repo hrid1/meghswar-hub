@@ -19,6 +19,7 @@ export const getParcelColumns = (
     onUpdateCharges?: UpdateChargesHandler,
     onPrintParcels?: (originalId: string) => void,
     onUpdateWeight?: UpdateWeightHandler,
+    processingParcelId?: string | null,
 ): any => [
   {
     key: "id",
@@ -134,14 +135,27 @@ export const getParcelColumns = (
     header: "Action",
     width: "7%",
 
-    render: (row: any) => (
-      <button 
-        onClick={() => onPrintParcels?.(row.originalId)}
-        className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-3 py-1.5 rounded-md transition-colors"
-      >
-        <Printer className="w-3 h-3 inline-block mr-1" />
-        <span className="text-sm font-medium">Print</span>
-      </button>
-    ),
+    render: (row: any) => {
+      const isProcessing = processingParcelId === row.originalId;
+      return (
+        <button 
+          disabled={isProcessing}
+          onClick={() => onPrintParcels?.(row.originalId)}
+          className="bg-orange-50 hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed text-orange-600 px-3 py-1.5 rounded-md transition-colors flex items-center justify-center min-w-[70px]"
+        >
+          {isProcessing ? (
+            <>
+              <span className="w-3 h-3 border-2 border-orange-600 border-t-transparent rounded-full animate-spin inline-block mr-1" />
+              <span className="text-sm font-medium">Processing...</span>
+            </>
+          ) : (
+            <>
+              <Printer className="w-3 h-3 inline-block mr-1" />
+              <span className="text-sm font-medium">Print</span>
+            </>
+          )}
+        </button>
+      );
+    },
   },
 ];

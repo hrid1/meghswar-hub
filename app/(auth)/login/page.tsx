@@ -32,16 +32,18 @@ export default function LoginPage() {
   const dispatch = useAppDispatch()
   const accessToken = useAppSelector((state) => state.auth.access_token)
   const [login, { isLoading }] = useLoginMutation()
-  const [identifier, setIdentifier] = React.useState("01321148144")
-  const [password, setPassword] = React.useState("Adabor@123")
+  const [identifier, setIdentifier] = React.useState("01881041306")
+  const [password, setPassword] = React.useState("12345678")
   // const [identifier, setIdentifier] = React.useState("manager@hub.com")
   // const [password, setPassword] = React.useState("Manager123!")
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [showPassword, setShowPassword] = React.useState(false)
 
   React.useEffect(() => {
-    if (accessToken) router.replace("/dashboard")
-  }, [accessToken, router])
+    if (accessToken) {
+      window.location.href = "/dashboard";
+    }
+  }, [accessToken])
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
@@ -55,7 +57,7 @@ export default function LoginPage() {
           user: data.data.user,
         })
       )
-      router.push("/dashboard")
+      window.location.href = "/dashboard";
     } catch (error) {
       setErrorMessage(loginErrorMessage(error))
     }

@@ -14,6 +14,7 @@ import { RiderTransferParcel } from "@/redux/features/rider/riderType";
 import { Repeat2, Search } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { AddressHover } from "@/lib/table.utils";
 
 interface RiderAssignParcelTableProps {
   riderId: string;
@@ -38,7 +39,9 @@ const parcelColumns = (onTransfer: (row: RiderTransferParcel) => void) => [
     render: (row: RiderTransferParcel) => (
       <div>
         <p className="font-medium">{row.customer_info?.name}</p>
+        <AddressHover maxLength={40} address={row.customer_info?.full_address} />
         <p className="text-xs text-gray-500">{row.customer_info?.phone}</p>
+        {/* <p className="text-xs text-gray-500">{row.customer_info?.full_address}</p> */}
       </div>
     ),
   },

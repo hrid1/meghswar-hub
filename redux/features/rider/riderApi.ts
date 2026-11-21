@@ -7,10 +7,6 @@ import {
   UpdateRiderRequest,
   RiderPerformanceResponse,
   RiderPerformanceParams,
-  PendingHubApprovalsResponse,
-  PendingHubApprovalsParams,
-  HubApprovalRequest,
-  HubApprovalResponse,
   RidersForTransferResponse,
   AvailableRidersForTransferResponse,
   RiderParcelsForTransferResponse,
@@ -81,29 +77,6 @@ export const ridersApi = baseApi.injectEndpoints({
         params: params ?? {},
       }),
       providesTags: [TAG_TYPES.Riders],
-    }),
-
-    getPendingHubApprovals: builder.query<
-      PendingHubApprovalsResponse,
-      PendingHubApprovalsParams | void
-    >({
-      query: (params) => ({
-        url: "/delivery-verifications/hub-approval/pending",
-        method: "GET",
-        params: params ?? {},
-      }),
-      providesTags: [TAG_TYPES.DeliveryVerifications],
-    }),
-
-    hubApproveOrDecline: builder.mutation<
-      HubApprovalResponse,
-      HubApprovalRequest
-    >({
-      query: ({ id, action }) => ({
-        url: `/delivery-verifications/${id}/hub-approval/${action}`,
-        method: "PATCH",
-      }),
-      invalidatesTags: [TAG_TYPES.DeliveryVerifications],
     }),
 
     // ─── Rider Transfer Endpoints ───────────────────────────────────────────
@@ -213,8 +186,6 @@ export const {
   useUpdateRiderMutation,
   useDeactivateRiderMutation,
   useGetRidersPerformanceQuery,
-  useGetPendingHubApprovalsQuery,
-  useHubApproveOrDeclineMutation,
   useGetRidersForTransferQuery,
   useGetAvailableRidersForTransferQuery,
   useGetRiderParcelsForTransferQuery,

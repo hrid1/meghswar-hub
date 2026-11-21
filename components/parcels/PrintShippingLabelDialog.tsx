@@ -4,17 +4,31 @@ import React, { useState } from "react";
 import CustomDialog from "@/components/reusable/CustomDialog";
 import { Button } from "@/components/ui/button";
 import {
-  downloadSingleShippingLabel,
-  downloadBulkShippingLabels,
-  LabelLayout,
-} from "@/lib/shippingLabel";
+  useDownloadShippingLabelMutation,
+  useDownloadBulkShippingLabelsMutation,
+} from "@/redux/features/parcels/parcelsApi";
+import { LabelLayout } from "@/redux/features/parcels/parcelTypes";
 import { toast } from "sonner";
 import { Printer, FileText, CheckCircle2 } from "lucide-react";
+
+/** Triggers a browser file download from a Blob */
+function triggerBlobDownload(blob: Blob, filename: string) {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 1500);
+}
 
 interface PrintShippingLabelDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+  /** Parcel UUIDs to print. Single item = single label, multiple = bulk PDF */
   parcelIds: string[];
+  /** Display ID shown in the dialog subtitle for single-parcel mode */
   singleParcelTxId?: string;
 }
 
@@ -25,28 +39,42 @@ export default function PrintShippingLabelDialog({
   singleParcelTxId,
 }: PrintShippingLabelDialogProps) {
   const [layout, setLayout] = useState<LabelLayout>("THERMAL");
-  const [isDownloading, setIsDownloading] = useState(false);
 
+  const [downloadSingle, { isLoading: isSingleLoading }] =
+    useDownloadShippingLabelMutation();
+  const [downloadBulk, { isLoading: isBulkLoading }] =
+    useDownloadBulkShippingLabelsMutation();
+
+  const isDownloading = isSingleLoading || isBulkLoading;
   const isBulk = parcelIds.length > 1;
 
   const handlePrint = async () => {
     if (parcelIds.length === 0) return;
 
-    setIsDownloading(true);
     try {
       if (isBulk) {
-        await downloadBulkShippingLabels({ parcelIds, layout });
-        toast.success(`Downloaded ${parcelIds.length} shipping labels (${layout})`);
+        const result = await downloadBulk({
+          parcel_ids: parcelIds,
+          layout,
+        }).unwrap();
+        triggerBlobDownload(result.blob, result.filename);
+        toast.success(
+          `Downloaded ${parcelIds.length} shipping labels (${layout})`,
+        );
       } else {
-        await downloadSingleShippingLabel({ parcelId: parcelIds[0], layout });
+        const result = await downloadSingle({
+          parcelId: parcelIds[0],
+          layout,
+        }).unwrap();
+        triggerBlobDownload(result.blob, result.filename);
         toast.success(`Downloaded shipping label (${layout})`);
       }
       setOpen(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to generate shipping labels";
       console.error(err);
-      toast.error(err.message || "Failed to generate shipping labels");
-    } finally {
-      setIsDownloading(false);
+      toast.error(msg);
     }
   };
 

@@ -14,6 +14,11 @@ import {
   UpdateParcelRequest,
   UpdateParcelResponse,
   GetAllParcelsParams,
+  SingleLabelParams,
+  BulkLabelParams,
+  ShippingLabelBlobResponse,
+  HubManagerStoresResponse,
+  HubManagerStoresParams,
 } from "./parcelTypes";
 // GET /hubs/dashboard/parcels/:id
 
@@ -324,6 +329,132 @@ const parcelsApi = baseApi.injectEndpoints({
       providesTags: [TAG_TYPES.Parcels],
     }),
 
+    // ======================= Shipping Label APIs =======================
+
+    /**
+     * GET /parcels/:parcelId/label?layout=THERMAL|A4
+     *
+     * Downloads a single parcel shipping label as a PDF blob.
+     * Roles: ADMIN, HUB_MANAGER, MERCHANT
+     *
+     * Usage:
+     *   const [trigger] = useDownloadShippingLabelMutation();
+     *   const { blob, filename } = await trigger({ parcelId, layout: "THERMAL" }).unwrap();
+     *   triggerBlobDownload(blob, filename);
+     */
+    downloadShippingLabel: builder.mutation<ShippingLabelBlobResponse, SingleLabelParams>({
+      query: ({ parcelId, layout = "THERMAL" }) => ({
+        url: `/parcels/${encodeURIComponent(parcelId)}/label`,
+        method: "GET",
+        params: { layout },
+        // Tell RTK Query to treat the response body as a Blob
+        responseHandler: async (response: Response): Promise<ShippingLabelBlobResponse> => {
+          if (!response.ok) {
+            // Try to parse an error JSON body
+            let message = "Failed to download shipping label";
+            try {
+              const errJson = await response.json();
+              if (errJson?.message) {
+                message = Array.isArray(errJson.message)
+                  ? errJson.message.join(", ")
+                  : errJson.message;
+              }
+            } catch {
+              // ignore
+            }
+            throw new Error(message);
+          }
+          const blob = await response.blob();
+          const contentDisposition = response.headers.get("content-disposition") ?? "";
+          const filenameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i,
+          );
+          const filename =
+            (filenameMatch?.[1] ?? "").replace(/['"]/g, "").trim() ||
+            `meghswar-label-${parcelId}.pdf`;
+          return { blob, filename };
+        },
+      }),
+    }),
+
+    /**
+     * POST /parcels/labels
+     *
+     * Downloads a bulk shipping labels PDF (1–100 parcels) in a single document.
+     * Roles: ADMIN, HUB_MANAGER, MERCHANT
+     *
+     * Usage:
+     *   const [trigger] = useDownloadBulkShippingLabelsMutation();
+     *   const { blob, filename } = await trigger({ parcel_ids, layout: "A4" }).unwrap();
+     *   triggerBlobDownload(blob, filename);
+     */
+    downloadBulkShippingLabels: builder.mutation<ShippingLabelBlobResponse, BulkLabelParams>({
+      query: ({ parcel_ids, layout = "A4" }) => ({
+        url: "/parcels/labels",
+        method: "POST",
+        body: { parcel_ids, layout },
+        // Tell RTK Query to treat the response body as a Blob
+        responseHandler: async (response: Response): Promise<ShippingLabelBlobResponse> => {
+          if (!response.ok) {
+            let message = "Failed to download bulk shipping labels";
+            try {
+              const errJson = await response.json();
+              if (errJson?.message) {
+                message = Array.isArray(errJson.message)
+                  ? errJson.message.join(", ")
+                  : errJson.message;
+              }
+            } catch {
+              // ignore
+            }
+            throw new Error(message);
+          }
+          const blob = await response.blob();
+          const contentDisposition = response.headers.get("content-disposition") ?? "";
+          const filenameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i,
+          );
+          const dateStr = new Date().toISOString().split("T")[0];
+          const filename =
+            (filenameMatch?.[1] ?? "").replace(/['"]/g, "").trim() ||
+            `meghswar-shipping-labels-${dateStr}.pdf`;
+          return { blob, filename };
+        },
+      }),
+    }),
+
+    // ======================= Hub Manager Stores =======================
+
+    /**
+     * GET /stores/hub-manager/my-stores?status=APPROVED
+     *
+     * Returns all stores assigned to the authenticated hub manager,
+     * with full merchant, hub, and performance details.
+     * Role: HUB_MANAGER
+     *
+     * Usage:
+     *   const { data } = useGetHubManagerStoresQuery({ status: "APPROVED" });
+     *   const stores = data?.stores ?? [];
+     */
+    getHubManagerStores: builder.query<HubManagerStoresResponse, HubManagerStoresParams | void>({
+      query: (params = {}) => ({
+        url: "/stores/hub-manager/my-stores",
+        method: "GET",
+        params: {
+          ...(params?.status ? { status: params.status } : {}),
+        },
+      }),
+      // Server wraps the payload: { success, data: { stores }, message, timestamp }
+      transformResponse: (response: {
+        data?: { stores?: HubManagerStoresResponse["stores"] };
+        message?: string;
+      }): HubManagerStoresResponse => ({
+        stores: response?.data?.stores ?? [],
+        message: response?.message ?? "",
+      }),
+      providesTags: [TAG_TYPES.Hubs],
+    }),
+
 
 
   }),
@@ -347,4 +478,7 @@ export const {
   useGetParcelByIdQuery,
   useGetParcelHistoryQuery,
   useUpdateParcelMutation,
+  useDownloadShippingLabelMutation,
+  useDownloadBulkShippingLabelsMutation,
+  useGetHubManagerStoresQuery,
 } = parcelsApi;

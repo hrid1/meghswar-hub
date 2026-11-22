@@ -5,6 +5,7 @@ import React, { useState, useMemo } from "react";
 import { Search, Printer, ChevronDown, RefreshCw, Plus } from "lucide-react";
 import PrintShippingLabelDialog from "@/components/parcels/PrintShippingLabelDialog";
 import { DataTable } from "@/components/reusable/DataTable";
+import CustomPagination from "@/components/reusable/CustomPagination";
 import {
   useGetReceivedParcelsQuery,
   useReceiveParcelsMutation,
@@ -85,24 +86,71 @@ interface TransformedParcel {
   status: string;
   tracking_number: string;
   store: string;
+  storeId?: string;
+  storePhone?: string;
 }
 
 export default function ParcelTable() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [selectedStoreId, setSelectedStoreId] = useState("");
+  const [statusFilter, setStatusFilter] = useState("PENDING");
+
   const {
     data: receivedParcels,
     isLoading,
     error,
     refetch,
-  } = useGetReceivedParcelsQuery(null);
+  } = useGetReceivedParcelsQuery({
+    page,
+    limit,
+    status: statusFilter || undefined,
+    storeId: selectedStoreId || undefined,
+  });
   const [receiveParcels, { isLoading: isReceiving }] =
     useReceiveParcelsMutation();
   const [downloadShippingLabel] = useDownloadShippingLabelMutation();
 
   const { data: storesData } = useGetHubManagerStoresQuery({ status: "APPROVED" });
-  const stores = storesData?.stores ?? [];
-  // console.log("Store", stores)
 
-  console.log("receivedParcels", receivedParcels);
+  // Extract parcels data and pagination from API response
+  const parcelsData = receivedParcels?.data?.parcels || [];
+  const pagination = receivedParcels?.data?.pagination;
+
+  // Stores list merged from API and parcels
+  const stores = useMemo(() => {
+    const rawList: any[] = Array.isArray(storesData)
+      ? storesData
+      : Array.isArray(storesData?.stores)
+      ? storesData.stores
+      : Array.isArray((storesData as any)?.data?.stores)
+      ? (storesData as any).data.stores
+      : Array.isArray((storesData as any)?.data)
+      ? (storesData as any).data
+      : [];
+
+    const map = new Map<string, { id: string; business_name: string }>();
+
+    rawList.forEach((s) => {
+      const id = String(s?.id || s?.store_id || "");
+      const name = s?.business_name || s?.name || "";
+      if (id && name) {
+        map.set(id, { id, business_name: name });
+      }
+    });
+
+    // Also include stores directly present in parcelsData
+    parcelsData.forEach((p: any) => {
+      const sId = String(p.store?.id || p.store_id || "");
+      const sName = p.store?.business_name || p.store?.name;
+      if (sId && sName && !map.has(sId)) {
+        map.set(sId, { id: sId, business_name: sName });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [storesData, parcelsData]);
+
   const { updateCharges, isUpdating } = useUpdateParcelCharges();
 
   const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([]);
@@ -114,30 +162,36 @@ export default function ParcelTable() {
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [processingParcelId, setProcessingParcelId] = useState<string | null>(null);
 
-  // Extract parcels data from API response
-  const parcelsData = receivedParcels?.data?.parcels || [];
-
   // Transform API data to match the expected format for the table
   const transformedParcels = useMemo((): TransformedParcel[] => {
-    return parcelsData.map((parcel: Parcel) => {
+    return parcelsData.map((parcel: any) => {
       const parsedWeight = Number(parcel.product_weight);
       const originalWeight = Number.isFinite(parsedWeight)
         ? parsedWeight
         : parseFloat(parcel.weight_charge) / 40 || 0;
 
+      const storeId = String(parcel.store?.id || parcel.store_id || "");
+
       return {
         id: parcel.parcel_tx_id,
         originalId: parcel.id,
-        merchant: parcel.merchant.user.full_name,
+        merchant:
+          parcel.merchant?.user?.full_name ||
+          parcel.merchant?.name ||
+          parcel.store?.business_name ||
+          "Unknown",
         merchantInvoice: parcel.merchant_order_id,
         additionalNote: parcel.special_instructions || "No instructions",
         customer: parcel.customer_name,
         phone: parcel.customer_phone,
         secondary_phone: parcel.customer_secondary_phone,
         address: parcel.customer_address,
-        zone: parcel.delivery_area.zone,
-        area: parcel.delivery_area.area,
-        city: parcel.delivery_area.city,
+        zone:
+          typeof parcel.delivery_area?.zone === "string"
+            ? parcel.delivery_area?.zone
+            : parcel.delivery_area?.name || "",
+        area: parcel.delivery_area?.area,
+        city: parcel.delivery_area?.city,
         collectableAmount: parseFloat(parcel.cod_amount) || 0,
         deliveryCharge: parseFloat(parcel.delivery_charge) || 0,
         codCharge: parseFloat(parcel.cod_charge) || 0,
@@ -146,11 +200,12 @@ export default function ParcelTable() {
         weight: weightOverrides[parcel.id] ?? originalWeight,
         delivery: parseFloat(parcel.total_charge) || 0,
         totalWeight: "1K",
-        deliveryArea: `${parcel.delivery_area.area}, ${parcel.delivery_area.zone}`,
+        deliveryArea: `${parcel.delivery_area?.area || ""}, ${parcel.delivery_area?.zone || ""}`,
         is_cod: parcel.is_cod,
         status: parcel.status,
         tracking_number: parcel.tracking_number,
-        store: parcel.store?.business_name,
+        store: parcel.store?.business_name || "Unknown Store",
+        storeId,
         storePhone: parcel.store?.phone_number,
       };
     });
@@ -172,10 +227,36 @@ export default function ParcelTable() {
 
   /* ------------------------------- Filtering -------------------------------- */
   const filteredData = useMemo(() => {
-    return transformedParcels.filter((p) =>
-      Object.values(p).join(" ").toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [transformedParcels, search]);
+    return transformedParcels.filter((p) => {
+      // 1. Search matching
+      const matchesSearch =
+        !search.trim() ||
+        [
+          p.id,
+          p.tracking_number,
+          p.merchant,
+          p.merchantInvoice,
+          p.customer,
+          p.phone,
+          p.secondary_phone,
+          p.address,
+          p.zone,
+          p.store,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(search.toLowerCase().trim());
+
+      // 2. Store filter matching
+      const matchesStore =
+        !selectedStoreId ||
+        p.storeId === selectedStoreId ||
+        p.store?.toLowerCase() === selectedStoreId.toLowerCase();
+
+      return matchesSearch && matchesStore;
+    });
+  }, [transformedParcels, search, selectedStoreId]);
 
   /** UUIDs (originalId) of selected rows — used by the label print API */
   const selectedOriginalIds = useMemo(
@@ -375,12 +456,38 @@ export default function ParcelTable() {
         totalWeight={summary.totalWeight}
       />
 
-      {/* Action Buttons */}
+      {/* Action Buttons & Filters */}
       <div className="flex justify-between items-center flex-wrap gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Status filter */}
+          {/* <div className="relative">
+            <select
+              className="border p-2 rounded-md text-sm bg-white"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="PICKED_UP">Picked Up</option>
+              <option value="OUT_FOR_PICKUP">Out for Pickup</option>
+              <option value="IN_TRANSIT">In Transit</option>
+            </select>
+          </div> */}
+
+          {/* Store filter */}
           <div className="relative">
-            <select className="border p-2 rounded-md  ">
-              <option value="">All Merchants</option>
+            <select
+              className="border p-2 rounded-md text-sm bg-white"
+              value={selectedStoreId}
+              onChange={(e) => {
+                setSelectedStoreId(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All Stores</option>
               {stores.map((store) => (
                 <option key={store.id} value={store.id}>
                   {store.business_name}
@@ -388,7 +495,8 @@ export default function ParcelTable() {
               ))}
             </select>
           </div>
-          <div className="font-semibold text-gray-700">
+
+          <div className="font-semibold text-gray-700 text-sm">
             {selectedRowIds.length} Parcel
             {selectedRowIds.length !== 1 ? "s" : ""} Selected
           </div>
@@ -438,9 +546,25 @@ export default function ParcelTable() {
         
       />
 
-      {/* Results count */}
-      <div className="text-sm text-gray-500">
-        Showing {filteredData.length} of {transformedParcels.length} parcels
+      {/* Results count & Pagination */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-sm text-gray-500">
+          Showing {filteredData.length} of {transformedParcels.length} parcels
+        </div>
+
+        {pagination && pagination.totalPages > 1 && (
+          <CustomPagination
+            page={page}
+            totalPages={pagination.totalPages}
+            onPageChange={setPage}
+            totalItems={pagination.total}
+            itemsPerPage={limit}
+            onItemsPerPageChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
+        )}
       </div>
 
       {/* Shipping Label Print Dialog */}

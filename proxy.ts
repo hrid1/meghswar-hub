@@ -1,47 +1,24 @@
-// proxy.ts
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
-
-function parseJwt(token: string) {
-  try {
-    const base64Payload = token.split(".")[1]
-    const payload = Buffer.from(base64Payload, "base64").toString("utf-8")
-    return JSON.parse(payload)
-  } catch (err) {
-    return null
-  }
-}
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { isHubManagerToken } from "./lib/auth";
 
 export default function proxy(request: NextRequest) {
-  const token = request.cookies.get('access_token')?.value;
+  const token = request.cookies.get("access_token")?.value;
   const { pathname } = request.nextUrl;
 
-  const isLoginPage = pathname === '/login' || pathname.startsWith('/login');
-  const isDashboard = pathname.startsWith('/dashboard');
+  const isLoginPage = pathname.startsWith("/login");
+  const isDashboard = pathname.startsWith("/dashboard");
 
-  // If authenticated with a valid HUB_MANAGER token, block access to login
-  if (isLoginPage && token) {
-    const decodedToken = parseJwt(token);
-    if (decodedToken?.role === 'HUB_MANAGER') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
+  if (isDashboard && !isHubManagerToken(token)) {
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    response.cookies.delete("access_token");
+    response.cookies.delete("refresh_token");
+    return response;
   }
 
-  // Protect dashboard routes
-  if (isDashboard) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    const decodedToken = parseJwt(token);
-
-    if (decodedToken?.role !== 'HUB_MANAGER') {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  if (isLoginPage && isHubManagerToken(token)) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();
 }
-
-

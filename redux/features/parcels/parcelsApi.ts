@@ -14,6 +14,7 @@ import {
   UpdateParcelRequest,
   UpdateParcelResponse,
   GetAllParcelsParams,
+  GetReceivedParcelsParams,
   SingleLabelParams,
   BulkLabelParams,
   ShippingLabelBlobResponse,
@@ -64,8 +65,29 @@ const parcelsApi = baseApi.injectEndpoints({
     }),
 
     // get received parcels
-    getReceivedParcels: builder.query({
-      query: () => "/hubs/parcels/received",
+    getReceivedParcels: builder.query<any, GetReceivedParcelsParams | void>({
+      query: (params) => ({
+        url: "/hubs/parcels/received",
+        method: "GET",
+        params: {
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 20,
+          ...(params?.status ? { status: params.status } : {}),
+          ...(params?.storeId ? { storeId: params.storeId } : {}),
+          ...(params?.merchantId ? { merchantId: params.merchantId } : {}),
+          ...(params?.search?.trim() ? { search: params.search.trim() } : {}),
+          ...(params?.customerName ? { customerName: params.customerName } : {}),
+          ...(params?.customerPhone ? { customerPhone: params.customerPhone } : {}),
+          ...(params?.merchantName ? { merchantName: params.merchantName } : {}),
+          ...(params?.area ? { area: params.area } : {}),
+          ...(params?.minAmount !== undefined ? { minAmount: params.minAmount } : {}),
+          ...(params?.maxAmount !== undefined ? { maxAmount: params.maxAmount } : {}),
+          ...(params?.deliveryType ? { deliveryType: params.deliveryType } : {}),
+          ...(params?.paymentStatus ? { paymentStatus: params.paymentStatus } : {}),
+          ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
+          ...(params?.order ? { order: params.order } : {}),
+        },
+      }),
       providesTags: [TAG_TYPES.Parcels],
     }),
 

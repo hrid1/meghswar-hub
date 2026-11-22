@@ -70,6 +70,25 @@ export interface Parcel {
     endDate?: string;
   }
 
+  export interface GetReceivedParcelsParams {
+    page?: number;
+    limit?: number;
+    status?: string;
+    storeId?: string;
+    merchantId?: string;
+    search?: string;
+    customerName?: string;
+    customerPhone?: string;
+    merchantName?: string;
+    area?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    deliveryType?: string;
+    paymentStatus?: string;
+    sortBy?: string;
+    order?: "ASC" | "DESC";
+  }
+
   export const PARCEL_STATUS_OPTIONS = [
     { value: "PENDING", label: "Pending" },
     { value: "IN_HUB", label: "In Hub" },

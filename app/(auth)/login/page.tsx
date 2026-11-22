@@ -1,15 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { EyeOffIcon, Loader2 } from "lucide-react"
 import { EyeIcon } from "lucide-react"
 import * as React from "react"
+import { isHubManagerToken } from "@/lib/auth"
 import { useLoginMutation } from "@/redux/features/auth/authApi"
-import { setCredentials } from "@/redux/features/auth/authSlice"
+import { logOut, setCredentials } from "@/redux/features/auth/authSlice"
 import { useAppDispatch, useAppSelector } from "@/redux/store/hook"
 
 function loginErrorMessage(error: unknown): string {
@@ -28,36 +28,45 @@ function loginErrorMessage(error: unknown): string {
 }
 
 export default function LoginPage() {
-  const router = useRouter()
   const dispatch = useAppDispatch()
   const accessToken = useAppSelector((state) => state.auth.access_token)
   const [login, { isLoading }] = useLoginMutation()
-  const [identifier, setIdentifier] = React.useState("01881041306")
-  const [password, setPassword] = React.useState("12345678")
-  // const [identifier, setIdentifier] = React.useState("manager@hub.com")
-  // const [password, setPassword] = React.useState("Manager123!")
+  const [identifier, setIdentifier] = React.useState("")
+  const [password, setPassword] = React.useState("")
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [showPassword, setShowPassword] = React.useState(false)
 
   React.useEffect(() => {
-    if (accessToken) {
-      window.location.href = "/dashboard";
+    if (!accessToken) return
+
+    if (isHubManagerToken(accessToken)) {
+      window.location.assign("/dashboard")
+      return
     }
-  }, [accessToken])
+
+    dispatch(logOut())
+  }, [accessToken, dispatch])
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault()
     setErrorMessage(null)
     try {
       const data = await login({ identifier, password }).unwrap()
+      const token = data.data.accessToken
+
+      if (!isHubManagerToken(token)) {
+        dispatch(logOut())
+        setErrorMessage("Please sign in with a Hub Manager account.")
+        return
+      }
+
       dispatch(
         setCredentials({
-          access_token: data.data.accessToken,
+          access_token: token,
           refresh_token: data.data.refreshToken,
           user: data.data.user,
         })
       )
-      window.location.href = "/dashboard";
     } catch (error) {
       setErrorMessage(loginErrorMessage(error))
     }
